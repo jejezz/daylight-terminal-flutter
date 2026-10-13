@@ -353,5 +353,16 @@
   "terminalFontCustomName": "설치된 글꼴 이름",
   "terminalFontCustomHelp": "OS에 설치된 글꼴의 이름을 그대로 적으세요. 없는 이름이면 내장 글꼴로 대신 표시됩니다.",
   "terminalFontSize": "크기",
-  "terminalFontReset": "기본값으로"
+  "terminalFontReset": "기본값으로",
+  "terminalScrollback": "스크롤백 줄 수",
+  "terminalScrollbackHelp": "위로 스크롤해 다시 볼 수 있는 지난 출력의 최대 줄 수입니다. 새로 여는 탭부터 적용되고, 열려 있는 탭은 그대로입니다.",
+  "terminalScrollbackLines": "{count}줄",
+  "@terminalScrollbackLines": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  }
 }

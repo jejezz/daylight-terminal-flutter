@@ -27,14 +27,14 @@ enum SessionError { hostKeyMismatch, closed, other }
 /// 터미널의 현재 경로와 탐색기 경로는 **자동으로 맞추지 않는다.** 사용자가 메뉴로
 /// 요청할 때만 [moveTerminalTo] / [syncExplorerToTerminal]이 한쪽을 다른 쪽에 맞춘다.
 class SshSessionProvider extends ChangeNotifier {
-  SshSessionProvider(this.store) {
+  SshSessionProvider(this.store, {int scrollback = 10000}) : terminal = Terminal(maxLines: scrollback) {
     _bind(terminal);
   }
 
   final ProfileStore store;
   final LogFileService _log = LogFileService();
 
-  final Terminal terminal = Terminal(maxLines: 10000);
+  final Terminal terminal;
 
   SshConnection? _conn;
   StreamSubscription<Uint8List>? _stdoutSub;

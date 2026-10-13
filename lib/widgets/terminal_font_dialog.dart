@@ -106,7 +106,23 @@ class _TerminalFontDialogState extends State<_TerminalFontDialog> {
                 SizedBox(width: 32, child: Text('${prefs.size.round()}', textAlign: TextAlign.end)),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
+            DropdownButtonFormField<int>(
+              initialValue: prefs.scrollback,
+              decoration: InputDecoration(
+                labelText: l10n.terminalScrollback,
+                helperText: l10n.terminalScrollbackHelp,
+                helperMaxLines: 3,
+              ),
+              items: [
+                for (final n in {...TerminalPrefs.scrollbackPresets, prefs.scrollback}.toList()..sort())
+                  DropdownMenuItem(value: n, child: Text(l10n.terminalScrollbackLines(n))),
+              ],
+              onChanged: (n) {
+                if (n != null) prefs.setScrollback(n);
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(

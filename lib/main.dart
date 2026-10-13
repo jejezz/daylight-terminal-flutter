@@ -48,8 +48,8 @@ Future<void> main() async {
   }
 
   final settings = await AppSettings.load();
-  final sessions = SessionsController(await ProfileStore.load());
   final terminalPrefs = await TerminalPrefs.load();
+  final sessions = SessionsController(await ProfileStore.load(), scrollback: () => terminalPrefs.scrollback);
   // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
   final updates = await UpdateService.create();
   // UpdateScope 는 MaterialApp 위에 둔다 — 정보 창이 이것을 읽어 "업데이트 확인" 단추를 붙인다.

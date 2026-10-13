@@ -1,5 +1,7 @@
 import 'package:daylight_terminal/l10n/app_localizations.dart';
+import 'package:daylight_terminal/services/profile_store.dart';
 import 'package:daylight_terminal/settings/terminal_prefs.dart';
+import 'package:daylight_terminal/state/sessions_controller.dart';
 import 'package:daylight_terminal/theme/app_theme.dart';
 import 'package:daylight_terminal/widgets/terminal_font_dialog.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +33,29 @@ void main() {
 
       final again = await TerminalPrefs.load(); // 다시 켜도 유지
       expect((again.family, again.size), ('Fira Code', 16));
+    });
+
+    test('scrollback: saved, clamped, reset; new tabs use the current value, open tabs keep theirs', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await TerminalPrefs.load();
+      expect(prefs.scrollback, 10000);
+      final sessions = SessionsController(await ProfileStore.load(), scrollback: () => prefs.scrollback);
+      final first = sessions.current!;
+      expect(first.terminal.maxLines, 10000);
+
+      await prefs.setScrollback(2000);
+      sessions.add();
+      expect(sessions.current!.terminal.maxLines, 2000);
+      expect(first.terminal.maxLines, 10000, reason: '열려 있는 탭은 그대로');
+      expect((await TerminalPrefs.load()).scrollback, 2000);
+
+      await prefs.setScrollback(1);
+      expect(prefs.scrollback, TerminalPrefs.minScrollback);
+      await prefs.setScrollback(10000000);
+      expect(prefs.scrollback, TerminalPrefs.maxScrollback);
+      await prefs.reset();
+      expect(prefs.scrollback, 10000);
+      sessions.dispose();
     });
 
     test('size is clamped, blank names are ignored, reset restores defaults', () async {
@@ -97,10 +122,17 @@ void main() {
     await tester.pump();
     expect(prefs.size, greaterThan(13));
 
+    // 스크롤백 줄 수
+    await tester.tap(find.text('10,000줄'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('50,000줄').last);
+    await tester.pumpAndSettle();
+    expect(prefs.scrollback, 50000);
+
     // 기본값으로
     await tester.tap(find.text('기본값으로'));
     await tester.pumpAndSettle();
-    expect((prefs.family, prefs.size), ('AgaveNerdFontMono', 13));
+    expect((prefs.family, prefs.size, prefs.scrollback), ('AgaveNerdFontMono', 13, 10000));
     expect(tester.takeException(), isNull);
   });
 }

@@ -973,6 +973,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기본값으로'**
   String get terminalFontReset;
+
+  /// No description provided for @terminalScrollback.
+  ///
+  /// In ko, this message translates to:
+  /// **'스크롤백 줄 수'**
+  String get terminalScrollback;
+
+  /// No description provided for @terminalScrollbackHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'위로 스크롤해 다시 볼 수 있는 지난 출력의 최대 줄 수입니다. 새로 여는 탭부터 적용되고, 열려 있는 탭은 그대로입니다.'**
+  String get terminalScrollbackHelp;
+
+  /// No description provided for @terminalScrollbackLines.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}줄'**
+  String terminalScrollbackLines(int count);
 }
 
 class _AppLocalizationsDelegate

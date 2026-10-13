@@ -336,5 +336,16 @@
   "terminalFontCustomName": "Installed font name",
   "terminalFontCustomHelp": "Type the exact name of a font installed on this computer. If it is not found, the bundled font is used instead.",
   "terminalFontSize": "Size",
-  "terminalFontReset": "Reset to default"
+  "terminalFontReset": "Reset to default",
+  "terminalScrollback": "Scrollback lines",
+  "terminalScrollbackHelp": "The most past output lines you can scroll back to. Applies to tabs opened from now on; open tabs keep their current setting.",
+  "terminalScrollbackLines": "{count} lines",
+  "@terminalScrollbackLines": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  }
 }

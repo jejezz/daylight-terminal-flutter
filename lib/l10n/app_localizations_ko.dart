@@ -508,4 +508,20 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get terminalFontReset => '기본값으로';
+
+  @override
+  String get terminalScrollback => '스크롤백 줄 수';
+
+  @override
+  String get terminalScrollbackHelp =>
+      '위로 스크롤해 다시 볼 수 있는 지난 출력의 최대 줄 수입니다. 새로 여는 탭부터 적용되고, 열려 있는 탭은 그대로입니다.';
+
+  @override
+  String terminalScrollbackLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString줄';
+  }
 }

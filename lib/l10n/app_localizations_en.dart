@@ -515,4 +515,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalFontReset => 'Reset to default';
+
+  @override
+  String get terminalScrollback => 'Scrollback lines';
+
+  @override
+  String get terminalScrollbackHelp =>
+      'The most past output lines you can scroll back to. Applies to tabs opened from now on; open tabs keep their current setting.';
+
+  @override
+  String terminalScrollbackLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString lines';
+  }
 }
