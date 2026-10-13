@@ -1,0 +1,164 @@
+// portside-flutter의 LineSender에서 가져와 SSH에 맞게 고침 (로컬 에코 제거, 줄 끝 기본값 CR).
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import '../l10n/app_localizations.dart';
+import '../models/line_ending.dart';
+import '../state/ssh_session_provider.dart';
+import '../theme/app_theme.dart';
+
+/// 여러 줄을 미리 써두고 한 줄씩 순서대로 전송하는 스크립트 러너.
+/// 그냥 Enter는 커서가 있는 줄을 전송하고, Ctrl+Enter는 평범한 줄바꿈이다.
+/// 전송 후 커서는 다음 줄의 끝으로 이동해서, Enter를 반복해서 누르면
+/// 위에서부터 한 줄씩 순서대로 흘러 내려가며 전송된다.
+class LineSender extends StatefulWidget {
+  const LineSender({super.key});
+
+  @override
+  State<LineSender> createState() => _LineSenderState();
+}
+
+class _LineSenderState extends State<LineSender> {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
+    final isEnter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
+    if (!isEnter) return KeyEventResult.ignored;
+
+    final connected = context.read<SshSessionProvider>().connected;
+    // 연결 전에는 전송할 대상이 없으므로 Enter도 보통의 줄바꿈으로만 동작해서
+    // 스크립트를 미리 자유롭게 써둘 수 있다.
+    if (!connected || HardwareKeyboard.instance.isControlPressed) {
+      _insertNewlineAtCursor();
+    } else {
+      _sendCurrentLine();
+    }
+    return KeyEventResult.handled;
+  }
+
+  // TextField의 기본 동작에 기대지 않고 직접 줄바꿈을 넣는다 — 플랫폼 텍스트 입력
+  // 채널이 raw 키 이벤트 처리와 별개로 움직여서 Ctrl+Enter를 무시(ignored)하면
+  // 줄바꿈이 전혀 안 들어가는 문제가 있었다.
+  void _insertNewlineAtCursor() {
+    final text = _controller.text;
+    final selection = _controller.selection;
+    final start = selection.start < 0 ? text.length : selection.start;
+    final end = selection.end < 0 ? text.length : selection.end;
+    _controller.value = TextEditingValue(
+      text: text.replaceRange(start, end, '\n'),
+      selection: TextSelection.collapsed(offset: start + 1),
+    );
+  }
+
+  void _sendCurrentLine() {
+    final session = context.read<SshSessionProvider>();
+    if (!session.connected) return;
+
+    final text = _controller.text;
+    final cursor = _controller.selection.baseOffset;
+    final safeCursor = cursor < 0 ? text.length : cursor;
+
+    var lineStart = 0;
+    if (safeCursor > 0) {
+      final idx = text.lastIndexOf('\n', safeCursor - 1);
+      lineStart = idx == -1 ? 0 : idx + 1;
+    }
+    var lineEnd = text.indexOf('\n', safeCursor);
+    if (lineEnd == -1) lineEnd = text.length;
+
+    session.send(text.substring(lineStart, lineEnd));
+
+    if (lineEnd == text.length) {
+      // 마지막 줄이었다 — 새 빈 줄을 만들고 거기로 이동해서 바로 이어 쓸 수 있게.
+      final newText = '$text\n';
+      _controller.value = TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    } else {
+      var nextLineEnd = text.indexOf('\n', lineEnd + 1);
+      if (nextLineEnd == -1) nextLineEnd = text.length;
+      _controller.selection = TextSelection.collapsed(offset: nextLineEnd);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final session = context.watch<SshSessionProvider>();
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Row(
+        // 부모가 드래그로 조절하는 높이를 주므로, 입력 칸도 그 높이에 맞춰 늘어난다.
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Focus(
+              onKeyEvent: _onKeyEvent,
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                maxLines: null,
+                expands: true,
+                textAlignVertical: TextAlignVertical.top,
+                style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: l10n.senderHint,
+                  contentPadding: const EdgeInsets.all(10),
+                  filled: true,
+                  fillColor: scheme.surfaceContainerLowest,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          SizedBox(
+            width: 96,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Tooltip(
+                  message: l10n.senderLineEndingTooltip,
+                  child: DropdownButton<LineEnding>(
+                    value: session.lineEnding,
+                    isDense: true,
+                    items: [
+                      for (final e in LineEnding.values)
+                        DropdownMenuItem(value: e, child: Text(e.label ?? l10n.senderLineEndingNone)),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) session.setLineEnding(value);
+                    },
+                  ),
+                ),
+                const Spacer(),
+                IconButton.filledTonal(
+                  tooltip: l10n.senderSend,
+                  onPressed: session.connected ? _sendCurrentLine : null,
+                  icon: const Icon(Icons.send_rounded),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

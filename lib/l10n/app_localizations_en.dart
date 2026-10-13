@@ -192,4 +192,226 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get updateBusyBody =>
       'A task is in progress. Please try again when it has finished.';
+
+  @override
+  String get tabNew => 'New connection';
+
+  @override
+  String get tabClose => 'Close tab';
+
+  @override
+  String get connectTitle => 'Connect to a server';
+
+  @override
+  String get connectSavedProfiles => 'Saved connections';
+
+  @override
+  String get connectNewProfile => 'New connection';
+
+  @override
+  String get connectHost => 'Host';
+
+  @override
+  String get connectPort => 'Port';
+
+  @override
+  String get connectUser => 'User';
+
+  @override
+  String get connectPassword => 'Password';
+
+  @override
+  String get connectKeyFile => 'Private key file (optional)';
+
+  @override
+  String get connectKeyBrowse => 'Browse';
+
+  @override
+  String get connectKeyPassphrase => 'Key passphrase (if any)';
+
+  @override
+  String get connectSaveProfile =>
+      'Save this connection (the password is never saved)';
+
+  @override
+  String get connectDeleteProfile => 'Delete saved connection';
+
+  @override
+  String get connectAction => 'Connect';
+
+  @override
+  String get connecting => 'Connecting…';
+
+  @override
+  String connectFailed(String detail) {
+    return 'Could not connect: $detail';
+  }
+
+  @override
+  String connectHostKeyMismatch(String host) {
+    return 'The host key of $host differs from the one saved earlier. The connection was refused because this could be a man-in-the-middle attack.';
+  }
+
+  @override
+  String get connectClosed => 'The server closed the connection.';
+
+  @override
+  String get connectReconnect => 'Reconnect';
+
+  @override
+  String get connectDisconnect => 'Disconnect';
+
+  @override
+  String get sftpTitle => 'Files';
+
+  @override
+  String get sftpUp => 'Parent folder';
+
+  @override
+  String get sftpRefresh => 'Refresh';
+
+  @override
+  String get sftpNewFolder => 'New folder';
+
+  @override
+  String get sftpFolderName => 'Folder name';
+
+  @override
+  String get sftpRename => 'Rename';
+
+  @override
+  String get sftpNewName => 'New name';
+
+  @override
+  String get sftpDelete => 'Delete';
+
+  @override
+  String sftpDeleteConfirm(String name) {
+    return 'Delete $name? This cannot be undone.';
+  }
+
+  @override
+  String get sftpDownload => 'Download';
+
+  @override
+  String get sftpDownloadConfirm => 'Download here';
+
+  @override
+  String get sftpEmpty => 'This folder is empty';
+
+  @override
+  String get sftpDropHint =>
+      'Drop files or folders here to upload to this folder';
+
+  @override
+  String get sftpDropActive => 'Drop to upload';
+
+  @override
+  String get sftpColName => 'Name';
+
+  @override
+  String get sftpColSize => 'Size';
+
+  @override
+  String get sftpColModified => 'Modified';
+
+  @override
+  String sftpError(String detail) {
+    return 'Could not load the listing: $detail';
+  }
+
+  @override
+  String get sftpOverwriteTitle => 'Overwrite?';
+
+  @override
+  String sftpOverwriteBody(String names) {
+    return 'Already exists: $names';
+  }
+
+  @override
+  String get sftpOverwrite => 'Overwrite';
+
+  @override
+  String get commonCancel => 'Cancel';
+
+  @override
+  String get commonOk => 'OK';
+
+  @override
+  String get pathMenuTooltip => 'Go to path';
+
+  @override
+  String get pathMenuTerminalToHere => 'Move terminal to this folder';
+
+  @override
+  String get pathMenuExplorerToTerminal => 'Move explorer to the terminal path';
+
+  @override
+  String get pathCwdFailed =>
+      'Could not get the terminal\'s current path. Check that the shell is ready for commands.';
+
+  @override
+  String transferUploading(String name) {
+    return 'Uploading $name';
+  }
+
+  @override
+  String transferDownloading(String name) {
+    return 'Downloading $name';
+  }
+
+  @override
+  String get transferDone => 'Done';
+
+  @override
+  String transferFailed(String error) {
+    return 'Failed: $error';
+  }
+
+  @override
+  String get transferClear => 'Clear finished';
+
+  @override
+  String get senderHint =>
+      'Write several lines ahead and send them one by one with Enter (Ctrl+Enter: new line)';
+
+  @override
+  String get senderLineEndingNone => 'None';
+
+  @override
+  String get senderLineEndingTooltip => 'Line ending';
+
+  @override
+  String get senderSend => 'Send current line';
+
+  @override
+  String statusRecording(String file) {
+    return 'Recording: $file';
+  }
+
+  @override
+  String statusStartRecording(String key) {
+    return 'Start recording ($key)';
+  }
+
+  @override
+  String statusStopRecording(String key) {
+    return 'Stop recording ($key)';
+  }
+
+  @override
+  String get statusRevealLog => 'Show the recording in the file manager';
+
+  @override
+  String get statusNoLogFile => 'Nothing has been recorded yet';
+
+  @override
+  String get statusStripAnsi => 'Strip escapes';
+
+  @override
+  String get statusStripAnsiTooltip =>
+      'Record plain text without control sequences such as colors and cursor moves';
+
+  @override
+  String get logSaveConfirm => 'Start recording';
 }

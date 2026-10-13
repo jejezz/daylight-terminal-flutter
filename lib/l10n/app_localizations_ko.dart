@@ -190,4 +190,222 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get updateBusyBody => '작업이 진행 중입니다. 끝난 뒤에 다시 시도해 주세요.';
+
+  @override
+  String get tabNew => '새 연결';
+
+  @override
+  String get tabClose => '탭 닫기';
+
+  @override
+  String get connectTitle => '서버에 연결';
+
+  @override
+  String get connectSavedProfiles => '저장된 접속';
+
+  @override
+  String get connectNewProfile => '새 접속';
+
+  @override
+  String get connectHost => '호스트';
+
+  @override
+  String get connectPort => '포트';
+
+  @override
+  String get connectUser => '사용자';
+
+  @override
+  String get connectPassword => '비밀번호';
+
+  @override
+  String get connectKeyFile => '개인 키 파일 (선택)';
+
+  @override
+  String get connectKeyBrowse => '찾아보기';
+
+  @override
+  String get connectKeyPassphrase => '키 암호 (있으면)';
+
+  @override
+  String get connectSaveProfile => '이 접속 정보 저장 (비밀번호는 저장하지 않습니다)';
+
+  @override
+  String get connectDeleteProfile => '저장된 접속 삭제';
+
+  @override
+  String get connectAction => '연결';
+
+  @override
+  String get connecting => '연결 중…';
+
+  @override
+  String connectFailed(String detail) {
+    return '연결하지 못했습니다: $detail';
+  }
+
+  @override
+  String connectHostKeyMismatch(String host) {
+    return '$host의 호스트 키가 이전에 저장한 것과 다릅니다. 중간자 공격일 수 있어 연결을 거부했습니다.';
+  }
+
+  @override
+  String get connectClosed => '서버가 연결을 닫았습니다.';
+
+  @override
+  String get connectReconnect => '다시 연결';
+
+  @override
+  String get connectDisconnect => '연결 끊기';
+
+  @override
+  String get sftpTitle => '파일';
+
+  @override
+  String get sftpUp => '상위 폴더';
+
+  @override
+  String get sftpRefresh => '새로 고침';
+
+  @override
+  String get sftpNewFolder => '새 폴더';
+
+  @override
+  String get sftpFolderName => '폴더 이름';
+
+  @override
+  String get sftpRename => '이름 바꾸기';
+
+  @override
+  String get sftpNewName => '새 이름';
+
+  @override
+  String get sftpDelete => '삭제';
+
+  @override
+  String sftpDeleteConfirm(String name) {
+    return '$name을(를) 삭제할까요? 되돌릴 수 없습니다.';
+  }
+
+  @override
+  String get sftpDownload => '다운로드';
+
+  @override
+  String get sftpDownloadConfirm => '여기로 받기';
+
+  @override
+  String get sftpEmpty => '비어 있는 폴더입니다';
+
+  @override
+  String get sftpDropHint => '파일이나 폴더를 끌어다 놓으면 이 폴더로 업로드합니다';
+
+  @override
+  String get sftpDropActive => '놓으면 업로드합니다';
+
+  @override
+  String get sftpColName => '이름';
+
+  @override
+  String get sftpColSize => '크기';
+
+  @override
+  String get sftpColModified => '수정한 날짜';
+
+  @override
+  String sftpError(String detail) {
+    return '목록을 불러오지 못했습니다: $detail';
+  }
+
+  @override
+  String get sftpOverwriteTitle => '덮어쓸까요?';
+
+  @override
+  String sftpOverwriteBody(String names) {
+    return '이미 있는 항목: $names';
+  }
+
+  @override
+  String get sftpOverwrite => '덮어쓰기';
+
+  @override
+  String get commonCancel => '취소';
+
+  @override
+  String get commonOk => '확인';
+
+  @override
+  String get pathMenuTooltip => '경로 이동';
+
+  @override
+  String get pathMenuTerminalToHere => '터미널을 이 폴더로 이동';
+
+  @override
+  String get pathMenuExplorerToTerminal => '탐색기를 터미널 경로로 이동';
+
+  @override
+  String get pathCwdFailed =>
+      '터미널의 현재 경로를 가져오지 못했습니다. 셸이 명령을 받을 수 있는 상태인지 확인하세요.';
+
+  @override
+  String transferUploading(String name) {
+    return '$name 올리는 중';
+  }
+
+  @override
+  String transferDownloading(String name) {
+    return '$name 받는 중';
+  }
+
+  @override
+  String get transferDone => '완료';
+
+  @override
+  String transferFailed(String error) {
+    return '실패: $error';
+  }
+
+  @override
+  String get transferClear => '완료된 항목 지우기';
+
+  @override
+  String get senderHint => '여러 줄을 미리 써 두고 Enter로 한 줄씩 전송합니다 (Ctrl+Enter: 줄바꿈)';
+
+  @override
+  String get senderLineEndingNone => '없음';
+
+  @override
+  String get senderLineEndingTooltip => '줄 끝 문자';
+
+  @override
+  String get senderSend => '현재 줄 전송';
+
+  @override
+  String statusRecording(String file) {
+    return '기록 중: $file';
+  }
+
+  @override
+  String statusStartRecording(String key) {
+    return '기록 시작 ($key)';
+  }
+
+  @override
+  String statusStopRecording(String key) {
+    return '기록 정지 ($key)';
+  }
+
+  @override
+  String get statusRevealLog => '탐색기에서 기록 파일 보기';
+
+  @override
+  String get statusNoLogFile => '기록한 파일이 아직 없습니다';
+
+  @override
+  String get statusStripAnsi => '이스케이프 제거';
+
+  @override
+  String get statusStripAnsiTooltip => '색·커서 이동 같은 제어 시퀀스를 빼고 텍스트만 기록합니다';
+
+  @override
+  String get logSaveConfirm => '기록 시작';
 }

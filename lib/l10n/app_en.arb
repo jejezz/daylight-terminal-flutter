@@ -123,5 +123,147 @@
   },
   "updateQuitAndInstall": "Quit and install",
   "updateBusyTitle": "Can't update right now",
-  "updateBusyBody": "A task is in progress. Please try again when it has finished."
+  "updateBusyBody": "A task is in progress. Please try again when it has finished.",
+  "tabNew": "New connection",
+  "tabClose": "Close tab",
+  "connectTitle": "Connect to a server",
+  "connectSavedProfiles": "Saved connections",
+  "connectNewProfile": "New connection",
+  "connectHost": "Host",
+  "connectPort": "Port",
+  "connectUser": "User",
+  "connectPassword": "Password",
+  "connectKeyFile": "Private key file (optional)",
+  "connectKeyBrowse": "Browse",
+  "connectKeyPassphrase": "Key passphrase (if any)",
+  "connectSaveProfile": "Save this connection (the password is never saved)",
+  "connectDeleteProfile": "Delete saved connection",
+  "connectAction": "Connect",
+  "connecting": "Connecting…",
+  "connectFailed": "Could not connect: {detail}",
+  "@connectFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "connectHostKeyMismatch": "The host key of {host} differs from the one saved earlier. The connection was refused because this could be a man-in-the-middle attack.",
+  "@connectHostKeyMismatch": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "connectClosed": "The server closed the connection.",
+  "connectReconnect": "Reconnect",
+  "connectDisconnect": "Disconnect",
+  "sftpTitle": "Files",
+  "sftpUp": "Parent folder",
+  "sftpRefresh": "Refresh",
+  "sftpNewFolder": "New folder",
+  "sftpFolderName": "Folder name",
+  "sftpRename": "Rename",
+  "sftpNewName": "New name",
+  "sftpDelete": "Delete",
+  "sftpDeleteConfirm": "Delete {name}? This cannot be undone.",
+  "@sftpDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sftpDownload": "Download",
+  "sftpDownloadConfirm": "Download here",
+  "sftpEmpty": "This folder is empty",
+  "sftpDropHint": "Drop files or folders here to upload to this folder",
+  "sftpDropActive": "Drop to upload",
+  "sftpColName": "Name",
+  "sftpColSize": "Size",
+  "sftpColModified": "Modified",
+  "sftpError": "Could not load the listing: {detail}",
+  "@sftpError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "sftpOverwriteTitle": "Overwrite?",
+  "sftpOverwriteBody": "Already exists: {names}",
+  "@sftpOverwriteBody": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "sftpOverwrite": "Overwrite",
+  "commonCancel": "Cancel",
+  "commonOk": "OK",
+  "pathMenuTooltip": "Go to path",
+  "pathMenuTerminalToHere": "Move terminal to this folder",
+  "pathMenuExplorerToTerminal": "Move explorer to the terminal path",
+  "pathCwdFailed": "Could not get the terminal's current path. Check that the shell is ready for commands.",
+  "transferUploading": "Uploading {name}",
+  "@transferUploading": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transferDownloading": "Downloading {name}",
+  "@transferDownloading": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transferDone": "Done",
+  "transferFailed": "Failed: {error}",
+  "@transferFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "transferClear": "Clear finished",
+  "senderHint": "Write several lines ahead and send them one by one with Enter (Ctrl+Enter: new line)",
+  "senderLineEndingNone": "None",
+  "senderLineEndingTooltip": "Line ending",
+  "senderSend": "Send current line",
+  "statusRecording": "Recording: {file}",
+  "@statusRecording": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "statusStartRecording": "Start recording ({key})",
+  "@statusStartRecording": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "statusStopRecording": "Stop recording ({key})",
+  "@statusStopRecording": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "statusRevealLog": "Show the recording in the file manager",
+  "statusNoLogFile": "Nothing has been recorded yet",
+  "statusStripAnsi": "Strip escapes",
+  "statusStripAnsiTooltip": "Record plain text without control sequences such as colors and cursor moves",
+  "logSaveConfirm": "Start recording"
 }

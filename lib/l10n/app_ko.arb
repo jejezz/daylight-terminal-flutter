@@ -140,5 +140,147 @@
   },
   "updateQuitAndInstall": "종료하고 설치",
   "updateBusyTitle": "지금은 업데이트할 수 없습니다",
-  "updateBusyBody": "작업이 진행 중입니다. 끝난 뒤에 다시 시도해 주세요."
+  "updateBusyBody": "작업이 진행 중입니다. 끝난 뒤에 다시 시도해 주세요.",
+  "tabNew": "새 연결",
+  "tabClose": "탭 닫기",
+  "connectTitle": "서버에 연결",
+  "connectSavedProfiles": "저장된 접속",
+  "connectNewProfile": "새 접속",
+  "connectHost": "호스트",
+  "connectPort": "포트",
+  "connectUser": "사용자",
+  "connectPassword": "비밀번호",
+  "connectKeyFile": "개인 키 파일 (선택)",
+  "connectKeyBrowse": "찾아보기",
+  "connectKeyPassphrase": "키 암호 (있으면)",
+  "connectSaveProfile": "이 접속 정보 저장 (비밀번호는 저장하지 않습니다)",
+  "connectDeleteProfile": "저장된 접속 삭제",
+  "connectAction": "연결",
+  "connecting": "연결 중…",
+  "connectFailed": "연결하지 못했습니다: {detail}",
+  "@connectFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "connectHostKeyMismatch": "{host}의 호스트 키가 이전에 저장한 것과 다릅니다. 중간자 공격일 수 있어 연결을 거부했습니다.",
+  "@connectHostKeyMismatch": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "connectClosed": "서버가 연결을 닫았습니다.",
+  "connectReconnect": "다시 연결",
+  "connectDisconnect": "연결 끊기",
+  "sftpTitle": "파일",
+  "sftpUp": "상위 폴더",
+  "sftpRefresh": "새로 고침",
+  "sftpNewFolder": "새 폴더",
+  "sftpFolderName": "폴더 이름",
+  "sftpRename": "이름 바꾸기",
+  "sftpNewName": "새 이름",
+  "sftpDelete": "삭제",
+  "sftpDeleteConfirm": "{name}을(를) 삭제할까요? 되돌릴 수 없습니다.",
+  "@sftpDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sftpDownload": "다운로드",
+  "sftpDownloadConfirm": "여기로 받기",
+  "sftpEmpty": "비어 있는 폴더입니다",
+  "sftpDropHint": "파일이나 폴더를 끌어다 놓으면 이 폴더로 업로드합니다",
+  "sftpDropActive": "놓으면 업로드합니다",
+  "sftpColName": "이름",
+  "sftpColSize": "크기",
+  "sftpColModified": "수정한 날짜",
+  "sftpError": "목록을 불러오지 못했습니다: {detail}",
+  "@sftpError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "sftpOverwriteTitle": "덮어쓸까요?",
+  "sftpOverwriteBody": "이미 있는 항목: {names}",
+  "@sftpOverwriteBody": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "sftpOverwrite": "덮어쓰기",
+  "commonCancel": "취소",
+  "commonOk": "확인",
+  "pathMenuTooltip": "경로 이동",
+  "pathMenuTerminalToHere": "터미널을 이 폴더로 이동",
+  "pathMenuExplorerToTerminal": "탐색기를 터미널 경로로 이동",
+  "pathCwdFailed": "터미널의 현재 경로를 가져오지 못했습니다. 셸이 명령을 받을 수 있는 상태인지 확인하세요.",
+  "transferUploading": "{name} 올리는 중",
+  "@transferUploading": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transferDownloading": "{name} 받는 중",
+  "@transferDownloading": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transferDone": "완료",
+  "transferFailed": "실패: {error}",
+  "@transferFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "transferClear": "완료된 항목 지우기",
+  "senderHint": "여러 줄을 미리 써 두고 Enter로 한 줄씩 전송합니다 (Ctrl+Enter: 줄바꿈)",
+  "senderLineEndingNone": "없음",
+  "senderLineEndingTooltip": "줄 끝 문자",
+  "senderSend": "현재 줄 전송",
+  "statusRecording": "기록 중: {file}",
+  "@statusRecording": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "statusStartRecording": "기록 시작 ({key})",
+  "@statusStartRecording": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "statusStopRecording": "기록 정지 ({key})",
+  "@statusStopRecording": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "statusRevealLog": "탐색기에서 기록 파일 보기",
+  "statusNoLogFile": "기록한 파일이 아직 없습니다",
+  "statusStripAnsi": "이스케이프 제거",
+  "statusStripAnsiTooltip": "색·커서 이동 같은 제어 시퀀스를 빼고 텍스트만 기록합니다",
+  "logSaveConfirm": "기록 시작"
 }

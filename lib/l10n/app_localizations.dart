@@ -409,6 +409,396 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'작업이 진행 중입니다. 끝난 뒤에 다시 시도해 주세요.'**
   String get updateBusyBody;
+
+  /// No description provided for @tabNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 연결'**
+  String get tabNew;
+
+  /// No description provided for @tabClose.
+  ///
+  /// In ko, this message translates to:
+  /// **'탭 닫기'**
+  String get tabClose;
+
+  /// No description provided for @connectTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버에 연결'**
+  String get connectTitle;
+
+  /// No description provided for @connectSavedProfiles.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장된 접속'**
+  String get connectSavedProfiles;
+
+  /// No description provided for @connectNewProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 접속'**
+  String get connectNewProfile;
+
+  /// No description provided for @connectHost.
+  ///
+  /// In ko, this message translates to:
+  /// **'호스트'**
+  String get connectHost;
+
+  /// No description provided for @connectPort.
+  ///
+  /// In ko, this message translates to:
+  /// **'포트'**
+  String get connectPort;
+
+  /// No description provided for @connectUser.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용자'**
+  String get connectUser;
+
+  /// No description provided for @connectPassword.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호'**
+  String get connectPassword;
+
+  /// No description provided for @connectKeyFile.
+  ///
+  /// In ko, this message translates to:
+  /// **'개인 키 파일 (선택)'**
+  String get connectKeyFile;
+
+  /// No description provided for @connectKeyBrowse.
+  ///
+  /// In ko, this message translates to:
+  /// **'찾아보기'**
+  String get connectKeyBrowse;
+
+  /// No description provided for @connectKeyPassphrase.
+  ///
+  /// In ko, this message translates to:
+  /// **'키 암호 (있으면)'**
+  String get connectKeyPassphrase;
+
+  /// No description provided for @connectSaveProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 접속 정보 저장 (비밀번호는 저장하지 않습니다)'**
+  String get connectSaveProfile;
+
+  /// No description provided for @connectDeleteProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장된 접속 삭제'**
+  String get connectDeleteProfile;
+
+  /// No description provided for @connectAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결'**
+  String get connectAction;
+
+  /// No description provided for @connecting.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결 중…'**
+  String get connecting;
+
+  /// No description provided for @connectFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결하지 못했습니다: {detail}'**
+  String connectFailed(String detail);
+
+  /// No description provided for @connectHostKeyMismatch.
+  ///
+  /// In ko, this message translates to:
+  /// **'{host}의 호스트 키가 이전에 저장한 것과 다릅니다. 중간자 공격일 수 있어 연결을 거부했습니다.'**
+  String connectHostKeyMismatch(String host);
+
+  /// No description provided for @connectClosed.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버가 연결을 닫았습니다.'**
+  String get connectClosed;
+
+  /// No description provided for @connectReconnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 연결'**
+  String get connectReconnect;
+
+  /// No description provided for @connectDisconnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결 끊기'**
+  String get connectDisconnect;
+
+  /// No description provided for @sftpTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일'**
+  String get sftpTitle;
+
+  /// No description provided for @sftpUp.
+  ///
+  /// In ko, this message translates to:
+  /// **'상위 폴더'**
+  String get sftpUp;
+
+  /// No description provided for @sftpRefresh.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로 고침'**
+  String get sftpRefresh;
+
+  /// No description provided for @sftpNewFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 폴더'**
+  String get sftpNewFolder;
+
+  /// No description provided for @sftpFolderName.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 이름'**
+  String get sftpFolderName;
+
+  /// No description provided for @sftpRename.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름 바꾸기'**
+  String get sftpRename;
+
+  /// No description provided for @sftpNewName.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 이름'**
+  String get sftpNewName;
+
+  /// No description provided for @sftpDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get sftpDelete;
+
+  /// No description provided for @sftpDeleteConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name}을(를) 삭제할까요? 되돌릴 수 없습니다.'**
+  String sftpDeleteConfirm(String name);
+
+  /// No description provided for @sftpDownload.
+  ///
+  /// In ko, this message translates to:
+  /// **'다운로드'**
+  String get sftpDownload;
+
+  /// No description provided for @sftpDownloadConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'여기로 받기'**
+  String get sftpDownloadConfirm;
+
+  /// No description provided for @sftpEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'비어 있는 폴더입니다'**
+  String get sftpEmpty;
+
+  /// No description provided for @sftpDropHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일이나 폴더를 끌어다 놓으면 이 폴더로 업로드합니다'**
+  String get sftpDropHint;
+
+  /// No description provided for @sftpDropActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'놓으면 업로드합니다'**
+  String get sftpDropActive;
+
+  /// No description provided for @sftpColName.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름'**
+  String get sftpColName;
+
+  /// No description provided for @sftpColSize.
+  ///
+  /// In ko, this message translates to:
+  /// **'크기'**
+  String get sftpColSize;
+
+  /// No description provided for @sftpColModified.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정한 날짜'**
+  String get sftpColModified;
+
+  /// No description provided for @sftpError.
+  ///
+  /// In ko, this message translates to:
+  /// **'목록을 불러오지 못했습니다: {detail}'**
+  String sftpError(String detail);
+
+  /// No description provided for @sftpOverwriteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'덮어쓸까요?'**
+  String get sftpOverwriteTitle;
+
+  /// No description provided for @sftpOverwriteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 있는 항목: {names}'**
+  String sftpOverwriteBody(String names);
+
+  /// No description provided for @sftpOverwrite.
+  ///
+  /// In ko, this message translates to:
+  /// **'덮어쓰기'**
+  String get sftpOverwrite;
+
+  /// No description provided for @commonCancel.
+  ///
+  /// In ko, this message translates to:
+  /// **'취소'**
+  String get commonCancel;
+
+  /// No description provided for @commonOk.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인'**
+  String get commonOk;
+
+  /// No description provided for @pathMenuTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'경로 이동'**
+  String get pathMenuTooltip;
+
+  /// No description provided for @pathMenuTerminalToHere.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널을 이 폴더로 이동'**
+  String get pathMenuTerminalToHere;
+
+  /// No description provided for @pathMenuExplorerToTerminal.
+  ///
+  /// In ko, this message translates to:
+  /// **'탐색기를 터미널 경로로 이동'**
+  String get pathMenuExplorerToTerminal;
+
+  /// No description provided for @pathCwdFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널의 현재 경로를 가져오지 못했습니다. 셸이 명령을 받을 수 있는 상태인지 확인하세요.'**
+  String get pathCwdFailed;
+
+  /// No description provided for @transferUploading.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} 올리는 중'**
+  String transferUploading(String name);
+
+  /// No description provided for @transferDownloading.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} 받는 중'**
+  String transferDownloading(String name);
+
+  /// No description provided for @transferDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'완료'**
+  String get transferDone;
+
+  /// No description provided for @transferFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'실패: {error}'**
+  String transferFailed(String error);
+
+  /// No description provided for @transferClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'완료된 항목 지우기'**
+  String get transferClear;
+
+  /// No description provided for @senderHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'여러 줄을 미리 써 두고 Enter로 한 줄씩 전송합니다 (Ctrl+Enter: 줄바꿈)'**
+  String get senderHint;
+
+  /// No description provided for @senderLineEndingNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음'**
+  String get senderLineEndingNone;
+
+  /// No description provided for @senderLineEndingTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 끝 문자'**
+  String get senderLineEndingTooltip;
+
+  /// No description provided for @senderSend.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 줄 전송'**
+  String get senderSend;
+
+  /// No description provided for @statusRecording.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 중: {file}'**
+  String statusRecording(String file);
+
+  /// No description provided for @statusStartRecording.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 시작 ({key})'**
+  String statusStartRecording(String key);
+
+  /// No description provided for @statusStopRecording.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 정지 ({key})'**
+  String statusStopRecording(String key);
+
+  /// No description provided for @statusRevealLog.
+  ///
+  /// In ko, this message translates to:
+  /// **'탐색기에서 기록 파일 보기'**
+  String get statusRevealLog;
+
+  /// No description provided for @statusNoLogFile.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록한 파일이 아직 없습니다'**
+  String get statusNoLogFile;
+
+  /// No description provided for @statusStripAnsi.
+  ///
+  /// In ko, this message translates to:
+  /// **'이스케이프 제거'**
+  String get statusStripAnsi;
+
+  /// No description provided for @statusStripAnsiTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'색·커서 이동 같은 제어 시퀀스를 빼고 텍스트만 기록합니다'**
+  String get statusStripAnsiTooltip;
+
+  /// No description provided for @logSaveConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 시작'**
+  String get logSaveConfirm;
 }
 
 class _AppLocalizationsDelegate

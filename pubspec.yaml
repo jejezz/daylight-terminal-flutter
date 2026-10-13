@@ -46,6 +46,12 @@ dependencies:
       ref: updater-v0.1.0
   window_manager: ^0.5.2
   shared_preferences: ^2.5.6
+  provider: ^6.1.5+1
+  xterm2: ^5.3.0
+  dartssh2: ^4.1.0
+  desktop_drop: ^0.8.4
+  file_selector: ^1.1.0
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

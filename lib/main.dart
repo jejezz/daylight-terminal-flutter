@@ -6,8 +6,10 @@
 // 기존 앱에는 통째로 덮어쓰지 말고 필요한 부분만 옮긴다.
 
 import 'dart:io';
+import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'about/about_dialog.dart';
@@ -16,11 +18,12 @@ import 'about/extra_licenses.dart';
 import 'app_identity.dart';
 import 'l10n/app_localizations.dart';
 import 'settings/app_settings.dart';
-import 'settings/settings_menus.dart';
+import 'screens/home_screen.dart';
+import 'services/profile_store.dart';
+import 'state/sessions_controller.dart';
 import 'theme/app_theme.dart';
 import 'update/update_scope.dart';
 import 'update/update_service.dart';
-import 'window/focus_tint.dart';
 
 final bool _isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
 
@@ -44,16 +47,18 @@ Future<void> main() async {
   }
 
   final settings = await AppSettings.load();
+  final sessions = SessionsController(await ProfileStore.load());
   // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
   final updates = await UpdateService.create();
   // UpdateScope 는 MaterialApp 위에 둔다 — 정보 창이 이것을 읽어 "업데이트 확인" 단추를 붙인다.
-  runApp(UpdateScope(service: updates, child: App(settings: settings, updates: updates)));
+  runApp(UpdateScope(service: updates, child: App(settings: settings, sessions: sessions, updates: updates)));
 }
 
 class App extends StatefulWidget {
-  const App({super.key, required this.settings, this.updates});
+  const App({super.key, required this.settings, required this.sessions, this.updates});
 
   final AppSettings settings;
+  final SessionsController sessions;
   final UpdateService? updates;
 
   @override
@@ -77,6 +82,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     widget.settings.removeListener(_syncWindowBrightness);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  // 앱 종료 요청(⌘Q, 업데이트 후 재시작 등) 때는 위젯 dispose가 보장되지 않으므로
+  // 기록 중인 파일을 먼저 flush/close 한다.
+  @override
+  Future<AppExitResponse> didRequestAppExit() async {
+    await widget.sessions.prepareForExit();
+    return AppExitResponse.exit;
   }
 
   // 앱에서 다크를 골라도 OS가 라이트면 제목 표시줄은 밝게 남는다 (theming.md §4).
@@ -112,7 +125,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return AppSettingsScope(
+    return ChangeNotifierProvider<SessionsController>.value(
+      value: widget.sessions,
+      child: AppSettingsScope(
       settings: widget.settings,
       child: ListenableBuilder(
         listenable: widget.settings,
@@ -135,47 +150,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           home: HomeScreen(onAbout: _showAbout),
         ),
       ),
-    );
-  }
-}
-
-/// 기능이 들어오기 전의 자리 표시 화면 — 빈 상태 패턴 (ui-ux.md §6).
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key, required this.onAbout});
-
-  final VoidCallback onAbout;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: const FocusTint(),
-        title: const Text(AppIdentity.displayName),
-        actions: [
-          const ThemeMenuButton(),
-          const LanguageMenuButton(),
-          IconButton(
-            tooltip: l10n.aboutTooltip,
-            icon: const Icon(Icons.info_outline_rounded),
-            onPressed: onAbout,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(AppIdentity.iconAsset, width: 48, height: 48),
-            const SizedBox(height: AppSpacing.lg),
-            Text(l10n.homeEmptyTitle, style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.lg),
-            // 기능이 생기면 주 행동을 연결한다. 그 전까지는 비활성.
-            FilledButton(onPressed: null, child: Text(l10n.homeEmptyAction)),
-          ],
-        ),
       ),
     );
   }
