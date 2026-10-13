@@ -56,6 +56,21 @@ class SessionsController extends ChangeNotifier {
     return session;
   }
 
+  /// 지금 탭이 아직 연결하지 않은 빈 SSH 탭이면 그 자리에서 로컬 셸 탭으로 바꾼다 (빈 탭이 남지 않게).
+  /// 연결 중이거나 이미 연결되어 있거나 다른 종류의 탭이면 새 탭으로 연다.
+  LocalShellSession openLocalHere(LocalShell shell) {
+    final old = current;
+    final reusable = old is SshSessionProvider && !old.connected && old.status != SessionStatus.connecting;
+    if (!reusable) return addLocal(shell)!;
+    final session = LocalShellSession(shell, scrollback: scrollback?.call() ?? 10000, ptyFactory: ptyFactory);
+    sessions[_selected] = session;
+    notifyListeners();
+    unawaited(session.start());
+    // 위젯 트리가 옛 탭을 내려놓은 다음에 정리한다.
+    Future<void>.microtask(old.dispose);
+    return session;
+  }
+
   void _addSession(TerminalSession session) {
     sessions.add(session);
     _selected = sessions.length - 1;

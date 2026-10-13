@@ -112,8 +112,9 @@ void main() {
     await tester.tap(find.byTooltip('새 연결'));
     await settleMenu(tester);
     expect(find.text('SSH 연결'), findsOneWidget);
-    expect(find.text('bash'), findsOneWidget);
-    expect(find.text('Command Prompt'), findsOneWidget);
+    final menu = find.byType(PopupMenuItem<Object>);
+    expect(find.descendant(of: menu, matching: find.text('bash')), findsOneWidget);
+    expect(find.descendant(of: menu, matching: find.text('Command Prompt')), findsOneWidget);
     expect(find.textContaining('Ctrl+Shift+L'), findsOneWidget); // 기본 셸(첫 번째)에만
   });
 
@@ -138,6 +139,74 @@ void main() {
     // 폴더가 위, 파일이 아래
     expect(tester.getTopLeft(find.text('projects')).dy, lessThan(tester.getTopLeft(find.text('notes.txt')).dy));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the new-connection screen offers local shells below Connect; picking one turns that empty tab into it', (
+    tester,
+  ) async {
+    final sessions = await pumpApp(tester);
+    expect(find.text('서버에 연결'), findsOneWidget);
+
+    // "연결" 버튼 아래에 로컬 셸 버튼들이 있다 (주소록은 SSH만이라 여기에는 셸이 없다).
+    final connect = find.widgetWithText(FilledButton, '연결');
+    final bash = find.widgetWithText(OutlinedButton, 'bash');
+    final cmd = find.widgetWithText(OutlinedButton, 'Command Prompt');
+    expect(bash, findsOneWidget);
+    expect(cmd, findsOneWidget);
+    expect(tester.getTopLeft(bash).dy, greaterThan(tester.getBottomLeft(connect).dy));
+    expect(find.text('로컬 셸'), findsOneWidget);
+    expect(ptys.made, isEmpty); // 누르기 전에는 아무것도 띄우지 않는다
+
+    await tester.ensureVisible(bash);
+    await tester.tap(bash);
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // 빈 SSH 탭이 셸 탭으로 바뀌었다: 탭 수는 그대로, 접속 폼은 사라지고, 폴더 뷰 + 터미널이 보인다.
+    expect(sessions.sessions, hasLength(1));
+    expect(sessions.current, isA<LocalShellSession>());
+    expect(ptys.made, hasLength(1));
+    expect(find.text('서버에 연결'), findsNothing);
+    expect(find.byType(LocalFolderPane), findsOneWidget);
+    expect(find.byType(TerminalPane), findsOneWidget);
+
+    // 셸 탭에서 다시 고르면(+ 메뉴) 이번에는 새 탭이다 — 쓰던 셸을 덮어쓰지 않는다.
+    sessions.openLocalHere(_cmd);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(sessions.sessions, hasLength(2));
+    expect(ptys.made, hasLength(2));
+    expect(ptys.made.first.killed, isFalse);
+  });
+
+  testWidgets('no local shells found: the new-connection screen shows no shell section', (tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    SharedPreferences.setMockInitialValues({});
+    final sessions = SessionsController(await ProfileStore.load(), shellFinder: _FixedFinder(const []));
+    await tester.runAsync(sessions.loadShells);
+    final settings = await AppSettings.load();
+    final prefs = await TerminalPrefs.load();
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<SessionsController>.value(value: sessions),
+          ChangeNotifierProvider<TerminalPrefs>.value(value: prefs),
+        ],
+        child: AppSettingsScope(
+          settings: settings,
+          child: MaterialApp(
+            theme: AppTheme.dark(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('ko'),
+            home: HomeScreen(onAbout: () {}),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('서버에 연결'), findsOneWidget);
+    expect(find.text('로컬 셸'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'bash'), findsNothing);
   });
 
   testWidgets('the LineSender types into the local shell', (tester) async {

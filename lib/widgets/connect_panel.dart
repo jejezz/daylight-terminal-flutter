@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/ssh_profile.dart';
+import '../state/sessions_controller.dart';
 import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
 import 'address_book_dialog.dart';
@@ -125,6 +126,8 @@ class _ConnectPanelState extends State<ConnectPanel> {
     final session = context.watch<SshSessionProvider>();
     final scheme = Theme.of(context).colorScheme;
     final connecting = session.status == SessionStatus.connecting;
+    final controller = context.watch<SessionsController>();
+    final shells = controller.shells;
 
     return Center(
       child: SingleChildScrollView(
@@ -275,6 +278,37 @@ class _ConnectPanelState extends State<ConnectPanel> {
                       )
                     : Text(session.status == SessionStatus.error ? l10n.connectReconnect : l10n.connectAction),
               ),
+              // 서버 없이 이 PC의 셸을 바로 연다. 이 빈 탭이 그 셸 탭으로 바뀐다.
+              if (shells.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.xl),
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: Text(
+                        l10n.newTabLocalShell,
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    for (final shell in shells)
+                      OutlinedButton.icon(
+                        onPressed: connecting ? null : () => controller.openLocalHere(shell),
+                        icon: const Icon(Icons.terminal_rounded, size: 18),
+                        label: Text(shell.name),
+                      ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

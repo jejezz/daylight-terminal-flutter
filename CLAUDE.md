@@ -49,7 +49,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 
 ## 탭 종류: SSH와 로컬 셸
 
-- 새 탭 메뉴(+)에서 고른다. **SSH 탭** = 왼쪽 SFTP(서버 폴더) + SSH 터미널. **로컬 셸 탭** = 왼쪽 이 PC의 폴더 뷰 +
+- 새 탭 메뉴(+) 또는 새 연결 화면(연결 버튼 아래의 "로컬 셸" 버튼들)에서 고른다. 새 연결 화면에서 고르면 그 빈 탭이 셸 탭으로 바뀐다(`openLocalHere`). 주소록은 SSH만 저장한다. **SSH 탭** = 왼쪽 SFTP(서버 폴더) + SSH 터미널. **로컬 셸 탭** = 왼쪽 이 PC의 폴더 뷰 +
   로컬 셸 터미널. 한 탭에서 로컬과 원격을 동시에 보지 않는다(양쪽 패널 없음).
 - 구조: `TerminalSession`(터미널, LineSender, 기록, 현재 경로 확인)을 `SshSessionProvider`와 `LocalShellSession`이
   상속한다. 화면의 공통 위젯(터미널, LineSender, 상태 바, 탭)은 `TerminalSession`으로, 왼쪽 패널은 `SftpPane` /
