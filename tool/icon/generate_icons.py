@@ -4,6 +4,9 @@
     python3 tool/icon/generate_icons.py            # from assets/icon/source_glyph.svg or .png
     python3 tool/icon/generate_icons.py path/to/glyph.svg
     python3 tool/icon/generate_icons.py path/to/cat.png --app-id portside   # cat mode
+    python3 tool/icon/generate_icons.py path/to/cat.png --app-id x --prop-tile
+    python3 tool/icon/generate_icons.py path/to/cat.png --app-id x --hue 148  # fixed hue
+    python3 tool/icon/generate_icons.py path/to/cat.png   # settings from assets/icon/cat.json
 
 From jejezz/application-release-templates common/ @ conventions-v1 — merges
 allwinner-phoenix's macOS/Windows/Linux scripts with saturn-mobile's
@@ -70,6 +73,7 @@ MASTER = 1024
 # Cat mode. APP_HUE (0..1) is None in the default sticker mode.
 APP_HUE: float | None = None
 PROP_COMPOSED = False  # the glyph is already a cat+prop composite
+PROP_TILE = False      # always put the prop on a dark tile (--prop-tile)
 CAT_HUE_BANNED = (0.03, 0.20)  # about 10°-72°: the cat's own oranges and yellows
 CAT_PLATE_TOP = (0.55, 0.95)   # (saturation, value)
 CAT_PLATE_BOTTOM = (0.85, 0.55)
@@ -176,7 +180,8 @@ def backed(prop: Image.Image) -> Image.Image:
     draw = ImageDraw.Draw(tile)
     draw.rounded_rectangle((60, 60, 964, 964), radius=210, fill=(0xF2, 0xF2, 0xF2, 255))
     draw.rounded_rectangle((120, 120, 904, 904), radius=160, fill=(0x2A, 0x2D, 0x45, 255))
-    return centre(tile, fit(prop, 470))
+    # A plain glyph floats in the tile; a sticker already has its own border.
+    return centre(tile, fit(prop, 470 if is_plain_light(prop) else 600))
 
 
 def cat_with_prop(cat: Image.Image, prop: Image.Image) -> Image.Image:
@@ -186,7 +191,7 @@ def cat_with_prop(cat: Image.Image, prop: Image.Image) -> Image.Image:
     canvas.alpha_composite(cat_art, (
         (MASTER - cat_art.width) // 2 + round(CAT_PROP_CAT_OFFSET[0] * MASTER),
         (MASTER - cat_art.height) // 2 + round(CAT_PROP_CAT_OFFSET[1] * MASTER)))
-    if is_plain_light(prop):
+    if PROP_TILE or is_plain_light(prop):
         prop = backed(prop)
     badge = fit(prop, round(MASTER * CAT_PROP_BADGE))
     margin = round(MASTER * CAT_PROP_MARGIN)
@@ -367,18 +372,48 @@ def render_svg(svg: Path) -> Path:
     return out
 
 
+def cat_options(args: list[str]) -> tuple[str | None, float | None, bool, list[str]]:
+    """Cat-mode settings: assets/icon/cat.json first, command-line flags override.
+
+    cat.json: {"app_id": "portside", "hue": 148, "prop_tile": true} — only
+    app_id is required. It records what the flags would say, so a plain
+    `generate_icons.py <cat image>` reproduces the committed icons."""
+    app_id = hue = None
+    tile = False
+    config = ICON_DIR / 'cat.json'
+    if config.exists():
+        data = json.loads(config.read_text(encoding='utf-8'))
+        app_id = data['app_id']
+        hue = data.get('hue')
+        tile = bool(data.get('prop_tile', False))
+    args = list(args)
+    for flag in ('--app-id', '--hue'):
+        if flag in args:
+            i = args.index(flag)
+            if i + 1 >= len(args):
+                raise SystemExit(f'{flag} needs a value')
+            if flag == '--app-id':
+                app_id = args[i + 1]
+            else:
+                hue = float(args[i + 1])
+            del args[i:i + 2]
+    if '--prop-tile' in args:
+        tile = True
+        args.remove('--prop-tile')
+    return app_id, (None if hue is None else hue % 360 / 360), tile, args
+
+
 def main() -> None:
-    global APP_HUE, PROP_COMPOSED
-    args = sys.argv[1:]
-    if '--app-id' in args:
-        i = args.index('--app-id')
-        if i + 1 >= len(args):
-            raise SystemExit('--app-id needs a value')
-        APP_HUE = hue_for(args[i + 1])
-        print(f'cat mode  app id {args[i + 1]!r} → hue {round(APP_HUE * 360)}°')
-        del args[i:i + 2]
+    global APP_HUE, PROP_COMPOSED, PROP_TILE
+    app_id, hue, PROP_TILE, args = cat_options(sys.argv[1:])
+    if app_id is not None:
+        APP_HUE = hue if hue is not None else hue_for(app_id)
+        print(f'cat mode  app id {app_id!r} → hue {round(APP_HUE * 360)}° '
+              f'({"fixed" if hue is not None else "hash"})')
     if args:
         source = Path(args[0])
+    elif APP_HUE is not None:
+        raise SystemExit('cat mode needs the cat image path as an argument')
     elif (ICON_DIR / 'source_glyph.svg').exists():
         source = ICON_DIR / 'source_glyph.svg'
     else:
