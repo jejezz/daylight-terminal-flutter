@@ -31,7 +31,7 @@ void main() {
 
   tearDown(() => session.dispose());
 
-  Future<void> pumpSender(WidgetTester tester, {double height = 120}) async {
+  Future<void> pumpSender(WidgetTester tester, {double height = 200}) async {
     tester.view.physicalSize = const Size(900, 500);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -165,7 +165,7 @@ void main() {
     await tester.pump();
     expect(cursorAt(tester, gesture), SystemMouseCursors.basic);
 
-    await pumpSender(tester, height: 450); // 14줄이 다 들어가는 높이 (120일 때는 안 들어간다)
+    await pumpSender(tester, height: 450); // 14줄이 다 들어가는 높이 (200일 때는 안 들어간다)
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
     box = fieldRect(tester);

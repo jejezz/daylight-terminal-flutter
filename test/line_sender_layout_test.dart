@@ -86,41 +86,97 @@ void main() {
   testWidgets('their position and size do not depend on the height of the LineSender', (tester) async {
     final positions = <double, List<Offset>>{};
     final sizes = <double, List<Size>>{};
-    for (final h in [96.0, 120.0, 200.0, 400.0]) {
+    for (final h in [132.0, 150.0, 220.0, 400.0]) {
       await pumpSender(tester, height: h);
       positions[h] = [for (final b in buttons()) fromTopLeft(tester, b)];
       sizes[h] = [for (final b in buttons()) tester.getSize(b)];
       expect(tester.takeException(), isNull, reason: '높이 $h에서 넘침이 있다');
     }
-    final base = positions[96.0]!;
+    final base = positions[132.0]!;
     for (final h in positions.keys) {
       for (var i = 0; i < base.length; i++) {
         expect(positions[h]![i].dx, closeTo(base[i].dx, 0.01), reason: '높이 $h, 버튼 $i의 가로 위치');
         expect(positions[h]![i].dy, closeTo(base[i].dy, 0.01), reason: '높이 $h, 버튼 $i의 세로 위치');
-        expect(sizes[h]![i], sizes[96.0]![i], reason: '높이 $h, 버튼 $i의 크기');
+        expect(sizes[h]![i], sizes[132.0]![i], reason: '높이 $h, 버튼 $i의 크기');
       }
     }
   });
 
   testWidgets('at the smallest height the title bar is intact and the box still has room', (tester) async {
-    await pumpSender(tester, height: 96);
+    await pumpSender(tester, height: 132);
     expect(tester.takeException(), isNull);
     expect(rectOf(tester, open()).top, greaterThanOrEqualTo(tester.getTopLeft(find.byType(LineSender)).dy));
     expect(rectOf(tester, find.byType(TextField)).height, greaterThanOrEqualTo(40));
   });
 
-  testWidgets('the side column keeps only the line ending and the send button (no file buttons)', (tester) async {
+  Finder endingChip() => find.byType(PopupMenuButton<LineEnding>);
+  Finder sendButton() => find.ancestor(of: find.byIcon(Icons.send_rounded), matching: find.byType(IconButton));
+
+  testWidgets('the line ending chip and the send button share one bar under the box; the box uses the full width', (
+    tester,
+  ) async {
     await pumpSender(tester, height: 200);
+    final sender = tester.getRect(find.byType(LineSender));
     final field = rectOf(tester, find.byType(TextField));
-    final send = rectOf(tester, find.byIcon(Icons.send_rounded));
-    final ending = rectOf(tester, find.byType(DropdownButton<LineEnding>));
-    expect(send.left, greaterThan(field.right - 1));
-    expect(ending.left, greaterThan(field.right - 1));
-    // 파일 버튼은 제목 줄에 있어서 옆 열의 위쪽(입력 칸 위)에 놓인다 — 옆 열 안에 끼어 있지 않다.
+    final chip = rectOf(tester, endingChip());
+    final send = rectOf(tester, sendButton());
+
+    // 입력 칸은 옆 열에 폭을 내주지 않고 전체 폭을 쓴다.
+    expect(field.left, closeTo(sender.left + 8, 1));
+    expect(field.right, closeTo(sender.right - 8, 1));
+    // 둘 다 칸 아래, 같은 줄이다. 줄 끝 선택은 왼쪽, 전송은 오른쪽 끝.
+    expect(chip.top, greaterThanOrEqualTo(field.bottom - 1));
+    expect(send.top, greaterThanOrEqualTo(field.bottom - 1));
+    expect(chip.center.dy, closeTo(send.center.dy, 0.5));
+    expect(chip.left, closeTo(sender.left + 8, 1));
+    expect(send.right, closeTo(sender.right - 8, 1));
+    expect(chip.right, lessThan(send.left));
+    // 위쪽 파일 버튼은 제목 줄에 그대로.
     for (final b in buttons()) {
       expect(rectOf(tester, b).bottom, lessThanOrEqualTo(field.top + 1));
-      expect(rectOf(tester, b).bottom, lessThanOrEqualTo(ending.top + 1), reason: '줄 끝 선택 위쪽이어야 한다');
     }
+  });
+
+  testWidgets('the bottom bar stays glued to the bottom edge and keeps its size at any height', (tester) async {
+    final fromBottom = <double, List<double>>{};
+    final sizes = <double, List<Size>>{};
+    for (final h in [132.0, 200.0, 400.0]) {
+      await pumpSender(tester, height: h);
+      final sender = tester.getRect(find.byType(LineSender));
+      final chip = rectOf(tester, endingChip());
+      final send = rectOf(tester, sendButton());
+      fromBottom[h] = [sender.bottom - chip.bottom, sender.bottom - send.bottom];
+      sizes[h] = [chip.size, send.size];
+      expect(tester.takeException(), isNull, reason: '높이 $h에서 넘침이 있다');
+    }
+    for (final h in fromBottom.keys) {
+      expect(fromBottom[h]![0], closeTo(fromBottom[132.0]![0], 0.01), reason: '높이 $h: 줄 끝 선택이 맨 아래에서 떨어졌다');
+      expect(fromBottom[h]![1], closeTo(fromBottom[132.0]![1], 0.01), reason: '높이 $h: 전송 버튼이 맨 아래에서 떨어졌다');
+      expect(sizes[h], sizes[132.0], reason: '높이 $h: 크기가 달라졌다');
+    }
+  });
+
+  testWidgets('the send button is a compact filled button, not the big round one', (tester) async {
+    await pumpSender(tester, height: 200);
+    final send = rectOf(tester, sendButton());
+    expect(send.height, lessThanOrEqualTo(36));
+    expect(send.width, lessThanOrEqualTo(48));
+    // 다른 아이콘 버튼과 마찬가지로 둥근 사각형이다 (원이 아니다).
+    final shape = tester.widget<IconButton>(sendButton()).style?.shape?.resolve({});
+    expect(shape, isA<RoundedRectangleBorder>());
+  });
+
+  testWidgets('choosing a line ending from the chip changes what the sender appends', (tester) async {
+    await pumpSender(tester, height: 200);
+    expect(find.text(r'\r'), findsOneWidget);
+    await tester.tap(endingChip());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.tap(find.text(r'\r\n').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(session.lineEnding, LineEnding.crlf);
+    expect(find.text(r'\r\n'), findsOneWidget);
   });
 
   testWidgets('a narrow LineSender does not overflow either', (tester) async {

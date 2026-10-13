@@ -362,6 +362,65 @@ class _LineSenderState extends State<LineSender> {
     );
   }
 
+  /// 하단 줄 높이. 제목 줄처럼 영역의 높이와 상관없이 항상 같은 크기로 맨 아래에 있다.
+  static const _bottomBarHeight = 36.0;
+
+  /// 하단 줄: 왼쪽에 줄 끝 문자 선택(작은 윤곽선 칩), 오른쪽 끝에 전송 버튼. 입력 칸 옆에 열을 두면 폭이 좁은 화면에서
+  /// 입력 칸이 거의 안 남으므로 칸 아래 한 줄로 둔다.
+  Widget _bottomBar(TerminalSession session, ColorScheme scheme, AppLocalizations l10n) {
+    final ending = session.lineEnding.label ?? l10n.senderLineEndingNone;
+    return SizedBox(
+      height: _bottomBarHeight,
+      child: Row(
+        children: [
+          PopupMenuButton<LineEnding>(
+            tooltip: l10n.senderLineEndingTooltip,
+            initialValue: session.lineEnding,
+            onSelected: session.setLineEnding,
+            itemBuilder: (context) => [
+              for (final e in LineEnding.values)
+                PopupMenuItem(
+                  value: e,
+                  child: Text(e.label ?? l10n.senderLineEndingNone, style: AppFonts.mono.copyWith(fontSize: 13)),
+                ),
+            ],
+            child: Container(
+              height: 28,
+              padding: const EdgeInsets.only(left: AppSpacing.sm, right: AppSpacing.xs),
+              decoration: BoxDecoration(
+                border: Border.all(color: scheme.outlineVariant),
+                borderRadius: BorderRadius.circular(AppRadius.button),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.keyboard_return_rounded, size: 14, color: scheme.onSurfaceVariant),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(ending, style: AppFonts.mono.copyWith(fontSize: 12, color: scheme.onSurface)),
+                  Icon(Icons.arrow_drop_down_rounded, size: 18, color: scheme.onSurfaceVariant),
+                ],
+              ),
+            ),
+          ),
+          const Spacer(),
+          // 위의 아이콘 버튼들과 같은 모서리 모양. 크고 진한 원 대신 한 단계 작은 채운 버튼.
+          IconButton.filled(
+            tooltip: l10n.senderSend,
+            onPressed: session.connected ? _sendCurrentLine : null,
+            iconSize: 18,
+            style: IconButton.styleFrom(
+              minimumSize: const Size(40, 30),
+              fixedSize: const Size(40, 30),
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
+            ),
+            icon: const Icon(Icons.send_rounded),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = context.watch<TerminalSession>();
@@ -375,78 +434,34 @@ class _LineSenderState extends State<LineSender> {
         children: [
           _titleBar(scheme, l10n),
           Expanded(
-            child: Row(
-              // 부모가 드래그로 조절하는 높이를 주므로, 입력 칸도 그 높이에 맞춰 늘어난다.
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Focus(
-                    onKeyEvent: _onKeyEvent,
-                    child: _withScrollbarCursor(
-                      TextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        scrollController: _scroll,
-                        maxLines: null,
-                        expands: true,
-                        textAlignVertical: TextAlignVertical.top,
-                        style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          hintText: l10n.senderHint,
-                          contentPadding: const EdgeInsets.all(_contentPadding),
-                          filled: true,
-                          fillColor: scheme.surfaceContainerLowest,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.button),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
+            child: Focus(
+              onKeyEvent: _onKeyEvent,
+              child: _withScrollbarCursor(
+                TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  scrollController: _scroll,
+                  maxLines: null,
+                  expands: true,
+                  textAlignVertical: TextAlignVertical.top,
+                  style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: l10n.senderHint,
+                    contentPadding: const EdgeInsets.all(_contentPadding),
+                    filled: true,
+                    fillColor: scheme.surfaceContainerLowest,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.button),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                SizedBox(
-                  width: 96,
-                  // 높이를 줄여도 넘치지 않게, 안 들어가면 통째로 줄여서 보여 준다.
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.topRight,
-                    child: SizedBox(
-                      width: 96,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Tooltip(
-                            message: l10n.senderLineEndingTooltip,
-                            child: DropdownButton<LineEnding>(
-                              value: session.lineEnding,
-                              isDense: true,
-                              items: [
-                                for (final e in LineEnding.values)
-                                  DropdownMenuItem(value: e, child: Text(e.label ?? l10n.senderLineEndingNone)),
-                              ],
-                              onChanged: (value) {
-                                if (value != null) session.setLineEnding(value);
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          IconButton.filledTonal(
-                            tooltip: l10n.senderSend,
-                            onPressed: session.connected ? _sendCurrentLine : null,
-                            icon: const Icon(Icons.send_rounded),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
+          const SizedBox(height: AppSpacing.xs),
+          _bottomBar(session, scheme, l10n),
         ],
       ),
     );
