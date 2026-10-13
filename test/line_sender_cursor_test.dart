@@ -17,8 +17,8 @@ import 'helpers/fake_pty.dart';
 /// flutter_test의 마우스 장치 번호.
 const _mouseDevice = 1;
 
-/// 실제 스크롤바 손잡이 위치: 입력 칸 오른쪽 끝에서 안쪽으로 약 21px (측정값 18~24px의 가운데).
-const _thumbDx = 21.0;
+/// 실제 스크롤바 손잡이 위치: 입력 칸 오른쪽 끝에서 안쪽으로 약 17px (측정값 13~20px의 가운데).
+const _thumbDx = 17.0;
 
 const _bash = LocalShell(id: 'bash', name: 'bash', executable: '/bin/bash', kind: ShellKind.posix);
 

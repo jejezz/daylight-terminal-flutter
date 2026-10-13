@@ -44,7 +44,7 @@ class _LineSenderState extends State<LineSender> {
   /// 내용이 칸보다 길어서 스크롤바가 생겼는가.
   bool _scrollable = false;
 
-  /// 입력 칸 안쪽 여백. 스크롤바는 이 여백 안쪽에 그려지므로(손잡이가 상자 오른쪽 끝에서 18~24px 안쪽) 스크롤바
+  /// 입력 칸 안쪽 여백. 스크롤바는 이 여백 안쪽에 그려지므로(손잡이가 상자 오른쪽 끝에서 13~20px 안쪽) 스크롤바
   /// 영역을 잡을 때 여백을 더해야 한다.
   static const _contentPadding = 10.0;
 
@@ -313,11 +313,9 @@ class _LineSenderState extends State<LineSender> {
 
   static String get _commandKey => defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : 'Ctrl+';
 
-  /// 제목 줄 높이. 영역의 높이가 어떻게 바뀌어도 항상 같은 크기로 맨 위에 있다.
-  static const _titleBarHeight = 24.0;
-
-  /// 제목 줄: 편집 중인 파일 이름과 변경 여부만 보인다 (파일이 없으면 '제목 없음').
-  Widget _titleBar(ColorScheme scheme, AppLocalizations l10n) {
+  /// 입력 칸 안 왼쪽 위에 고정해서 보이는 파일 이름과 변경 여부 (파일이 없으면 '제목 없음'). 글이 스크롤되어도 이름은
+  /// 그대로 있고, 이름 줄을 누르면 입력 칸에 포커스가 간다.
+  Widget _nameRow(ColorScheme scheme, AppLocalizations l10n) {
     final name = _path != null
         ? (_modified ? '● $_displayName (${l10n.senderModified})' : _displayName)
         : (_modified ? '● ${l10n.senderUntitled}' : l10n.senderUntitled);
@@ -327,17 +325,24 @@ class _LineSenderState extends State<LineSender> {
       overflow: TextOverflow.ellipsis,
       style: AppFonts.userContent.copyWith(fontSize: 11.5, color: _modified ? scheme.primary : scheme.onSurfaceVariant),
     );
-    return SizedBox(
-      height: _titleBarHeight,
-      child: Padding(
-        padding: const EdgeInsets.only(left: AppSpacing.xs),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: _path == null ? title : Tooltip(message: _path!, child: title),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _focusNode.requestFocus,
+      child: SizedBox(
+        height: _nameRowHeight,
+        child: Padding(
+          padding: const EdgeInsets.only(left: _contentPadding, right: _contentPadding, top: AppSpacing.sm),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: _path == null ? title : Tooltip(message: _path!, child: title),
+          ),
         ),
       ),
     );
   }
+
+  /// 이름 줄 높이 (입력 칸 안, 맨 위).
+  static const _nameRowHeight = 24.0;
 
   /// 하단 줄 높이. 영역의 높이와 상관없이 항상 같은 크기로 맨 아래에 있다.
   static const _bottomBarHeight = 44.0;
@@ -441,31 +446,49 @@ class _LineSenderState extends State<LineSender> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _titleBar(scheme, l10n),
           Expanded(
-            child: Focus(
-              onKeyEvent: _onKeyEvent,
-              child: _withScrollbarCursor(
-                TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  scrollController: _scroll,
-                  maxLines: null,
-                  expands: true,
-                  textAlignVertical: TextAlignVertical.top,
-                  style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: l10n.senderHint,
-                    contentPadding: const EdgeInsets.all(_contentPadding),
-                    filled: true,
-                    fillColor: scheme.surfaceContainerLowest,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.button),
-                      borderSide: BorderSide.none,
+            child: Container(
+              key: const ValueKey('line-sender-box'),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(AppRadius.button),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _nameRow(scheme, l10n),
+                  Expanded(
+                    child: Focus(
+                      onKeyEvent: _onKeyEvent,
+                      child: _withScrollbarCursor(
+                        TextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          scrollController: _scroll,
+                          maxLines: null,
+                          expands: true,
+                          textAlignVertical: TextAlignVertical.top,
+                          style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
+                          // 바깥 상자(Container)가 배경과 모서리를 맡으므로, 테마의 기본 채움과 테두리는 끈다.
+                          decoration: InputDecoration(
+                            isDense: true,
+                            hintText: l10n.senderHint,
+                            contentPadding: const EdgeInsets.fromLTRB(
+                              _contentPadding,
+                              AppSpacing.xs,
+                              _contentPadding,
+                              _contentPadding,
+                            ),
+                            filled: false,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),

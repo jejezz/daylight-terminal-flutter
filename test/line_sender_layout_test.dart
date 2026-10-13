@@ -95,16 +95,48 @@ void main() {
     expect(saveAsButton.right, lessThan(chip.left));
   });
 
-  testWidgets('the title bar shows only the file name; nothing else is above the box', (tester) async {
+  Finder box() => find.byKey(const ValueKey('line-sender-box'));
+
+  testWidgets('there is no title bar: the file name sits inside the input box, top-left, above the text', (
+    tester,
+  ) async {
     await pumpSender(tester, height: 200);
     final sender = tester.getRect(find.byType(LineSender));
+    final inputBox = rectOf(tester, box());
     final field = rectOf(tester, find.byType(TextField));
     final name = rectOf(tester, find.text('제목 없음'));
-    expect(name.left, lessThan(sender.left + 40));
+
+    // 입력 칸이 맨 위(안쪽 여백 8)부터 시작한다 — 그 위에 별도의 제목 줄이 없다.
+    expect(inputBox.top, closeTo(sender.top + 8, 1));
+    // 이름은 그 상자 안 왼쪽 위에 있고, 글을 쓰는 영역 위에 있다.
+    expect(name.left, greaterThanOrEqualTo(inputBox.left));
+    expect(name.left, lessThan(inputBox.left + 24));
+    expect(name.top, greaterThanOrEqualTo(inputBox.top));
     expect(name.bottom, lessThanOrEqualTo(field.top + 1));
+    expect(field.top, greaterThanOrEqualTo(inputBox.top));
+    expect(field.bottom, closeTo(inputBox.bottom, 1));
+    // 버튼은 모두 상자 아래 하단 줄에 있다.
     for (final b in [...fileButtons(), find.byIcon(Icons.send_rounded)]) {
-      expect(rectOf(tester, b).top, greaterThanOrEqualTo(field.bottom - 1), reason: '버튼이 제목 줄에 남아 있다');
+      expect(rectOf(tester, b).top, greaterThanOrEqualTo(inputBox.bottom - 1), reason: '버튼이 상자 안/위에 있다');
     }
+  });
+
+  testWidgets('the name stays put while the text scrolls, and the name row does not scroll away', (tester) async {
+    await pumpSender(tester, height: 200);
+    final before = rectOf(tester, find.text('제목 없음'));
+    await tester.enterText(find.byType(TextField), List.generate(60, (i) => 'line ${i + 1}').join('\n'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    final scrollable = tester.state<ScrollableState>(
+      find.descendant(of: find.byType(TextField), matching: find.byType(Scrollable)).first,
+    );
+    scrollable.position.jumpTo(scrollable.position.maxScrollExtent);
+    await tester.pump();
+    expect(scrollable.position.pixels, greaterThan(0));
+    // 글이 맨 끝까지 스크롤되어도 이름은 같은 자리에 있다 (변경 표시는 붙지만 왼쪽 위 위치는 그대로).
+    final after = rectOf(tester, find.textContaining('제목 없음'));
+    expect(after.left, closeTo(before.left, 0.01));
+    expect(after.top, closeTo(before.top, 0.01));
   });
 
   testWidgets('the buttons are bigger than before (icon 22, 40x40 touch area)', (tester) async {
