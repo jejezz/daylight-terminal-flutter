@@ -396,5 +396,54 @@
   "shellTerminate": "셸 종료",
   "newTabSsh": "SSH 연결",
   "newTabLocalShell": "로컬 셸",
-  "newTabNoShells": "사용할 수 있는 로컬 셸을 찾지 못했습니다"
+  "newTabNoShells": "사용할 수 있는 로컬 셸을 찾지 못했습니다",
+  "senderOpen": "스크립트 열기 ({key})",
+  "@senderOpen": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "senderSave": "저장 ({key})",
+  "@senderSave": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "senderMore": "더 보기",
+  "senderSaveAs": "다른 이름으로 저장…",
+  "senderNew": "새로 만들기",
+  "senderModified": "변경됨",
+  "senderUnsavedTitle": "저장하지 않은 변경 사항",
+  "senderUnsavedBody": "{name}의 변경 사항을 저장하지 않았습니다.",
+  "@senderUnsavedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "senderUntitled": "제목 없음",
+  "senderDiscard": "버리기",
+  "senderSaveFirst": "저장",
+  "senderFileTooLarge": "파일이 너무 큽니다 (최대 {mb}MB)",
+  "@senderFileTooLarge": {
+    "placeholders": {
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
+  "senderFileNotUtf8": "UTF-8 텍스트 파일만 열 수 있습니다",
+  "senderFileError": "파일을 처리하지 못했습니다: {detail}",
+  "@senderFileError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  }
 }

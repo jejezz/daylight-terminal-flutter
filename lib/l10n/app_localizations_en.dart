@@ -570,4 +570,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newTabNoShells => 'No local shell was found';
+
+  @override
+  String senderOpen(String key) {
+    return 'Open a script ($key)';
+  }
+
+  @override
+  String senderSave(String key) {
+    return 'Save ($key)';
+  }
+
+  @override
+  String get senderMore => 'More';
+
+  @override
+  String get senderSaveAs => 'Save as…';
+
+  @override
+  String get senderNew => 'New script';
+
+  @override
+  String get senderModified => 'modified';
+
+  @override
+  String get senderUnsavedTitle => 'Unsaved changes';
+
+  @override
+  String senderUnsavedBody(String name) {
+    return '$name has changes that are not saved.';
+  }
+
+  @override
+  String get senderUntitled => 'Untitled';
+
+  @override
+  String get senderDiscard => 'Discard';
+
+  @override
+  String get senderSaveFirst => 'Save';
+
+  @override
+  String senderFileTooLarge(int mb) {
+    return 'The file is too large (max $mb MB)';
+  }
+
+  @override
+  String get senderFileNotUtf8 => 'Only UTF-8 text files can be opened';
+
+  @override
+  String senderFileError(String detail) {
+    return 'Could not handle the file: $detail';
+  }
 }

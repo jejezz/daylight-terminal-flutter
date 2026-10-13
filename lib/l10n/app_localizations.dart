@@ -1057,6 +1057,90 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'사용할 수 있는 로컬 셸을 찾지 못했습니다'**
   String get newTabNoShells;
+
+  /// No description provided for @senderOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'스크립트 열기 ({key})'**
+  String senderOpen(String key);
+
+  /// No description provided for @senderSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 ({key})'**
+  String senderSave(String key);
+
+  /// No description provided for @senderMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'더 보기'**
+  String get senderMore;
+
+  /// No description provided for @senderSaveAs.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 이름으로 저장…'**
+  String get senderSaveAs;
+
+  /// No description provided for @senderNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로 만들기'**
+  String get senderNew;
+
+  /// No description provided for @senderModified.
+  ///
+  /// In ko, this message translates to:
+  /// **'변경됨'**
+  String get senderModified;
+
+  /// No description provided for @senderUnsavedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장하지 않은 변경 사항'**
+  String get senderUnsavedTitle;
+
+  /// No description provided for @senderUnsavedBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name}의 변경 사항을 저장하지 않았습니다.'**
+  String senderUnsavedBody(String name);
+
+  /// No description provided for @senderUntitled.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목 없음'**
+  String get senderUntitled;
+
+  /// No description provided for @senderDiscard.
+  ///
+  /// In ko, this message translates to:
+  /// **'버리기'**
+  String get senderDiscard;
+
+  /// No description provided for @senderSaveFirst.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get senderSaveFirst;
+
+  /// No description provided for @senderFileTooLarge.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일이 너무 큽니다 (최대 {mb}MB)'**
+  String senderFileTooLarge(int mb);
+
+  /// No description provided for @senderFileNotUtf8.
+  ///
+  /// In ko, this message translates to:
+  /// **'UTF-8 텍스트 파일만 열 수 있습니다'**
+  String get senderFileNotUtf8;
+
+  /// No description provided for @senderFileError.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일을 처리하지 못했습니다: {detail}'**
+  String senderFileError(String detail);
 }
 
 class _AppLocalizationsDelegate

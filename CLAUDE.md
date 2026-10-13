@@ -66,6 +66,17 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   자세한 내용은 `packages/flutter_pty/PATCHES.md`. 원본이 고치면 되돌린다.
 - macOS 샌드박스는 꺼 둔다(`app-sandbox = false`, 규약). 켜져 있으면 로컬 셸도 SSH 연결도 막힌다.
 
+## LineSender를 편집기처럼 (불러오기/저장)
+
+- 입력 칸 오른쪽 아이콘: 열기(Ctrl+O, macOS ⌘O), 저장(Ctrl+S), 더 보기(다른 이름으로 저장 Ctrl+Shift+S, 새로 만들기).
+  편집 중인 파일 이름이 칸 위에 보이고, 저장하지 않은 변경이 있으면 `● 이름 (변경됨)`으로 바뀐다. 파일과 연결되기 전
+  (새 스크립트)에는 이름 줄이 없다. 열기·새로 만들기 전에 변경이 있으면 취소/버리기/저장을 묻는다.
+- 규칙(`sender_file.dart`): UTF-8 텍스트만(BOM은 떼고, UTF-8이 아니면 깨져 보이게 열지 않고 거부), 2MB 초과 거부. 칸 안에서는
+  줄바꿈을 LF로 통일하고(한 줄씩 보내는 로직이 LF 기준), 저장할 때 파일이 원래 쓰던 줄바꿈(CRLF 등)으로 돌려놓는다.
+- 불러온 뒤 커서는 맨 앞이라 Enter를 누르면 첫 줄부터 보내진다. 마지막 줄을 보내면 새 줄이 붙지만 그것만으로
+  "변경됨"이 되지는 않는다(끝의 빈 줄은 비교에서 뺀다). 스크립트와 파일 연결은 탭마다 따로다.
+- 테스트의 파일 선택창은 `FileSelectorPlatform.instance`를 가짜로 바꿔서 쓴다 (`test/line_sender_file_test.dart`).
+
 ## 창 위치 (Windows)
 
 - `lib/window/window_placement.dart`: 마지막 창 위치·크기를 `window_placement` 키로 저장하고(물리 픽셀, 최대화 여부 포함) 다시 켤 때 복원한다.

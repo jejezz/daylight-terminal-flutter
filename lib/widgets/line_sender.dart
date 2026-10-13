@@ -1,10 +1,15 @@
 // portside-flutter의 LineSender에서 가져와 SSH에 맞게 고침 (로컬 에코 제거, 줄 끝 기본값 CR).
+// 거기에 편집기처럼 스크립트 파일을 열고 저장하는 기능을 더했다.
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/line_ending.dart';
+import '../services/sender_file.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 
@@ -12,6 +17,9 @@ import '../theme/app_theme.dart';
 /// 그냥 Enter는 커서가 있는 줄을 전송하고, Ctrl+Enter는 평범한 줄바꿈이다.
 /// 전송 후 커서는 다음 줄의 끝으로 이동해서, Enter를 반복해서 누르면
 /// 위에서부터 한 줄씩 순서대로 흘러 내려가며 전송된다.
+///
+/// 편집기처럼 스크립트를 파일에서 불러오고(Ctrl+O) 저장할 수 있다(Ctrl+S, 다른 이름으로: Ctrl+Shift+S).
+/// 어느 파일을 편집 중인지와 변경 여부가 입력 칸 위에 보이고, 저장하지 않은 변경이 있으면 열기·새로 만들기 전에 묻는다.
 class LineSender extends StatefulWidget {
   const LineSender({super.key});
 
@@ -23,6 +31,20 @@ class _LineSenderState extends State<LineSender> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
 
+  /// 편집 중인 파일. 아직 저장한 적 없는 새 스크립트면 null.
+  String? _path;
+
+  /// 파일에 저장된(또는 방금 불러온) 내용과 그 파일의 줄바꿈.
+  String _savedText = '';
+  String _eol = '\n';
+  bool _modified = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_updateModified);
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -30,8 +52,140 @@ class _LineSenderState extends State<LineSender> {
     super.dispose();
   }
 
+  // ───────────────────────── 파일: 열기 / 저장 ─────────────────────────
+
+  /// 끝에 붙은 빈 줄은 무시하고 비교한다 — 마지막 줄을 보내면 자동으로 새 줄이 붙는데, 그것만으로 "변경됨"이
+  /// 되면 스크립트를 끝까지 실행할 때마다 저장하라는 표시가 뜨기 때문이다.
+  static String _trimEnd(String s) => s.replaceFirst(RegExp(r'\n+$'), '');
+
+  void _updateModified() {
+    final modified = _path != null ? _trimEnd(_controller.text) != _trimEnd(_savedText) : _controller.text.isNotEmpty;
+    if (modified != _modified) setState(() => _modified = modified);
+  }
+
+  String get _displayName => _path == null ? AppLocalizations.of(context).senderUntitled : p.basename(_path!);
+
+  void _toast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 4)));
+  }
+
+  String _errorText(Object e) {
+    final l10n = AppLocalizations.of(context);
+    if (e is SenderFileException) {
+      return switch (e.kind) {
+        SenderFileError.tooLarge => l10n.senderFileTooLarge(SenderFile.maxBytes ~/ (1024 * 1024)),
+        SenderFileError.notUtf8 => l10n.senderFileNotUtf8,
+        SenderFileError.io => l10n.senderFileError(e.detail),
+      };
+    }
+    return l10n.senderFileError('$e');
+  }
+
+  /// 저장하지 않은 변경이 있으면 물어본다. 계속해도 되면 true. ("저장"을 골랐는데 저장을 취소하면 false)
+  Future<bool> _confirmDiscard() async {
+    if (!_modified) return true;
+    final l10n = AppLocalizations.of(context);
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.senderUnsavedTitle),
+        content: Text(l10n.senderUnsavedBody(_displayName)),
+        actions: [
+          TextButton(
+            autofocus: true,
+            onPressed: () => Navigator.pop(context, 'cancel'),
+            child: Text(l10n.commonCancel),
+          ),
+          TextButton(onPressed: () => Navigator.pop(context, 'discard'), child: Text(l10n.senderDiscard)),
+          FilledButton(onPressed: () => Navigator.pop(context, 'save'), child: Text(l10n.senderSaveFirst)),
+        ],
+      ),
+    );
+    return switch (choice) {
+      'discard' => true,
+      'save' => await _save(),
+      _ => false,
+    };
+  }
+
+  Future<void> _new() async {
+    if (!await _confirmDiscard()) return;
+    _setDocument(null, '', '\n');
+  }
+
+  Future<void> _open() async {
+    if (!await _confirmDiscard()) return;
+    final file = await openFile();
+    if (file == null) return;
+    try {
+      final doc = await SenderFile.read(file.path);
+      _setDocument(file.path, doc.text, doc.eol);
+    } catch (e) {
+      _toast(_errorText(e));
+    }
+  }
+
+  /// 편집 중인 파일에 저장한다. 파일이 아직 없으면 "다른 이름으로 저장". 저장했으면 true.
+  Future<bool> _save() => _path == null ? _saveAs() : _write(_path!);
+
+  Future<bool> _saveAs() async {
+    final location = await getSaveLocation(
+      suggestedName: _path == null ? SenderFile.suggestedName : p.basename(_path!),
+      confirmButtonText: AppLocalizations.of(context).senderSaveFirst,
+    );
+    if (location == null) return false;
+    return _write(location.path);
+  }
+
+  Future<bool> _write(String path) async {
+    final text = _controller.text;
+    try {
+      await SenderFile.write(path, text, eol: _eol);
+    } catch (e) {
+      _toast(_errorText(e));
+      return false;
+    }
+    if (!mounted) return true;
+    setState(() {
+      _path = path;
+      _savedText = text;
+      _modified = false;
+    });
+    return true;
+  }
+
+  /// 칸의 내용을 문서로 바꾼다. 커서는 맨 앞에 두어서 Enter를 누르면 첫 줄부터 보내진다.
+  void _setDocument(String? path, String text, String eol) {
+    _path = path;
+    _savedText = text;
+    _eol = eol;
+    _modified = false;
+    _controller.value = TextEditingValue(text: text, selection: const TextSelection.collapsed(offset: 0));
+    setState(() {});
+  }
+
+  // ───────────────────────── 키보드 ─────────────────────────
+
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
+
+    // 파일 단축키: Windows/Linux는 Ctrl, macOS는 ⌘. (앱 전역 단축키는 Ctrl+Shift라 겹치지 않는다.)
+    final kb = HardwareKeyboard.instance;
+    final command = defaultTargetPlatform == TargetPlatform.macOS ? kb.isMetaPressed : kb.isControlPressed;
+    if (command && event is KeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.keyS) {
+        kb.isShiftPressed ? _saveAs() : _save();
+        return KeyEventResult.handled;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.keyO) {
+        _open();
+        return KeyEventResult.handled;
+      }
+    }
+
     final isEnter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
     if (!isEnter) return KeyEventResult.ignored;
 
@@ -92,6 +246,10 @@ class _LineSenderState extends State<LineSender> {
     }
   }
 
+  // ───────────────────────── 화면 ─────────────────────────
+
+  static String get _commandKey => defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : 'Ctrl+';
+
   @override
   Widget build(BuildContext context) {
     final session = context.watch<TerminalSession>();
@@ -105,56 +263,121 @@ class _LineSenderState extends State<LineSender> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: Focus(
-              onKeyEvent: _onKeyEvent,
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                maxLines: null,
-                expands: true,
-                textAlignVertical: TextAlignVertical.top,
-                style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: l10n.senderHint,
-                  contentPadding: const EdgeInsets.all(10),
-                  filled: true,
-                  fillColor: scheme.surfaceContainerLowest,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.button),
-                    borderSide: BorderSide.none,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 어느 파일을 편집 중인지, 저장하지 않은 변경이 있는지. 파일과 연결되지 않았으면 자리를 차지하지 않는다.
+                if (_path != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                    child: Tooltip(
+                      message: _path!,
+                      child: Text(
+                        _modified ? '● $_displayName (${l10n.senderModified})' : _displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.userContent.copyWith(
+                          fontSize: 11.5,
+                          color: _modified ? scheme.primary : scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: Focus(
+                    onKeyEvent: _onKeyEvent,
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      maxLines: null,
+                      expands: true,
+                      textAlignVertical: TextAlignVertical.top,
+                      style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        hintText: l10n.senderHint,
+                        contentPadding: const EdgeInsets.all(10),
+                        filled: true,
+                        fillColor: scheme.surfaceContainerLowest,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.button),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           SizedBox(
-            width: 96,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Tooltip(
-                  message: l10n.senderLineEndingTooltip,
-                  child: DropdownButton<LineEnding>(
-                    value: session.lineEnding,
-                    isDense: true,
-                    items: [
-                      for (final e in LineEnding.values)
-                        DropdownMenuItem(value: e, child: Text(e.label ?? l10n.senderLineEndingNone)),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) session.setLineEnding(value);
-                    },
-                  ),
+            width: 132,
+            // 높이를 줄여도 넘치지 않게, 안 들어가면 통째로 줄여서 보여 준다.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.topRight,
+              child: SizedBox(
+                width: 132,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Tooltip(
+                      message: l10n.senderLineEndingTooltip,
+                      child: DropdownButton<LineEnding>(
+                        value: session.lineEnding,
+                        isDense: true,
+                        items: [
+                          for (final e in LineEnding.values)
+                            DropdownMenuItem(value: e, child: Text(e.label ?? l10n.senderLineEndingNone)),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) session.setLineEnding(value);
+                        },
+                      ),
+                    ),
+                    // 스크립트 파일: 열기, 저장, 그 밖(다른 이름으로 저장, 새로 만들기)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          iconSize: 18,
+                          visualDensity: VisualDensity.compact,
+                          tooltip: l10n.senderOpen('${_commandKey}O'),
+                          icon: const Icon(Icons.folder_open_rounded),
+                          onPressed: _open,
+                        ),
+                        IconButton(
+                          iconSize: 18,
+                          visualDensity: VisualDensity.compact,
+                          tooltip: l10n.senderSave('${_commandKey}S'),
+                          icon: const Icon(Icons.save_outlined),
+                          color: _modified ? scheme.primary : null,
+                          onPressed: _save,
+                        ),
+                        PopupMenuButton<String>(
+                          tooltip: l10n.senderMore,
+                          iconSize: 18,
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.more_horiz_rounded),
+                          onSelected: (v) => v == 'saveAs' ? _saveAs() : _new(),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(value: 'saveAs', child: Text(l10n.senderSaveAs)),
+                            PopupMenuItem(value: 'new', child: Text(l10n.senderNew)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    IconButton.filledTonal(
+                      tooltip: l10n.senderSend,
+                      onPressed: session.connected ? _sendCurrentLine : null,
+                      icon: const Icon(Icons.send_rounded),
+                    ),
+                  ],
                 ),
-                const Spacer(),
-                IconButton.filledTonal(
-                  tooltip: l10n.senderSend,
-                  onPressed: session.connected ? _sendCurrentLine : null,
-                  icon: const Icon(Icons.send_rounded),
-                ),
-              ],
+              ),
             ),
           ),
         ],

@@ -379,5 +379,54 @@
   "shellTerminate": "End shell",
   "newTabSsh": "SSH connection",
   "newTabLocalShell": "Local shell",
-  "newTabNoShells": "No local shell was found"
+  "newTabNoShells": "No local shell was found",
+  "senderOpen": "Open a script ({key})",
+  "@senderOpen": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "senderSave": "Save ({key})",
+  "@senderSave": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "senderMore": "More",
+  "senderSaveAs": "Save as…",
+  "senderNew": "New script",
+  "senderModified": "modified",
+  "senderUnsavedTitle": "Unsaved changes",
+  "senderUnsavedBody": "{name} has changes that are not saved.",
+  "@senderUnsavedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "senderUntitled": "Untitled",
+  "senderDiscard": "Discard",
+  "senderSaveFirst": "Save",
+  "senderFileTooLarge": "The file is too large (max {mb} MB)",
+  "@senderFileTooLarge": {
+    "placeholders": {
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
+  "senderFileNotUtf8": "Only UTF-8 text files can be opened",
+  "senderFileError": "Could not handle the file: {detail}",
+  "@senderFileError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  }
 }
