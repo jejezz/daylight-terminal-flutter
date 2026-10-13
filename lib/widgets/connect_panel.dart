@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../models/ssh_profile.dart';
 import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
+import 'address_book_dialog.dart';
 
 /// 연결되지 않은 탭에 보이는 접속 폼. 저장된 접속을 고르거나 새로 입력한다.
 /// 비밀번호와 키 암호는 저장하지 않는다.
@@ -25,6 +26,9 @@ class _ConnectPanelState extends State<ConnectPanel> {
   final _passphrase = TextEditingController();
   bool _save = true;
   String? _profileId;
+
+  /// 불러온 주소록 항목. 이름·그룹·메모를 접속 때 잃지 않게 들고 있는다.
+  SshProfile? _base;
   late List<SshProfile> _profiles;
 
   @override
@@ -46,6 +50,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
   }
 
   void _fill(SshProfile p) {
+    _base = p;
     _profileId = p.id;
     _host.text = p.host;
     _port.text = '${p.port}';
@@ -66,6 +71,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
     setState(() {
       _profiles = store.profiles();
       _profileId = null;
+      _base = null;
     });
   }
 
@@ -75,13 +81,24 @@ class _ConnectPanelState extends State<ConnectPanel> {
     if (!_valid) return;
     final session = context.read<SshSessionProvider>();
     final key = _keyPath.text.trim();
-    final profile = SshProfile(
-      id: _profileId ?? DateTime.now().microsecondsSinceEpoch.toString(),
+    final id = _profileId ?? DateTime.now().microsecondsSinceEpoch.toString();
+    final fields = SshProfile(
+      id: id,
       host: _host.text.trim(),
       port: int.parse(_port.text),
       username: _user.text.trim(),
       keyPath: key.isEmpty ? null : key,
     );
+    final base = _base;
+    final profile = base == null
+        ? fields
+        : base.copyWith(
+            host: fields.host,
+            port: fields.port,
+            username: fields.username,
+            keyPath: fields.keyPath,
+            clearKey: fields.keyPath == null,
+          );
     if (_save) await session.store.saveProfile(profile);
     await session.connect(
       profile,
@@ -118,7 +135,16 @@ class _ConnectPanelState extends State<ConnectPanel> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l10n.connectTitle, style: Theme.of(context).textTheme.titleLarge),
+              Row(
+                children: [
+                  Expanded(child: Text(l10n.connectTitle, style: Theme.of(context).textTheme.titleLarge)),
+                  OutlinedButton.icon(
+                    onPressed: () => showAddressBook(context),
+                    icon: const Icon(Icons.menu_book_rounded, size: 18),
+                    label: Text(l10n.addressBookOpen),
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.lg),
               if (session.status == SessionStatus.error) ...[
                 Container(
@@ -145,6 +171,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
                         onChanged: (id) => setState(() {
                           if (id == null) {
                             _profileId = null;
+                            _base = null;
                             for (final c in [_host, _user, _keyPath]) {
                               c.clear();
                             }

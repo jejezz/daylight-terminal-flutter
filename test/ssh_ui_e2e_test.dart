@@ -3,9 +3,11 @@
 import 'dart:io';
 
 import 'package:daylight_terminal/l10n/app_localizations.dart';
+import 'package:daylight_terminal/models/remote_entry.dart';
 import 'package:daylight_terminal/screens/home_screen.dart';
 import 'package:daylight_terminal/services/profile_store.dart';
 import 'package:daylight_terminal/settings/app_settings.dart';
+import 'package:daylight_terminal/settings/terminal_prefs.dart';
 import 'package:daylight_terminal/state/sessions_controller.dart';
 import 'package:daylight_terminal/theme/app_theme.dart';
 import 'package:daylight_terminal/widgets/line_sender.dart';
@@ -29,9 +31,13 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final sessions = SessionsController(await ProfileStore.load());
     final settings = await AppSettings.load();
+    final terminalPrefs = await TerminalPrefs.load();
     await tester.pumpWidget(
-      ChangeNotifierProvider<SessionsController>.value(
-        value: sessions,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<SessionsController>.value(value: sessions),
+          ChangeNotifierProvider<TerminalPrefs>.value(value: terminalPrefs),
+        ],
         child: AppSettingsScope(
           settings: settings,
           child: MaterialApp(
@@ -74,6 +80,8 @@ void main() {
     expect(find.byType(LineSender), findsOneWidget);
     expect(find.byType(StatusBar), findsOneWidget);
     expect(find.text('sub'), findsOneWidget);
+    // 항목은 끌어내기(드래그 아웃)를 위해 Draggable이다.
+    expect(find.byType(Draggable<List<RemoteEntry>>), findsWidgets);
     expect(find.text('tester@127.0.0.1:$port'), findsWidgets);
 
     // 패널 크기를 줄여도 오버플로가 나지 않는다.

@@ -8,11 +8,13 @@ import '../state/sessions_controller.dart';
 import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
+import '../widgets/address_book_dialog.dart';
 import '../widgets/connect_panel.dart';
 import '../widgets/line_sender.dart';
 import '../widgets/sftp_pane.dart';
 import '../widgets/status_bar.dart';
 import '../widgets/tab_bar_row.dart';
+import '../widgets/terminal_font_dialog.dart';
 import '../widgets/terminal_pane.dart';
 import '../window/focus_tint.dart';
 
@@ -36,6 +38,7 @@ class HomeScreen extends StatelessWidget {
           current?.toggleLogging(confirmButtonText: l10n.logSaveConfirm);
         },
         AppShortcut.clearTerminal.activator: () => current?.clearTerminal(),
+        AppShortcut.addressBook.activator: () => showAddressBook(context),
       },
       child: Focus(
         autofocus: true,
@@ -55,6 +58,16 @@ class HomeScreen extends StatelessWidget {
                         )
                       : const SizedBox.shrink(),
                 ),
+              IconButton(
+                tooltip: l10n.addressBookTooltip(AppShortcut.addressBook.label),
+                icon: const Icon(Icons.menu_book_rounded),
+                onPressed: () => showAddressBook(context),
+              ),
+              IconButton(
+                tooltip: l10n.terminalFontTooltip,
+                icon: const Icon(Icons.text_fields_rounded),
+                onPressed: () => showTerminalFontDialog(context),
+              ),
               const ThemeMenuButton(),
               const LanguageMenuButton(),
               IconButton(tooltip: l10n.aboutTooltip, icon: const Icon(Icons.info_outline_rounded), onPressed: onAbout),

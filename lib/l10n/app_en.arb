@@ -265,5 +265,76 @@
   "statusNoLogFile": "Nothing has been recorded yet",
   "statusStripAnsi": "Strip escapes",
   "statusStripAnsiTooltip": "Record plain text without control sequences such as colors and cursor moves",
-  "logSaveConfirm": "Start recording"
+  "logSaveConfirm": "Start recording",
+  "sftpDragCount": "{count} items",
+  "@sftpDragCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sftpDeleteConfirmMany": "Delete the {count} selected items? This cannot be undone.",
+  "@sftpDeleteConfirmMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addressBookTitle": "Address book",
+  "addressBookTooltip": "Address book ({key})",
+  "@addressBookTooltip": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "addressBookOpen": "Open address book",
+  "addressBookSearch": "Search name, host or group",
+  "addressBookEmpty": "No saved connections yet. Add one with 'New connection' below.",
+  "addressBookNoMatch": "No matches",
+  "addressBookNew": "New connection",
+  "addressBookEdit": "Edit",
+  "addressBookConnect": "Connect",
+  "addressBookDelete": "Delete",
+  "addressBookDeleteConfirm": "Remove {name} from the address book?",
+  "@addressBookDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addressBookUngrouped": "No group",
+  "addressBookName": "Name (user@host if empty)",
+  "addressBookGroup": "Group",
+  "addressBookNote": "Note",
+  "addressBookSave": "Save",
+  "connectPromptTitle": "Connect to {label}",
+  "@connectPromptTitle": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "connectPromptHint": "The password is not saved",
+  "terminalFontTooltip": "Terminal font",
+  "terminalFontTitle": "Terminal font",
+  "terminalFontFamily": "Font",
+  "terminalFontBundled": "{name} (bundled)",
+  "@terminalFontBundled": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "terminalFontCustom": "Enter a name…",
+  "terminalFontCustomName": "Installed font name",
+  "terminalFontCustomHelp": "Type the exact name of a font installed on this computer. If it is not found, the bundled font is used instead.",
+  "terminalFontSize": "Size",
+  "terminalFontReset": "Reset to default"
 }

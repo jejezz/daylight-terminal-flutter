@@ -799,6 +799,180 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기록 시작'**
   String get logSaveConfirm;
+
+  /// No description provided for @sftpDragCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 항목'**
+  String sftpDragCount(int count);
+
+  /// No description provided for @sftpDeleteConfirmMany.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택한 {count}개 항목을 삭제할까요? 되돌릴 수 없습니다.'**
+  String sftpDeleteConfirmMany(int count);
+
+  /// No description provided for @addressBookTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'주소록'**
+  String get addressBookTitle;
+
+  /// No description provided for @addressBookTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'주소록 ({key})'**
+  String addressBookTooltip(String key);
+
+  /// No description provided for @addressBookOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'주소록 열기'**
+  String get addressBookOpen;
+
+  /// No description provided for @addressBookSearch.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름·호스트·그룹 검색'**
+  String get addressBookSearch;
+
+  /// No description provided for @addressBookEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장된 접속이 없습니다. 아래 \'새 접속\'으로 추가하세요.'**
+  String get addressBookEmpty;
+
+  /// No description provided for @addressBookNoMatch.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색 결과가 없습니다'**
+  String get addressBookNoMatch;
+
+  /// No description provided for @addressBookNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 접속'**
+  String get addressBookNew;
+
+  /// No description provided for @addressBookEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'편집'**
+  String get addressBookEdit;
+
+  /// No description provided for @addressBookConnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결'**
+  String get addressBookConnect;
+
+  /// No description provided for @addressBookDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get addressBookDelete;
+
+  /// No description provided for @addressBookDeleteConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name}을(를) 주소록에서 삭제할까요?'**
+  String addressBookDeleteConfirm(String name);
+
+  /// No description provided for @addressBookUngrouped.
+  ///
+  /// In ko, this message translates to:
+  /// **'그룹 없음'**
+  String get addressBookUngrouped;
+
+  /// No description provided for @addressBookName.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름 (비우면 user@host)'**
+  String get addressBookName;
+
+  /// No description provided for @addressBookGroup.
+  ///
+  /// In ko, this message translates to:
+  /// **'그룹'**
+  String get addressBookGroup;
+
+  /// No description provided for @addressBookNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모'**
+  String get addressBookNote;
+
+  /// No description provided for @addressBookSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get addressBookSave;
+
+  /// No description provided for @connectPromptTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'{label}에 연결'**
+  String connectPromptTitle(String label);
+
+  /// No description provided for @connectPromptHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호는 저장되지 않습니다'**
+  String get connectPromptHint;
+
+  /// No description provided for @terminalFontTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널 글꼴'**
+  String get terminalFontTooltip;
+
+  /// No description provided for @terminalFontTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널 글꼴'**
+  String get terminalFontTitle;
+
+  /// No description provided for @terminalFontFamily.
+  ///
+  /// In ko, this message translates to:
+  /// **'글꼴'**
+  String get terminalFontFamily;
+
+  /// No description provided for @terminalFontBundled.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} (내장)'**
+  String terminalFontBundled(String name);
+
+  /// No description provided for @terminalFontCustom.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 입력…'**
+  String get terminalFontCustom;
+
+  /// No description provided for @terminalFontCustomName.
+  ///
+  /// In ko, this message translates to:
+  /// **'설치된 글꼴 이름'**
+  String get terminalFontCustomName;
+
+  /// No description provided for @terminalFontCustomHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'OS에 설치된 글꼴의 이름을 그대로 적으세요. 없는 이름이면 내장 글꼴로 대신 표시됩니다.'**
+  String get terminalFontCustomHelp;
+
+  /// No description provided for @terminalFontSize.
+  ///
+  /// In ko, this message translates to:
+  /// **'크기'**
+  String get terminalFontSize;
+
+  /// No description provided for @terminalFontReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본값으로'**
+  String get terminalFontReset;
 }
 
 class _AppLocalizationsDelegate

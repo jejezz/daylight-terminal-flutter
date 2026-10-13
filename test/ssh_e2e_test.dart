@@ -7,6 +7,7 @@
 import 'dart:io';
 
 import 'package:daylight_terminal/models/ssh_profile.dart';
+import 'package:daylight_terminal/services/drag_staging.dart';
 import 'package:daylight_terminal/services/profile_store.dart';
 import 'package:daylight_terminal/state/ssh_session_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -106,6 +107,34 @@ void main() {
     expect(session.entries, isEmpty);
     await session.loadDir('/');
     await session.delete(session.entries.firstWhere((e) => e.name == 'work'));
+  }, skip: skip);
+
+  test('drag out: stageForDrag downloads local copies; the next drag cleans the previous one', () async {
+    await session.connect(profile(), password: password);
+    await session.makeDirectory('dragsrc');
+    await session.loadDir('/dragsrc');
+    final f = File('${tmp.path}/one.txt')..writeAsStringSync('stage me');
+    final d = Directory('${tmp.path}/folder')..createSync();
+    File('${d.path}/inner.txt').writeAsStringSync('inner');
+    await session.upload([f.path, d.path]);
+
+    final items = session.entries;
+    final first = await session.stageForDrag(items, from: '/dragsrc');
+    expect(first, hasLength(2));
+    final one = first.firstWhere((p) => p.endsWith('one.txt'));
+    expect(File(one).readAsStringSync(), 'stage me');
+    expect(File('${first.firstWhere((p) => p.endsWith('folder'))}/inner.txt').readAsStringSync(), 'inner');
+
+    // 끄는 동안 탐색기가 다른 폴더로 가도 원래 폴더(from)의 파일을 받는다.
+    await session.loadDir('/');
+    final second = await session.stageForDrag([items.firstWhere((e) => e.name == 'one.txt')], from: '/dragsrc');
+    expect(File(second.single).readAsStringSync(), 'stage me');
+    expect(File(one).existsSync(), isFalse, reason: '이전 드래그의 사본은 지워진다');
+
+    await DragStaging.clean();
+    expect(DragStaging.root.existsSync(), isFalse);
+    await session.loadDir('/');
+    await session.delete(session.entries.firstWhere((e) => e.name == 'dragsrc'));
   }, skip: skip);
 
   test('path menus: terminal -> folder and explorer -> terminal, only on request', () async {

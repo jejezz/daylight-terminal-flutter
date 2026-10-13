@@ -13,6 +13,7 @@ import '../models/remote_entry.dart';
 import '../models/ssh_profile.dart';
 import '../models/transfer.dart';
 import '../services/ansi_stripper.dart';
+import '../services/drag_staging.dart';
 import '../services/log_file_service.dart';
 import '../services/profile_store.dart';
 import '../services/ssh_connection.dart';
@@ -455,36 +456,49 @@ class SshSessionProvider extends ChangeNotifier {
       if (FileSystemEntity.typeSync(p.join(localDir, e.name)) != FileSystemEntityType.notFound) e.name,
   ];
 
-  /// [items]를 [localDir] 아래로 내려받는다. 같은 이름은 덮어쓴다.
-  Future<void> download(List<RemoteEntry> items, String localDir) async {
+  /// [items]를 [localDir] 아래로 내려받는다. 같은 이름은 덮어쓴다. [from]은 원격 폴더(기본: 지금 폴더).
+  Future<void> download(List<RemoteEntry> items, String localDir, {String? from}) async {
     final sftp = _sftp;
     if (sftp == null) return;
-    final from = _remotePath;
     for (final e in items) {
-      final t = Transfer(e.name, TransferDirection.download);
-      _transfers.insert(0, t);
-      _notify();
-      try {
-        await _downloadPath(sftp, _join(from, e.name), p.join(localDir, e.name), e.isDirectory, t, size: e.size);
-        t.finish();
-      } catch (err) {
-        t.finish(err);
-      }
+      await _downloadItem(sftp, _join(from ?? _remotePath, e.name), p.join(localDir, e.name), e);
     }
   }
 
-  /// 한 파일을 [localPath](전체 경로)로 내려받는다 — 저장 대화상자용.
-  Future<void> downloadFileTo(RemoteEntry e, String localPath) async {
+  /// [e] 하나를 [localPath](전체 경로)로 내려받는다 — 저장 대화상자와 드래그 앤 드롭(macOS 파일 프로미스)용.
+  /// 성공하면 true, 실패하면 전송 목록에 오류를 남기고 false.
+  Future<bool> downloadEntryTo(RemoteEntry e, String localPath, {String? from}) async {
     final sftp = _sftp;
-    if (sftp == null) return;
+    if (sftp == null) return false;
+    return _downloadItem(sftp, _join(from ?? _remotePath, e.name), localPath, e);
+  }
+
+  /// 끌어내기(드래그 아웃)용: macOS 밖에서는 파일 프로미스가 없으므로, 먼저 임시 폴더에 로컬 사본을
+  /// 받아 그 경로를 돌려준다. 하나라도 실패하면 예외를 던진다.
+  Future<List<String>> stageForDrag(List<RemoteEntry> items, {String? from}) async {
+    final dir = await DragStaging.newDir();
+    final paths = <String>[];
+    for (final e in items) {
+      final local = p.join(dir.path, e.name);
+      if (!await downloadEntryTo(e, local, from: from)) {
+        throw FileSystemException('download failed', e.name);
+      }
+      paths.add(local);
+    }
+    return paths;
+  }
+
+  Future<bool> _downloadItem(SftpClient sftp, String remote, String local, RemoteEntry e) async {
     final t = Transfer(e.name, TransferDirection.download);
     _transfers.insert(0, t);
     _notify();
     try {
-      await _downloadPath(sftp, pathOf(e), localPath, false, t, size: e.size);
+      await _downloadPath(sftp, remote, local, e.isDirectory, t, size: e.size);
       t.finish();
+      return true;
     } catch (err) {
       t.finish(err);
+      return false;
     }
   }
 
@@ -525,6 +539,7 @@ class SshSessionProvider extends ChangeNotifier {
   /// 기록 파일이 확실히 flush/close되게 한다.
   Future<void> prepareForExit() async {
     await _stopLogging();
+    await DragStaging.clean();
   }
 
   @override

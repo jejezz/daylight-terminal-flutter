@@ -414,4 +414,105 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logSaveConfirm => 'Start recording';
+
+  @override
+  String sftpDragCount(int count) {
+    return '$count items';
+  }
+
+  @override
+  String sftpDeleteConfirmMany(int count) {
+    return 'Delete the $count selected items? This cannot be undone.';
+  }
+
+  @override
+  String get addressBookTitle => 'Address book';
+
+  @override
+  String addressBookTooltip(String key) {
+    return 'Address book ($key)';
+  }
+
+  @override
+  String get addressBookOpen => 'Open address book';
+
+  @override
+  String get addressBookSearch => 'Search name, host or group';
+
+  @override
+  String get addressBookEmpty =>
+      'No saved connections yet. Add one with \'New connection\' below.';
+
+  @override
+  String get addressBookNoMatch => 'No matches';
+
+  @override
+  String get addressBookNew => 'New connection';
+
+  @override
+  String get addressBookEdit => 'Edit';
+
+  @override
+  String get addressBookConnect => 'Connect';
+
+  @override
+  String get addressBookDelete => 'Delete';
+
+  @override
+  String addressBookDeleteConfirm(String name) {
+    return 'Remove $name from the address book?';
+  }
+
+  @override
+  String get addressBookUngrouped => 'No group';
+
+  @override
+  String get addressBookName => 'Name (user@host if empty)';
+
+  @override
+  String get addressBookGroup => 'Group';
+
+  @override
+  String get addressBookNote => 'Note';
+
+  @override
+  String get addressBookSave => 'Save';
+
+  @override
+  String connectPromptTitle(String label) {
+    return 'Connect to $label';
+  }
+
+  @override
+  String get connectPromptHint => 'The password is not saved';
+
+  @override
+  String get terminalFontTooltip => 'Terminal font';
+
+  @override
+  String get terminalFontTitle => 'Terminal font';
+
+  @override
+  String get terminalFontFamily => 'Font';
+
+  @override
+  String terminalFontBundled(String name) {
+    return '$name (bundled)';
+  }
+
+  @override
+  String get terminalFontCustom => 'Enter a name…';
+
+  @override
+  String get terminalFontCustomName => 'Installed font name';
+
+  @override
+  String get terminalFontCustomHelp =>
+      'Type the exact name of a font installed on this computer. If it is not found, the bundled font is used instead.';
+
+  @override
+  String get terminalFontSize => 'Size';
+
+  @override
+  String get terminalFontReset => 'Reset to default';
 }

@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
+import 'package:flutter/services.dart';
+import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -10,8 +14,27 @@ import '../models/transfer.dart';
 import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
 
-/// SFTP 파일 탐색기. 로컬 파일/폴더를 끌어다 놓으면 현재 폴더로 업로드한다.
-/// 터미널 경로와는 자동으로 연동하지 않고, 상단 "경로 이동" 메뉴로만 맞춘다.
+/// 진행 중인 끌어내기 한 번의 상태.
+class _Drag {
+  _Drag(this.items, this.from);
+
+  final List<RemoteEntry> items;
+
+  /// 끌기를 시작할 때의 원격 폴더 (끄는 동안 탐색기가 다른 폴더로 가도 원래 파일을 받는다).
+  final String from;
+
+  /// macOS 밖에서 쓰는 임시 로컬 사본 경로. 받는 중에는 아직 끝나지 않은 Future.
+  Future<List<String>?>? staged;
+
+  /// OS 끌기 세션으로 넘겼는지.
+  bool handedOver = false;
+}
+
+/// SFTP 파일 탐색기.
+///
+/// - 로컬 파일/폴더를 끌어다 놓으면 현재 폴더로 업로드한다.
+/// - 항목을 창 밖(Finder/탐색기/바탕화면)으로 끌어내면 내려받는다 (flutter_drag_out).
+/// - 터미널 경로와는 자동으로 연동하지 않고, 상단 "경로 이동" 메뉴로만 맞춘다.
 class SftpPane extends StatefulWidget {
   const SftpPane({super.key});
 
@@ -21,7 +44,9 @@ class SftpPane extends StatefulWidget {
 
 class _SftpPaneState extends State<SftpPane> {
   bool _dragging = false;
-  String? _selected;
+  final Set<String> _selected = {};
+  int? _anchor;
+  _Drag? _drag;
 
   void _toast(String message) {
     if (!mounted) return;
@@ -37,6 +62,49 @@ class _SftpPaneState extends State<SftpPane> {
       _toast('$e');
     }
   }
+
+  // ───────────────────────── 선택 ─────────────────────────
+
+  void _select(int index, List<RemoteEntry> entries) {
+    final kb = HardwareKeyboard.instance;
+    setState(() {
+      final name = entries[index].name;
+      if (kb.isShiftPressed && _anchor != null) {
+        final a = _anchor!.clamp(0, entries.length - 1), b = index;
+        _selected
+          ..clear()
+          ..addAll([for (var i = a < b ? a : b; i <= (a < b ? b : a); i++) entries[i].name]);
+      } else if (kb.isControlPressed || kb.isMetaPressed) {
+        if (!_selected.remove(name)) _selected.add(name);
+        _anchor = index;
+      } else {
+        _selected
+          ..clear()
+          ..add(name);
+        _anchor = index;
+      }
+    });
+  }
+
+  List<RemoteEntry> _selectedEntries(SshSessionProvider session) => [
+    for (final e in session.entries)
+      if (_selected.contains(e.name)) e,
+  ];
+
+  /// 우클릭/끌기를 시작한 항목이 선택에 없으면 그 항목만 선택한다. 있으면 선택 전체가 대상이다.
+  List<RemoteEntry> _targetsFor(SshSessionProvider session, RemoteEntry e) {
+    if (!_selected.contains(e.name)) {
+      setState(() {
+        _selected
+          ..clear()
+          ..add(e.name);
+        _anchor = session.entries.indexWhere((x) => x.name == e.name);
+      });
+    }
+    return _selectedEntries(session);
+  }
+
+  // ───────────────────────── 대화상자 ─────────────────────────
 
   Future<bool> _confirmOverwrite(List<String> names) async {
     if (names.isEmpty) return true;
@@ -80,37 +148,46 @@ class _SftpPaneState extends State<SftpPane> {
     );
   }
 
+  // ───────────────────────── 동작 ─────────────────────────
+
   Future<void> _onDrop(List<String> paths) async {
+    // 이 앱에서 끌어낸 것이 다시 들어온 경우는 무시한다.
+    if (FlutterDragOut.inProgress) return;
     final session = context.read<SshSessionProvider>();
     if (paths.isEmpty || !session.connected) return;
     if (!await _confirmOverwrite(session.uploadConflicts(paths))) return;
     await _guard(() => session.upload(paths));
   }
 
-  Future<void> _download(RemoteEntry e) async {
+  Future<void> _download(List<RemoteEntry> items) async {
     final session = context.read<SshSessionProvider>();
     final l10n = AppLocalizations.of(context);
-    if (e.isDirectory) {
-      final dir = await getDirectoryPath(confirmButtonText: l10n.sftpDownloadConfirm);
-      if (dir == null) return;
-      if (!await _confirmOverwrite(session.downloadConflicts([e], dir))) return;
-      await _guard(() => session.download([e], dir));
-    } else {
+    if (items.length == 1 && !items.single.isDirectory) {
       // 저장 대화상자가 덮어쓰기 확인을 한다.
+      final e = items.single;
       final location = await getSaveLocation(suggestedName: e.name, confirmButtonText: l10n.sftpDownload);
       if (location == null) return;
-      await _guard(() => session.downloadFileTo(e, location.path));
+      await _guard(() async {
+        if (!await session.downloadEntryTo(e, location.path)) throw FileSystemException('download failed', e.name);
+      });
+      return;
     }
+    final dir = await getDirectoryPath(confirmButtonText: l10n.sftpDownloadConfirm);
+    if (dir == null) return;
+    if (!await _confirmOverwrite(session.downloadConflicts(items, dir))) return;
+    await _guard(() => session.download(items, dir));
   }
 
-  Future<void> _delete(RemoteEntry e) async {
+  Future<void> _delete(List<RemoteEntry> items) async {
     final session = context.read<SshSessionProvider>();
     final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.sftpDelete),
-        content: Text(l10n.sftpDeleteConfirm(e.name)),
+        content: Text(
+          items.length == 1 ? l10n.sftpDeleteConfirm(items.single.name) : l10n.sftpDeleteConfirmMany(items.length),
+        ),
         actions: [
           TextButton(autofocus: true, onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonCancel)),
           FilledButton(
@@ -121,7 +198,13 @@ class _SftpPaneState extends State<SftpPane> {
         ],
       ),
     );
-    if (ok == true) await _guard(() => session.delete(e));
+    if (ok != true) return;
+    await _guard(() async {
+      for (final e in items) {
+        await session.delete(e);
+      }
+    });
+    if (mounted) setState(_selected.clear);
   }
 
   Future<void> _rename(RemoteEntry e) async {
@@ -130,6 +213,12 @@ class _SftpPaneState extends State<SftpPane> {
     final name = await _askText(l10n.sftpRename, l10n.sftpNewName, initial: e.name);
     if (name == null || name.isEmpty || name == e.name) return;
     await _guard(() => session.rename(e, name));
+    if (!mounted) return;
+    setState(() {
+      _selected
+        ..clear()
+        ..add(name);
+    });
   }
 
   Future<void> _newFolder() async {
@@ -149,39 +238,101 @@ class _SftpPaneState extends State<SftpPane> {
   Future<void> _rowMenu(RemoteEntry e, Offset position) async {
     final session = context.read<SshSessionProvider>();
     final l10n = AppLocalizations.of(context);
-    setState(() => _selected = e.name);
+    final targets = _targetsFor(session, e);
+    final single = targets.length == 1;
     final choice = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
       items: [
         PopupMenuItem(value: 'download', child: Text(l10n.sftpDownload)),
-        if (e.isDirectory) PopupMenuItem(value: 'terminal', child: Text(l10n.pathMenuTerminalToHere)),
-        PopupMenuItem(value: 'rename', child: Text(l10n.sftpRename)),
+        if (single && e.isDirectory) PopupMenuItem(value: 'terminal', child: Text(l10n.pathMenuTerminalToHere)),
+        if (single) PopupMenuItem(value: 'rename', child: Text(l10n.sftpRename)),
         PopupMenuItem(value: 'delete', child: Text(l10n.sftpDelete)),
       ],
     );
     switch (choice) {
       case 'download':
-        await _download(e);
+        await _download(targets);
       case 'terminal':
         session.moveTerminalTo(session.pathOf(e));
       case 'rename':
         await _rename(e);
       case 'delete':
-        await _delete(e);
+        await _delete(targets);
     }
   }
+
+  // ───────────────────────── 끌어내기 (flutter_drag_out) ─────────────────────────
+
+  void _onDragStarted(SshSessionProvider session, RemoteEntry e) {
+    final items = _targetsFor(session, e);
+    final drag = _Drag(items, session.remotePath);
+    _drag = drag;
+    // 파일 프로미스가 없는 플랫폼(Windows/Linux)은 로컬 사본이 있어야 끌어낼 수 있다.
+    // 끌기가 창을 벗어나기 전에 미리 받기 시작해서 기다리는 시간을 줄인다.
+    if (!FlutterDragOut.supportsPromises) {
+      drag.staged = session
+          .stageForDrag(items, from: drag.from)
+          .then<List<String>?>(
+            (paths) => paths,
+            onError: (Object err) {
+              _toast('$err');
+              return null;
+            },
+          );
+    }
+  }
+
+  void _onDragUpdate(SshSessionProvider session, DragUpdateDetails details) {
+    final drag = _drag;
+    if (drag == null || drag.handedOver) return;
+    final viewSize = MediaQuery.sizeOf(context);
+    if (FlutterDragOut.supportsPromises) {
+      // macOS: 아무것도 미리 받지 않는다. 놓는 곳에서 바로 받는다.
+      FlutterDragOut.maybeStartOnExit(
+        details.globalPosition,
+        viewSize: viewSize,
+        items: () {
+          drag.handedOver = true;
+          return [
+            for (final e in drag.items)
+              DragOutItem.promise(
+                name: e.name,
+                isDirectory: e.isDirectory,
+                write: (request) async {
+                  if (!await session.downloadEntryTo(e, request.targetPath, from: drag.from)) {
+                    throw FileSystemException('download failed', e.name);
+                  }
+                },
+              ),
+          ];
+        },
+      );
+    } else if (!(Offset.zero & viewSize).contains(details.globalPosition)) {
+      drag.handedOver = true;
+      unawaited(_handOver(drag));
+    }
+  }
+
+  /// 로컬 사본이 다 받아지면 OS 끌기 세션을 시작한다. 그 사이 마우스를 놓았다면 아무것도 하지 않는다.
+  Future<void> _handOver(_Drag drag) async {
+    final paths = await drag.staged;
+    if (paths == null || !identical(_drag, drag)) return;
+    await FlutterDragOut.start(paths);
+  }
+
+  // ───────────────────────── 화면 ─────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final session = context.watch<SshSessionProvider>();
     final scheme = Theme.of(context).colorScheme;
-    final locale = Localizations.localeOf(context).toString();
-    final dateFormat = DateFormat.yMd(locale).add_Hm();
 
     return DropTarget(
-      onDragEntered: (_) => setState(() => _dragging = true),
+      onDragEntered: (_) {
+        if (!FlutterDragOut.inProgress) setState(() => _dragging = true);
+      },
       onDragExited: (_) => setState(() => _dragging = false),
       onDragDone: (details) {
         setState(() => _dragging = false);
@@ -228,11 +379,14 @@ class _SftpPaneState extends State<SftpPane> {
                           final e = session.entries[i];
                           return _Row(
                             entry: e,
-                            selected: _selected == e.name,
-                            dateFormat: dateFormat,
-                            onTap: () => setState(() => _selected = e.name),
-                            onOpen: () => e.isDirectory ? session.openEntry(e) : _download(e),
+                            selected: _selected.contains(e.name),
+                            onTap: () => _select(i, session.entries),
+                            onOpen: () => e.isDirectory ? session.openEntry(e) : _download([e]),
                             onMenu: (pos) => _rowMenu(e, pos),
+                            dragCount: () => _selected.contains(e.name) ? _selected.length : 1,
+                            onDragStarted: () => _onDragStarted(session, e),
+                            onDragUpdate: (d) => _onDragUpdate(session, d),
+                            onDragEnd: () => _drag = null,
                           );
                         },
                       ),
@@ -338,52 +492,75 @@ class _Row extends StatelessWidget {
   const _Row({
     required this.entry,
     required this.selected,
-    required this.dateFormat,
     required this.onTap,
     required this.onOpen,
     required this.onMenu,
+    required this.dragCount,
+    required this.onDragStarted,
+    required this.onDragUpdate,
+    required this.onDragEnd,
   });
 
   final RemoteEntry entry;
   final bool selected;
-  final DateFormat dateFormat;
   final VoidCallback onTap;
   final VoidCallback onOpen;
   final void Function(Offset globalPosition) onMenu;
+  final int Function() dragCount;
+  final VoidCallback onDragStarted;
+  final void Function(DragUpdateDetails details) onDragUpdate;
+  final VoidCallback onDragEnd;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final small = Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
+    final content = Container(
+      height: 30,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      color: selected ? scheme.primary.withValues(alpha: 0.14) : null,
+      child: Row(
+        children: [
+          Icon(
+            entry.isDirectory ? Icons.folder_rounded : Icons.insert_drive_file_outlined,
+            size: 18,
+            color: entry.isDirectory ? scheme.primary : scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              entry.name,
+              overflow: TextOverflow.ellipsis,
+              style: AppFonts.userContent.copyWith(fontSize: 13, color: scheme.onSurface),
+            ),
+          ),
+          if (!entry.isDirectory && entry.size != null) Text(_formatSize(entry.size!), style: small),
+        ],
+      ),
+    );
     return GestureDetector(
       onSecondaryTapDown: (d) => onMenu(d.globalPosition),
-      child: InkWell(
-        splashFactory: NoSplash.splashFactory,
-        onTap: onTap,
-        onDoubleTap: onOpen,
-        child: Container(
-          height: 30,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          color: selected ? scheme.primary.withValues(alpha: 0.14) : null,
-          child: Row(
-            children: [
-              Icon(
-                entry.isDirectory ? Icons.folder_rounded : Icons.insert_drive_file_outlined,
-                size: 18,
-                color: entry.isDirectory ? scheme.primary : scheme.onSurfaceVariant,
+      child: Draggable<List<RemoteEntry>>(
+        maxSimultaneousDrags: 1,
+        feedback: Builder(
+          builder: (context) {
+            final n = dragCount();
+            return Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(AppRadius.button),
+              color: scheme.surfaceContainerHighest,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                child: Text(n == 1 ? entry.name : l10n.sftpDragCount(n), style: const TextStyle(fontSize: 13)),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  entry.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppFonts.userContent.copyWith(fontSize: 13, color: scheme.onSurface),
-                ),
-              ),
-              if (!entry.isDirectory && entry.size != null) Text(_formatSize(entry.size!), style: small),
-            ],
-          ),
+            );
+          },
         ),
+        onDragStarted: onDragStarted,
+        onDragUpdate: onDragUpdate,
+        onDragEnd: (_) => onDragEnd(),
+        child: InkWell(splashFactory: NoSplash.splashFactory, onTap: onTap, onDoubleTap: onOpen, child: content),
       ),
     );
   }

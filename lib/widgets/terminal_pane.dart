@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:xterm2/ui.dart' as xterm_ui;
 import 'package:xterm2/xterm.dart';
 
+import '../settings/terminal_prefs.dart';
 import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
@@ -19,12 +20,6 @@ class TerminalPane extends StatefulWidget {
 
 class _TerminalPaneState extends State<TerminalPane> {
   final _controller = xterm_ui.TerminalController();
-
-  static final _style = TerminalStyle(
-    fontSize: 13,
-    fontFamily: AppFonts.mono.fontFamily!,
-    fontFamilyFallback: [...AppFonts.mono.fontFamilyFallback!, ...AppFonts.fallback],
-  );
 
   @override
   void dispose() {
@@ -49,6 +44,7 @@ class _TerminalPaneState extends State<TerminalPane> {
   @override
   Widget build(BuildContext context) {
     final terminal = context.read<SshSessionProvider>().terminal;
+    final prefs = context.watch<TerminalPrefs>();
     return LayoutBuilder(
       builder: (context, constraints) {
         // 리사이즈 중 잠깐 0이 되면 xterm2가 행/열 계산에서 오류를 내므로 그릴 때만 건너뛴다.
@@ -58,7 +54,7 @@ class _TerminalPaneState extends State<TerminalPane> {
           controller: _controller,
           autofocus: true,
           theme: xterm_ui.TerminalThemes.defaultTheme,
-          textStyle: _style,
+          textStyle: prefs.style,
           padding: const EdgeInsets.all(AppSpacing.sm),
           // 앱 전역 단축키는 xterm이 제어 문자로 보내버리기 전에 상위 CallbackShortcuts로 넘긴다.
           onKeyEvent: (_, event) => AppShortcut.all.any((s) => s.activator.accepts(event, HardwareKeyboard.instance))

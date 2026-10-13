@@ -30,9 +30,9 @@
 
 ## Features
 
-- **{{TODO: Feature}}** — {{TODO: what it does, concretely (names, numbers, formats)}}
-- **{{TODO: Feature}}** — {{TODO: …}}
-- **{{TODO: Feature}}** — {{TODO: …}}
+- **One window, one connection** — a terminal and an SFTP explorer side by side, sharing a single SSH login; tabs for several servers.
+- **Drag and drop both ways** — drop files or folders onto the explorer to upload; drag items out to Finder or Explorer to download (several at once).
+- **Address book and terminal tools** — saved connections with groups and search, a LineSender for step-by-step scripts, session recording, and a bundled Nerd Font (or any installed font).
 - **Light & dark, English & 한국어** — follows the system, or pick one in the toolbar
 
 <p align="center">

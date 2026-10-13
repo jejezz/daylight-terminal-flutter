@@ -56,6 +56,14 @@ void main() {
       expect(store.profiles(), isEmpty);
     });
 
+    test('profiles saved by the first version (no name/group/note) still load', () async {
+      SharedPreferences.setMockInitialValues({'ssh_profiles': '[{"id":"1","host":"h","port":22,"username":"u"}]'});
+      final p = (await ProfileStore.load()).profiles().single;
+      expect((p.name, p.group, p.note), ('', '', ''));
+      expect(p.label, 'u@h'); // 이름이 없으면 user@host
+      expect(p.copyWith(name: 'N').label, 'N');
+    });
+
     test('remembers host keys per host:port', () async {
       SharedPreferences.setMockInitialValues({});
       final store = await ProfileStore.load();

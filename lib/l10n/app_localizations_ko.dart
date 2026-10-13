@@ -408,4 +408,104 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get logSaveConfirm => '기록 시작';
+
+  @override
+  String sftpDragCount(int count) {
+    return '$count개 항목';
+  }
+
+  @override
+  String sftpDeleteConfirmMany(int count) {
+    return '선택한 $count개 항목을 삭제할까요? 되돌릴 수 없습니다.';
+  }
+
+  @override
+  String get addressBookTitle => '주소록';
+
+  @override
+  String addressBookTooltip(String key) {
+    return '주소록 ($key)';
+  }
+
+  @override
+  String get addressBookOpen => '주소록 열기';
+
+  @override
+  String get addressBookSearch => '이름·호스트·그룹 검색';
+
+  @override
+  String get addressBookEmpty => '저장된 접속이 없습니다. 아래 \'새 접속\'으로 추가하세요.';
+
+  @override
+  String get addressBookNoMatch => '검색 결과가 없습니다';
+
+  @override
+  String get addressBookNew => '새 접속';
+
+  @override
+  String get addressBookEdit => '편집';
+
+  @override
+  String get addressBookConnect => '연결';
+
+  @override
+  String get addressBookDelete => '삭제';
+
+  @override
+  String addressBookDeleteConfirm(String name) {
+    return '$name을(를) 주소록에서 삭제할까요?';
+  }
+
+  @override
+  String get addressBookUngrouped => '그룹 없음';
+
+  @override
+  String get addressBookName => '이름 (비우면 user@host)';
+
+  @override
+  String get addressBookGroup => '그룹';
+
+  @override
+  String get addressBookNote => '메모';
+
+  @override
+  String get addressBookSave => '저장';
+
+  @override
+  String connectPromptTitle(String label) {
+    return '$label에 연결';
+  }
+
+  @override
+  String get connectPromptHint => '비밀번호는 저장되지 않습니다';
+
+  @override
+  String get terminalFontTooltip => '터미널 글꼴';
+
+  @override
+  String get terminalFontTitle => '터미널 글꼴';
+
+  @override
+  String get terminalFontFamily => '글꼴';
+
+  @override
+  String terminalFontBundled(String name) {
+    return '$name (내장)';
+  }
+
+  @override
+  String get terminalFontCustom => '직접 입력…';
+
+  @override
+  String get terminalFontCustomName => '설치된 글꼴 이름';
+
+  @override
+  String get terminalFontCustomHelp =>
+      'OS에 설치된 글꼴의 이름을 그대로 적으세요. 없는 이름이면 내장 글꼴로 대신 표시됩니다.';
+
+  @override
+  String get terminalFontSize => '크기';
+
+  @override
+  String get terminalFontReset => '기본값으로';
 }

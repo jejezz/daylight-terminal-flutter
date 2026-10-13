@@ -52,6 +52,10 @@ dependencies:
   desktop_drop: ^0.8.4
   file_selector: ^1.1.0
   path: ^1.9.1
+  flutter_drag_out:
+    git:
+      url: https://github.com/jejezz/flutter_drag_out.git
+      ref: v0.5.0
 
 dev_dependencies:
   flutter_test:
@@ -82,3 +86,8 @@ flutter:
         - { asset: assets/fonts/seoul_namsan_regular.ttf, weight: 400 }
         - { asset: assets/fonts/seoul_namsan_bold.ttf, weight: 700 }
         - { asset: assets/fonts/seoul_namsan_extra_bold.ttf, weight: 800 }
+    # 터미널 기본 글꼴 (Nerd Font Mono: 파워라인·아이콘 글리프 포함). 라이선스: assets/licenses/agave-nerd-font.txt
+    - family: AgaveNerdFontMono
+      fonts:
+        - { asset: assets/fonts/agave_nerd_font_mono_regular.ttf, weight: 400 }
+        - { asset: assets/fonts/agave_nerd_font_mono_bold.ttf, weight: 700 }

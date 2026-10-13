@@ -282,5 +282,76 @@
   "statusNoLogFile": "기록한 파일이 아직 없습니다",
   "statusStripAnsi": "이스케이프 제거",
   "statusStripAnsiTooltip": "색·커서 이동 같은 제어 시퀀스를 빼고 텍스트만 기록합니다",
-  "logSaveConfirm": "기록 시작"
+  "logSaveConfirm": "기록 시작",
+  "sftpDragCount": "{count}개 항목",
+  "@sftpDragCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sftpDeleteConfirmMany": "선택한 {count}개 항목을 삭제할까요? 되돌릴 수 없습니다.",
+  "@sftpDeleteConfirmMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addressBookTitle": "주소록",
+  "addressBookTooltip": "주소록 ({key})",
+  "@addressBookTooltip": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "addressBookOpen": "주소록 열기",
+  "addressBookSearch": "이름·호스트·그룹 검색",
+  "addressBookEmpty": "저장된 접속이 없습니다. 아래 '새 접속'으로 추가하세요.",
+  "addressBookNoMatch": "검색 결과가 없습니다",
+  "addressBookNew": "새 접속",
+  "addressBookEdit": "편집",
+  "addressBookConnect": "연결",
+  "addressBookDelete": "삭제",
+  "addressBookDeleteConfirm": "{name}을(를) 주소록에서 삭제할까요?",
+  "@addressBookDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addressBookUngrouped": "그룹 없음",
+  "addressBookName": "이름 (비우면 user@host)",
+  "addressBookGroup": "그룹",
+  "addressBookNote": "메모",
+  "addressBookSave": "저장",
+  "connectPromptTitle": "{label}에 연결",
+  "@connectPromptTitle": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "connectPromptHint": "비밀번호는 저장되지 않습니다",
+  "terminalFontTooltip": "터미널 글꼴",
+  "terminalFontTitle": "터미널 글꼴",
+  "terminalFontFamily": "글꼴",
+  "terminalFontBundled": "{name} (내장)",
+  "@terminalFontBundled": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "terminalFontCustom": "직접 입력…",
+  "terminalFontCustomName": "설치된 글꼴 이름",
+  "terminalFontCustomHelp": "OS에 설치된 글꼴의 이름을 그대로 적으세요. 없는 이름이면 내장 글꼴로 대신 표시됩니다.",
+  "terminalFontSize": "크기",
+  "terminalFontReset": "기본값으로"
 }

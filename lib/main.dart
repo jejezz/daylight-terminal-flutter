@@ -20,6 +20,7 @@ import 'l10n/app_localizations.dart';
 import 'settings/app_settings.dart';
 import 'screens/home_screen.dart';
 import 'services/profile_store.dart';
+import 'settings/terminal_prefs.dart';
 import 'state/sessions_controller.dart';
 import 'theme/app_theme.dart';
 import 'update/update_scope.dart';
@@ -48,17 +49,19 @@ Future<void> main() async {
 
   final settings = await AppSettings.load();
   final sessions = SessionsController(await ProfileStore.load());
+  final terminalPrefs = await TerminalPrefs.load();
   // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
   final updates = await UpdateService.create();
   // UpdateScope 는 MaterialApp 위에 둔다 — 정보 창이 이것을 읽어 "업데이트 확인" 단추를 붙인다.
-  runApp(UpdateScope(service: updates, child: App(settings: settings, sessions: sessions, updates: updates)));
+  runApp(UpdateScope(service: updates, child: App(settings: settings, sessions: sessions, terminalPrefs: terminalPrefs, updates: updates)));
 }
 
 class App extends StatefulWidget {
-  const App({super.key, required this.settings, required this.sessions, this.updates});
+  const App({super.key, required this.settings, required this.sessions, required this.terminalPrefs, this.updates});
 
   final AppSettings settings;
   final SessionsController sessions;
+  final TerminalPrefs terminalPrefs;
   final UpdateService? updates;
 
   @override
@@ -125,8 +128,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<SessionsController>.value(
-      value: widget.sessions,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SessionsController>.value(value: widget.sessions),
+        ChangeNotifierProvider<TerminalPrefs>.value(value: widget.terminalPrefs),
+      ],
       child: AppSettingsScope(
       settings: widget.settings,
       child: ListenableBuilder(
