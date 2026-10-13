@@ -19,6 +19,9 @@ class ConnectPanel extends StatefulWidget {
 }
 
 class _ConnectPanelState extends State<ConnectPanel> {
+  /// 연결 버튼과 로컬 셸 버튼의 높이. 테마 기본(데스크톱 36)보다 조금 크게 해서 누르기 쉽게 한다.
+  static const _buttonHeight = 44.0;
+
   final _host = TextEditingController();
   final _port = TextEditingController(text: '22');
   final _user = TextEditingController();
@@ -266,6 +269,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
               ),
               const SizedBox(height: AppSpacing.md),
               FilledButton(
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(_buttonHeight)),
                 onPressed: connecting || !_valid ? null : _connect,
                 child: connecting
                     ? Row(
@@ -302,6 +306,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
                   children: [
                     for (final shell in shells)
                       OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(minimumSize: const Size(0, _buttonHeight)),
                         onPressed: connecting ? null : () => controller.openLocalHere(shell),
                         icon: const Icon(Icons.terminal_rounded, size: 18),
                         label: Text(shell.name),

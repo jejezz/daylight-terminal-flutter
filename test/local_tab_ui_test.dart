@@ -155,6 +155,12 @@ void main() {
     expect(cmd, findsOneWidget);
     expect(tester.getTopLeft(bash).dy, greaterThan(tester.getBottomLeft(connect).dy));
     expect(find.text('로컬 셸'), findsOneWidget);
+    // 연결 버튼과 셸 버튼은 기본(36)보다 높다.
+    double body(Finder button) =>
+        tester.getSize(find.descendant(of: button, matching: find.byType(Material)).first).height;
+    expect(body(connect), 44);
+    expect(body(bash), 44);
+    expect(body(cmd), 44);
     expect(ptys.made, isEmpty); // 누르기 전에는 아무것도 띄우지 않는다
 
     await tester.ensureVisible(bash);
