@@ -991,6 +991,72 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{count}줄'**
   String terminalScrollbackLines(int count);
+
+  /// No description provided for @localOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'열기'**
+  String get localOpen;
+
+  /// No description provided for @localReveal.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 관리자에서 보기'**
+  String get localReveal;
+
+  /// No description provided for @localPlaces.
+  ///
+  /// In ko, this message translates to:
+  /// **'자주 가는 곳'**
+  String get localPlaces;
+
+  /// No description provided for @localFolderError.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더를 읽지 못했습니다: {detail}'**
+  String localFolderError(String detail);
+
+  /// No description provided for @shellExited.
+  ///
+  /// In ko, this message translates to:
+  /// **'셸이 종료되었습니다 (종료 코드 {code})'**
+  String shellExited(int code);
+
+  /// No description provided for @shellRestart.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 시작'**
+  String get shellRestart;
+
+  /// No description provided for @shellStartFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'셸을 시작하지 못했습니다: {detail}'**
+  String shellStartFailed(String detail);
+
+  /// No description provided for @shellTerminate.
+  ///
+  /// In ko, this message translates to:
+  /// **'셸 종료'**
+  String get shellTerminate;
+
+  /// No description provided for @newTabSsh.
+  ///
+  /// In ko, this message translates to:
+  /// **'SSH 연결'**
+  String get newTabSsh;
+
+  /// No description provided for @newTabLocalShell.
+  ///
+  /// In ko, this message translates to:
+  /// **'로컬 셸'**
+  String get newTabLocalShell;
+
+  /// No description provided for @newTabNoShells.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용할 수 있는 로컬 셸을 찾지 못했습니다'**
+  String get newTabNoShells;
 }
 
 class _AppLocalizationsDelegate

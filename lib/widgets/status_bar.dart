@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/file_reveal_service.dart';
-import '../state/ssh_session_provider.dart';
+import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
 
@@ -17,7 +17,7 @@ class StatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final session = context.watch<SshSessionProvider>();
+    final session = context.watch<TerminalSession>();
     final scheme = Theme.of(context).colorScheme;
     final key = AppShortcut.toggleLogging.label;
     final small = Theme.of(context).textTheme.bodySmall;
@@ -33,7 +33,7 @@ class StatusBar extends StatelessWidget {
         children: [
           Icon(Icons.circle, size: 8, color: session.connected ? AppColors.success : scheme.outline),
           const SizedBox(width: AppSpacing.sm),
-          Text(session.profile?.label ?? '', style: small),
+          Text(session.statusLabel, style: small),
           const Spacer(),
           if (session.isLogging) ...[
             Flexible(

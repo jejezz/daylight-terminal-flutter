@@ -6,7 +6,7 @@ import 'package:xterm2/ui.dart' as xterm_ui;
 import 'package:xterm2/xterm.dart';
 
 import '../settings/terminal_prefs.dart';
-import '../state/ssh_session_provider.dart';
+import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
 
@@ -43,7 +43,7 @@ class _TerminalPaneState extends State<TerminalPane> {
 
   @override
   Widget build(BuildContext context) {
-    final terminal = context.read<SshSessionProvider>().terminal;
+    final terminal = context.read<TerminalSession>().terminal;
     final prefs = context.watch<TerminalPrefs>();
     return LayoutBuilder(
       builder: (context, constraints) {

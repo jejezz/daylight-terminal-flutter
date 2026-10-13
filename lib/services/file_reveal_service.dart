@@ -12,4 +12,16 @@ class FileRevealService {
       await Process.run('xdg-open', [File(path).parent.path]);
     }
   }
+
+  /// 파일/폴더를 OS의 기본 프로그램으로 연다 (더블클릭한 것과 같다).
+  static Future<void> open(String path) async {
+    if (Platform.isWindows) {
+      // explorer.exe에 경로를 주면 연결된 프로그램으로 열고, 폴더면 그 폴더를 연다.
+      await Process.start('explorer', [path], mode: ProcessStartMode.detached);
+    } else if (Platform.isMacOS) {
+      await Process.start('open', [path], mode: ProcessStartMode.detached);
+    } else if (Platform.isLinux) {
+      await Process.start('xdg-open', [path], mode: ProcessStartMode.detached);
+    }
+  }
 }

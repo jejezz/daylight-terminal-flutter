@@ -364,5 +364,37 @@
         "format": "decimalPattern"
       }
     }
-  }
+  },
+  "localOpen": "열기",
+  "localReveal": "파일 관리자에서 보기",
+  "localPlaces": "자주 가는 곳",
+  "localFolderError": "폴더를 읽지 못했습니다: {detail}",
+  "@localFolderError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "shellExited": "셸이 종료되었습니다 (종료 코드 {code})",
+  "@shellExited": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "shellRestart": "다시 시작",
+  "shellStartFailed": "셸을 시작하지 못했습니다: {detail}",
+  "@shellStartFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "shellTerminate": "셸 종료",
+  "newTabSsh": "SSH 연결",
+  "newTabLocalShell": "로컬 셸",
+  "newTabNoShells": "사용할 수 있는 로컬 셸을 찾지 못했습니다"
 }

@@ -531,4 +531,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return '$countString lines';
   }
+
+  @override
+  String get localOpen => 'Open';
+
+  @override
+  String get localReveal => 'Show in file manager';
+
+  @override
+  String get localPlaces => 'Places';
+
+  @override
+  String localFolderError(String detail) {
+    return 'Could not read the folder: $detail';
+  }
+
+  @override
+  String shellExited(int code) {
+    return 'The shell has exited (exit code $code)';
+  }
+
+  @override
+  String get shellRestart => 'Restart';
+
+  @override
+  String shellStartFailed(String detail) {
+    return 'Could not start the shell: $detail';
+  }
+
+  @override
+  String get shellTerminate => 'End shell';
+
+  @override
+  String get newTabSsh => 'SSH connection';
+
+  @override
+  String get newTabLocalShell => 'Local shell';
+
+  @override
+  String get newTabNoShells => 'No local shell was found';
 }

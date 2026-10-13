@@ -5,6 +5,7 @@
 //   언어 해석 · macOS 앱 메뉴 About · 앱 바 [테마 | 언어 | 정보] · 빈 상태.
 // 기존 앱에는 통째로 덮어쓰지 말고 필요한 부분만 옮긴다.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' show AppExitResponse;
 
@@ -61,14 +62,33 @@ Future<void> main() async {
   final settings = await AppSettings.load();
   final terminalPrefs = await TerminalPrefs.load();
   final sessions = SessionsController(await ProfileStore.load(), scrollback: () => terminalPrefs.scrollback);
+  unawaited(sessions.loadShells()); // 새 탭 메뉴에 보일 로컬 셸 목록 (Windows는 WSL 배포판을 묻느라 잠깐 걸린다)
   // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
   final updates = await UpdateService.create();
   // UpdateScope 는 MaterialApp 위에 둔다 — 정보 창이 이것을 읽어 "업데이트 확인" 단추를 붙인다.
-  runApp(UpdateScope(service: updates, child: App(settings: settings, sessions: sessions, terminalPrefs: terminalPrefs, placement: placement, updates: updates)));
+  runApp(
+    UpdateScope(
+      service: updates,
+      child: App(
+        settings: settings,
+        sessions: sessions,
+        terminalPrefs: terminalPrefs,
+        placement: placement,
+        updates: updates,
+      ),
+    ),
+  );
 }
 
 class App extends StatefulWidget {
-  const App({super.key, required this.settings, required this.sessions, required this.terminalPrefs, this.placement, this.updates});
+  const App({
+    super.key,
+    required this.settings,
+    required this.sessions,
+    required this.terminalPrefs,
+    this.placement,
+    this.updates,
+  });
 
   final AppSettings settings;
   final SessionsController sessions;
@@ -147,28 +167,28 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         ChangeNotifierProvider<TerminalPrefs>.value(value: widget.terminalPrefs),
       ],
       child: AppSettingsScope(
-      settings: widget.settings,
-      child: ListenableBuilder(
-        listenable: widget.settings,
-        builder: (context, _) => MaterialApp(
-          navigatorKey: _navigatorKey,
-          title: AppIdentity.displayName,
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light(dense: _isDesktop),
-          darkTheme: AppTheme.dark(dense: _isDesktop),
-          themeMode: widget.settings.themeMode,
-          locale: widget.settings.locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          localeResolutionCallback: AppSettings.resolveLocale,
-          builder: (context, child) => AppMenuBar(
-            onAbout: _showAbout,
-            onCheckForUpdates: widget.updates == null ? null : _checkForUpdates,
-            child: child!,
+        settings: widget.settings,
+        child: ListenableBuilder(
+          listenable: widget.settings,
+          builder: (context, _) => MaterialApp(
+            navigatorKey: _navigatorKey,
+            title: AppIdentity.displayName,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(dense: _isDesktop),
+            darkTheme: AppTheme.dark(dense: _isDesktop),
+            themeMode: widget.settings.themeMode,
+            locale: widget.settings.locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localeResolutionCallback: AppSettings.resolveLocale,
+            builder: (context, child) => AppMenuBar(
+              onAbout: _showAbout,
+              onCheckForUpdates: widget.updates == null ? null : _checkForUpdates,
+              child: child!,
+            ),
+            home: HomeScreen(onAbout: _showAbout),
           ),
-          home: HomeScreen(onAbout: _showAbout),
         ),
-      ),
       ),
     );
   }

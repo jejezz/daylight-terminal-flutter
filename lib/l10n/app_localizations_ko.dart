@@ -524,4 +524,43 @@ class AppLocalizationsKo extends AppLocalizations {
 
     return '$countString줄';
   }
+
+  @override
+  String get localOpen => '열기';
+
+  @override
+  String get localReveal => '파일 관리자에서 보기';
+
+  @override
+  String get localPlaces => '자주 가는 곳';
+
+  @override
+  String localFolderError(String detail) {
+    return '폴더를 읽지 못했습니다: $detail';
+  }
+
+  @override
+  String shellExited(int code) {
+    return '셸이 종료되었습니다 (종료 코드 $code)';
+  }
+
+  @override
+  String get shellRestart => '다시 시작';
+
+  @override
+  String shellStartFailed(String detail) {
+    return '셸을 시작하지 못했습니다: $detail';
+  }
+
+  @override
+  String get shellTerminate => '셸 종료';
+
+  @override
+  String get newTabSsh => 'SSH 연결';
+
+  @override
+  String get newTabLocalShell => '로컬 셸';
+
+  @override
+  String get newTabNoShells => '사용할 수 있는 로컬 셸을 찾지 못했습니다';
 }

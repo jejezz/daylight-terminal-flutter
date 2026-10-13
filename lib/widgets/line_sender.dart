@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/line_ending.dart';
-import '../state/ssh_session_provider.dart';
+import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 
 /// 여러 줄을 미리 써두고 한 줄씩 순서대로 전송하는 스크립트 러너.
@@ -35,7 +35,7 @@ class _LineSenderState extends State<LineSender> {
     final isEnter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
     if (!isEnter) return KeyEventResult.ignored;
 
-    final connected = context.read<SshSessionProvider>().connected;
+    final connected = context.read<TerminalSession>().connected;
     // 연결 전에는 전송할 대상이 없으므로 Enter도 보통의 줄바꿈으로만 동작해서
     // 스크립트를 미리 자유롭게 써둘 수 있다.
     if (!connected || HardwareKeyboard.instance.isControlPressed) {
@@ -61,7 +61,7 @@ class _LineSenderState extends State<LineSender> {
   }
 
   void _sendCurrentLine() {
-    final session = context.read<SshSessionProvider>();
+    final session = context.read<TerminalSession>();
     if (!session.connected) return;
 
     final text = _controller.text;
@@ -94,7 +94,7 @@ class _LineSenderState extends State<LineSender> {
 
   @override
   Widget build(BuildContext context) {
-    final session = context.watch<SshSessionProvider>();
+    final session = context.watch<TerminalSession>();
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 

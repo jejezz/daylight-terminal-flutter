@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/local_shell.dart';
+import '../state/local_shell_session.dart';
 import '../state/sessions_controller.dart';
-import '../state/ssh_session_provider.dart';
+import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
 
@@ -36,12 +38,27 @@ class TabBarRow extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
+          PopupMenuButton<Object>(
             iconSize: 18,
-            visualDensity: VisualDensity.compact,
-            tooltip: '${l10n.tabNew} (${AppShortcut.newTab.label})',
+            tooltip: l10n.tabNew,
             icon: const Icon(Icons.add_rounded),
-            onPressed: controller.add,
+            onSelected: (choice) => choice is LocalShell ? controller.addLocal(choice) : controller.add(),
+            itemBuilder: (context) => [
+              PopupMenuItem<Object>(
+                value: 'ssh',
+                child: _MenuRow(Icons.dns_outlined, l10n.newTabSsh, AppShortcut.newTab.label),
+              ),
+              const PopupMenuDivider(),
+              if (controller.shells.isEmpty)
+                PopupMenuItem<Object>(enabled: false, child: Text(l10n.newTabNoShells))
+              else
+                for (final (i, shell) in controller.shells.indexed)
+                  PopupMenuItem<Object>(
+                    value: shell,
+                    // 첫 번째가 기본 셸이고, 단축키는 그 셸을 연다.
+                    child: _MenuRow(Icons.terminal_rounded, shell.name, i == 0 ? AppShortcut.newLocalTab.label : null),
+                  ),
+            ],
           ),
         ],
       ),
@@ -52,7 +69,7 @@ class TabBarRow extends StatelessWidget {
 class _Tab extends StatelessWidget {
   const _Tab({required this.session, required this.selected, required this.onSelect, required this.onClose});
 
-  final SshSessionProvider session;
+  final TerminalSession session;
   final bool selected;
   final VoidCallback onSelect;
   final VoidCallback onClose;
@@ -81,6 +98,8 @@ class _Tab extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Icon(session is LocalShellSession ? Icons.terminal_rounded : Icons.dns_outlined, size: 13),
+                const SizedBox(width: AppSpacing.xs),
                 Icon(
                   Icons.circle,
                   size: 8,
@@ -115,6 +134,31 @@ class _Tab extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// 새 탭 메뉴의 한 줄: 아이콘, 이름, (있으면) 단축키.
+class _MenuRow extends StatelessWidget {
+  const _MenuRow(this.icon, this.label, this.shortcut);
+
+  final IconData icon;
+  final String label;
+  final String? shortcut;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Row(
+      children: [
+        Icon(icon, size: 18),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(child: Text(label)),
+        if (shortcut != null) ...[
+          const SizedBox(width: AppSpacing.lg),
+          Text(shortcut!, style: TextStyle(fontSize: 11, color: muted)),
+        ],
+      ],
     );
   }
 }

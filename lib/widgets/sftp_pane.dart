@@ -9,16 +9,18 @@ import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
-import '../models/remote_entry.dart';
+import '../models/file_item.dart';
 import '../models/transfer.dart';
 import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
+import 'file_pane_parts.dart';
+import 'list_selection.dart';
 
 /// 진행 중인 끌어내기 한 번의 상태.
 class _Drag {
   _Drag(this.items, this.from);
 
-  final List<RemoteEntry> items;
+  final List<FileItem> items;
 
   /// 끌기를 시작할 때의 원격 폴더 (끄는 동안 탐색기가 다른 폴더로 가도 원래 파일을 받는다).
   final String from;
@@ -44,8 +46,7 @@ class SftpPane extends StatefulWidget {
 
 class _SftpPaneState extends State<SftpPane> {
   bool _dragging = false;
-  final Set<String> _selected = {};
-  int? _anchor;
+  final _selection = ListSelection();
   _Drag? _drag;
 
   void _toast(String message) {
@@ -65,43 +66,14 @@ class _SftpPaneState extends State<SftpPane> {
 
   // ───────────────────────── 선택 ─────────────────────────
 
-  void _select(int index, List<RemoteEntry> entries) {
-    final kb = HardwareKeyboard.instance;
-    setState(() {
-      final name = entries[index].name;
-      if (kb.isShiftPressed && _anchor != null) {
-        final a = _anchor!.clamp(0, entries.length - 1), b = index;
-        _selected
-          ..clear()
-          ..addAll([for (var i = a < b ? a : b; i <= (a < b ? b : a); i++) entries[i].name]);
-      } else if (kb.isControlPressed || kb.isMetaPressed) {
-        if (!_selected.remove(name)) _selected.add(name);
-        _anchor = index;
-      } else {
-        _selected
-          ..clear()
-          ..add(name);
-        _anchor = index;
-      }
-    });
-  }
-
-  List<RemoteEntry> _selectedEntries(SshSessionProvider session) => [
-    for (final e in session.entries)
-      if (_selected.contains(e.name)) e,
-  ];
+  void _select(int index, List<FileItem> entries) =>
+      setState(() => _selection.click(index, entries, HardwareKeyboard.instance));
 
   /// 우클릭/끌기를 시작한 항목이 선택에 없으면 그 항목만 선택한다. 있으면 선택 전체가 대상이다.
-  List<RemoteEntry> _targetsFor(SshSessionProvider session, RemoteEntry e) {
-    if (!_selected.contains(e.name)) {
-      setState(() {
-        _selected
-          ..clear()
-          ..add(e.name);
-        _anchor = session.entries.indexWhere((x) => x.name == e.name);
-      });
-    }
-    return _selectedEntries(session);
+  List<FileItem> _targetsFor(SshSessionProvider session, FileItem e) {
+    final targets = _selection.targetsFor(e, session.entries);
+    setState(() {});
+    return targets;
   }
 
   // ───────────────────────── 대화상자 ─────────────────────────
@@ -159,7 +131,7 @@ class _SftpPaneState extends State<SftpPane> {
     await _guard(() => session.upload(paths));
   }
 
-  Future<void> _download(List<RemoteEntry> items) async {
+  Future<void> _download(List<FileItem> items) async {
     final session = context.read<SshSessionProvider>();
     final l10n = AppLocalizations.of(context);
     if (items.length == 1 && !items.single.isDirectory) {
@@ -178,7 +150,7 @@ class _SftpPaneState extends State<SftpPane> {
     await _guard(() => session.download(items, dir));
   }
 
-  Future<void> _delete(List<RemoteEntry> items) async {
+  Future<void> _delete(List<FileItem> items) async {
     final session = context.read<SshSessionProvider>();
     final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
@@ -204,21 +176,17 @@ class _SftpPaneState extends State<SftpPane> {
         await session.delete(e);
       }
     });
-    if (mounted) setState(_selected.clear);
+    if (mounted) setState(_selection.clear);
   }
 
-  Future<void> _rename(RemoteEntry e) async {
+  Future<void> _rename(FileItem e) async {
     final session = context.read<SshSessionProvider>();
     final l10n = AppLocalizations.of(context);
     final name = await _askText(l10n.sftpRename, l10n.sftpNewName, initial: e.name);
     if (name == null || name.isEmpty || name == e.name) return;
     await _guard(() => session.rename(e, name));
     if (!mounted) return;
-    setState(() {
-      _selected
-        ..clear()
-        ..add(name);
-    });
+    setState(() => _selection.setOnly(name));
   }
 
   Future<void> _newFolder() async {
@@ -235,7 +203,7 @@ class _SftpPaneState extends State<SftpPane> {
     if (!await session.syncExplorerToTerminal()) _toast(l10n.pathCwdFailed);
   }
 
-  Future<void> _rowMenu(RemoteEntry e, Offset position) async {
+  Future<void> _rowMenu(FileItem e, Offset position) async {
     final session = context.read<SshSessionProvider>();
     final l10n = AppLocalizations.of(context);
     final targets = _targetsFor(session, e);
@@ -264,7 +232,7 @@ class _SftpPaneState extends State<SftpPane> {
 
   // ───────────────────────── 끌어내기 (flutter_drag_out) ─────────────────────────
 
-  void _onDragStarted(SshSessionProvider session, RemoteEntry e) {
+  void _onDragStarted(SshSessionProvider session, FileItem e) {
     final items = _targetsFor(session, e);
     final drag = _Drag(items, session.remotePath);
     _drag = drag;
@@ -343,7 +311,15 @@ class _SftpPaneState extends State<SftpPane> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Header(onNewFolder: _newFolder, onSyncExplorer: _syncExplorer),
+              PaneHeader(
+                path: session.remotePath,
+                canGoUp: session.remotePath != '/',
+                onUp: session.goUp,
+                onRefresh: session.refresh,
+                onNewFolder: _newFolder,
+                onTerminalToHere: () => session.moveTerminalTo(session.remotePath),
+                onExplorerToTerminal: _syncExplorer,
+              ),
               Expanded(
                 child: session.sftpError != null
                     ? Center(
@@ -377,13 +353,13 @@ class _SftpPaneState extends State<SftpPane> {
                         itemCount: session.entries.length,
                         itemBuilder: (context, i) {
                           final e = session.entries[i];
-                          return _Row(
+                          return FileRow(
                             entry: e,
-                            selected: _selected.contains(e.name),
+                            selected: _selection.contains(e.name),
                             onTap: () => _select(i, session.entries),
                             onOpen: () => e.isDirectory ? session.openEntry(e) : _download([e]),
                             onMenu: (pos) => _rowMenu(e, pos),
-                            dragCount: () => _selected.contains(e.name) ? _selected.length : 1,
+                            dragCount: () => _selection.contains(e.name) ? _selection.length : 1,
                             onDragStarted: () => _onDragStarted(session, e),
                             onDragUpdate: (d) => _onDragUpdate(session, d),
                             onDragEnd: () => _drag = null,
@@ -416,165 +392,6 @@ class _SftpPaneState extends State<SftpPane> {
       ),
     );
   }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.onNewFolder, required this.onSyncExplorer});
-
-  final VoidCallback onNewFolder;
-  final VoidCallback onSyncExplorer;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final session = context.watch<SshSessionProvider>();
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            iconSize: 18,
-            visualDensity: VisualDensity.compact,
-            tooltip: l10n.sftpUp,
-            icon: const Icon(Icons.arrow_upward_rounded),
-            onPressed: session.remotePath == '/' ? null : session.goUp,
-          ),
-          Expanded(
-            child: Tooltip(
-              message: session.remotePath,
-              child: Text(
-                session.remotePath,
-                overflow: TextOverflow.ellipsis,
-                textDirection: TextDirection.rtl, // 길면 앞이 아니라 뒤(현재 폴더)가 보이게
-                style: AppFonts.mono.copyWith(fontSize: 12, color: scheme.onSurface),
-              ),
-            ),
-          ),
-          IconButton(
-            iconSize: 18,
-            visualDensity: VisualDensity.compact,
-            tooltip: l10n.sftpRefresh,
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: session.refresh,
-          ),
-          IconButton(
-            iconSize: 18,
-            visualDensity: VisualDensity.compact,
-            tooltip: l10n.sftpNewFolder,
-            icon: const Icon(Icons.create_new_folder_outlined),
-            onPressed: onNewFolder,
-          ),
-          PopupMenuButton<String>(
-            tooltip: l10n.pathMenuTooltip,
-            iconSize: 18,
-            icon: const Icon(Icons.sync_alt_rounded),
-            onSelected: (v) {
-              if (v == 'terminal') session.moveTerminalTo(session.remotePath);
-              if (v == 'explorer') onSyncExplorer();
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'terminal', child: Text(l10n.pathMenuTerminalToHere)),
-              PopupMenuItem(value: 'explorer', child: Text(l10n.pathMenuExplorerToTerminal)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  const _Row({
-    required this.entry,
-    required this.selected,
-    required this.onTap,
-    required this.onOpen,
-    required this.onMenu,
-    required this.dragCount,
-    required this.onDragStarted,
-    required this.onDragUpdate,
-    required this.onDragEnd,
-  });
-
-  final RemoteEntry entry;
-  final bool selected;
-  final VoidCallback onTap;
-  final VoidCallback onOpen;
-  final void Function(Offset globalPosition) onMenu;
-  final int Function() dragCount;
-  final VoidCallback onDragStarted;
-  final void Function(DragUpdateDetails details) onDragUpdate;
-  final VoidCallback onDragEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    final small = Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
-    final content = Container(
-      height: 30,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      color: selected ? scheme.primary.withValues(alpha: 0.14) : null,
-      child: Row(
-        children: [
-          Icon(
-            entry.isDirectory ? Icons.folder_rounded : Icons.insert_drive_file_outlined,
-            size: 18,
-            color: entry.isDirectory ? scheme.primary : scheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              entry.name,
-              overflow: TextOverflow.ellipsis,
-              style: AppFonts.userContent.copyWith(fontSize: 13, color: scheme.onSurface),
-            ),
-          ),
-          if (!entry.isDirectory && entry.size != null) Text(_formatSize(entry.size!), style: small),
-        ],
-      ),
-    );
-    return GestureDetector(
-      onSecondaryTapDown: (d) => onMenu(d.globalPosition),
-      child: Draggable<List<RemoteEntry>>(
-        maxSimultaneousDrags: 1,
-        feedback: Builder(
-          builder: (context) {
-            final n = dragCount();
-            return Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(AppRadius.button),
-              color: scheme.surfaceContainerHighest,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-                child: Text(n == 1 ? entry.name : l10n.sftpDragCount(n), style: const TextStyle(fontSize: 13)),
-              ),
-            );
-          },
-        ),
-        onDragStarted: onDragStarted,
-        onDragUpdate: onDragUpdate,
-        onDragEnd: (_) => onDragEnd(),
-        child: InkWell(splashFactory: NoSplash.splashFactory, onTap: onTap, onDoubleTap: onOpen, child: content),
-      ),
-    );
-  }
-}
-
-String _formatSize(int bytes) {
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  var value = bytes.toDouble();
-  var i = 0;
-  while (value >= 1024 && i < units.length - 1) {
-    value /= 1024;
-    i++;
-  }
-  return i == 0 ? '$bytes B' : '${value.toStringAsFixed(value < 10 ? 1 : 0)} ${units[i]}';
 }
 
 class _TransferList extends StatelessWidget {

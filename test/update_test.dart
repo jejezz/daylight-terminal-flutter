@@ -18,19 +18,19 @@ import 'package:daylight_terminal/update/update_scope.dart';
 import 'package:daylight_terminal/update/update_service.dart';
 
 UpdateInfo _info({String notes = 'Fixed things.'}) => UpdateInfo(
-      appId: 'sample-flutter',
-      currentVersion: '1.0.0',
-      latestVersion: '1.1.0',
-      tag: 'v1.1.0',
-      notes: notes,
-      releaseUrl: Uri.parse('https://github.com/jejezz/sample-flutter/releases/tag/v1.1.0'),
-      asset: UpdateAsset(
-        name: 'Sample-1.1.0-macos-universal.dmg',
-        url: Uri.parse('https://github.com/jejezz/sample-flutter/releases/download/v1.1.0/x.dmg'),
-        size: 2 * 1024 * 1024,
-        sha256: 'a' * 64,
-      ),
-    );
+  appId: 'sample-flutter',
+  currentVersion: '1.0.0',
+  latestVersion: '1.1.0',
+  tag: 'v1.1.0',
+  notes: notes,
+  releaseUrl: Uri.parse('https://github.com/jejezz/sample-flutter/releases/tag/v1.1.0'),
+  asset: UpdateAsset(
+    name: 'Sample-1.1.0-macos-universal.dmg',
+    url: Uri.parse('https://github.com/jejezz/sample-flutter/releases/download/v1.1.0/x.dmg'),
+    size: 2 * 1024 * 1024,
+    sha256: 'a' * 64,
+  ),
+);
 
 class _FakeUpdater implements AppUpdater {
   UpdateCheckResult checkResult = const UpToDate();
@@ -113,19 +113,16 @@ class _Harness {
   int quits = 0;
 
   Widget app({Locale locale = const Locale('ko')}) => MaterialApp(
-        navigatorKey: navigatorKey,
-        locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => TextButton(
-              onPressed: () => service.checkManually(context),
-              child: const Text('check'),
-            ),
-          ),
-        ),
-      );
+    navigatorKey: navigatorKey,
+    locale: locale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(
+      body: Builder(
+        builder: (context) => TextButton(onPressed: () => service.checkManually(context), child: const Text('check')),
+      ),
+    ),
+  );
 }
 
 Future<void> _check(WidgetTester tester, _Harness h, {Locale locale = const Locale('ko')}) async {
@@ -164,21 +161,34 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       for (final version in ['0.1.0.1', 'garbage', '']) {
         PackageInfo.setMockInitialValues(
-          appName: 'Sample', packageName: 'art.example.sample', version: version,
-          buildNumber: '1', buildSignature: '',
+          appName: 'Sample',
+          packageName: 'art.example.sample',
+          version: version,
+          buildNumber: '1',
+          buildSignature: '',
         );
         await expectLater(UpdateService.create(), completes, reason: version);
       }
       PackageInfo.setMockInitialValues(
-        appName: 'Sample', packageName: 'art.example.sample', version: 'garbage',
-        buildNumber: '1', buildSignature: '',
+        appName: 'Sample',
+        packageName: 'art.example.sample',
+        version: 'garbage',
+        buildNumber: '1',
+        buildSignature: '',
       );
       expect(await UpdateService.create(), isNull);
     }, skip: !(Platform.isMacOS || Platform.isWindows || Platform.isLinux) || AppIdentity.updateServerUrl.isEmpty);
   });
 
-  setUp(() => PackageInfo.setMockInitialValues(
-        appName: 'Sample', packageName: 'art.zoomon.sample', version: '1.0.0', buildNumber: '3', buildSignature: ''));
+  setUp(
+    () => PackageInfo.setMockInitialValues(
+      appName: 'Sample',
+      packageName: 'art.zoomon.sample',
+      version: '1.0.0',
+      buildNumber: '3',
+      buildSignature: '',
+    ),
+  );
 
   group('manual check', () {
     testWidgets('up to date says so, with the running version', (tester) async {
@@ -191,7 +201,9 @@ void main() {
 
     testWidgets('a failed check explains in plain words, never the raw error', (tester) async {
       final h = _Harness();
-      h.updater.checkResult = UpdateCheckFailed(UpdateException(UpdateErrorKind.network, 'SocketException 10.0.0.1:443'));
+      h.updater.checkResult = UpdateCheckFailed(
+        UpdateException(UpdateErrorKind.network, 'SocketException 10.0.0.1:443'),
+      );
       await _check(tester, h);
       expect(find.text('업데이트를 확인하지 못했습니다'), findsOneWidget);
       expect(find.textContaining('인터넷 연결'), findsOneWidget);
@@ -261,20 +273,25 @@ void main() {
       expect(h.quits, 0); // macOS 는 앱을 종료하지 않는다
     });
 
-    testWidgets('sandboxed macOS: the browser downloads, the app never does (a file the sandbox writes is refused by Gatekeeper)', (tester) async {
-      final h = _Harness(browserDownload: true)
-        ..updater.prefixes = const ['https://github.com/']
-        ..updater.checkResult = UpdateAvailable(_info());
-      await _check(tester, h);
-      await agree(tester);
-      expect(h.updater.downloads, 0);
-      expect(h.updater.installs, 0);
-      expect(h.opened, [Uri.parse('https://github.com/jejezz/sample-flutter/releases/download/v1.1.0/x.dmg')]);
-      expect(find.text('브라우저에서 내려받습니다'), findsOneWidget);
-      expect(h.quits, 0);
-    });
+    testWidgets(
+      'sandboxed macOS: the browser downloads, the app never does (a file the sandbox writes is refused by Gatekeeper)',
+      (tester) async {
+        final h = _Harness(browserDownload: true)
+          ..updater.prefixes = const ['https://github.com/']
+          ..updater.checkResult = UpdateAvailable(_info());
+        await _check(tester, h);
+        await agree(tester);
+        expect(h.updater.downloads, 0);
+        expect(h.updater.installs, 0);
+        expect(h.opened, [Uri.parse('https://github.com/jejezz/sample-flutter/releases/download/v1.1.0/x.dmg')]);
+        expect(find.text('브라우저에서 내려받습니다'), findsOneWidget);
+        expect(h.quits, 0);
+      },
+    );
 
-    testWidgets('sandboxed macOS: an address outside the allowed prefixes opens the release page instead', (tester) async {
+    testWidgets('sandboxed macOS: an address outside the allowed prefixes opens the release page instead', (
+      tester,
+    ) async {
       final h = _Harness(browserDownload: true)
         ..updater.prefixes = const ['https://example.invalid/']
         ..updater.checkResult = UpdateAvailable(_info());
@@ -429,7 +446,10 @@ void main() {
 
     testWidgets('can be skipped too', (tester) async {
       final h = _Harness();
-      h.updater.checkResult = const UpdateUnavailable(reason: UnavailableReason.noAssetForPlatform, latestVersion: '1.1.0');
+      h.updater.checkResult = const UpdateUnavailable(
+        reason: UnavailableReason.noAssetForPlatform,
+        latestVersion: '1.1.0',
+      );
       await _check(tester, h);
       expect(find.text('릴리스 페이지 열기'), findsNothing); // 주소가 없으면 단추도 없다
       await tester.tap(find.text('이 버전 건너뛰기'));
@@ -466,13 +486,19 @@ void main() {
 
   group('about dialog', () {
     Widget about({VoidCallback? onCheck}) => MaterialApp(
-          locale: const Locale('ko'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: AppAboutDialog(version: '1.0.0', buildNumber: '3', tagline: 't', description: 'd', onCheckForUpdates: onCheck),
-          ),
-        );
+      locale: const Locale('ko'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: AppAboutDialog(
+          version: '1.0.0',
+          buildNumber: '3',
+          tagline: 't',
+          description: 'd',
+          onCheckForUpdates: onCheck,
+        ),
+      ),
+    );
 
     testWidgets('has the button only when updates are wired', (tester) async {
       await tester.pumpWidget(about());
@@ -487,21 +513,21 @@ void main() {
 
   group('UpdateScope', () {
     Widget host(UpdateService? service) => UpdateScope(
-          service: service,
-          child: MaterialApp(
-            locale: const Locale('ko'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => TextButton(
-                  onPressed: () => showAppAboutDialog(context, tagline: 't', description: 'd'),
-                  child: const Text('open about'),
-                ),
-              ),
+      service: service,
+      child: MaterialApp(
+        locale: const Locale('ko'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showAppAboutDialog(context, tagline: 't', description: 'd'),
+              child: const Text('open about'),
             ),
           ),
-        );
+        ),
+      ),
+    );
 
     testWidgets('the About dialog gets its own "check for updates" button, wherever it is opened', (tester) async {
       final h = _Harness();

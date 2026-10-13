@@ -19,8 +19,9 @@ class AppShortcut {
   static const toggleLogging = AppShortcut._(LogicalKeyboardKey.keyR, true);
   static const clearTerminal = AppShortcut._(LogicalKeyboardKey.keyK, false);
   static const addressBook = AppShortcut._(LogicalKeyboardKey.keyO, false);
+  static const newLocalTab = AppShortcut._(LogicalKeyboardKey.keyL, false);
 
-  static const all = [newTab, closeTab, toggleLogging, clearTerminal, addressBook];
+  static const all = [newTab, closeTab, toggleLogging, clearTerminal, addressBook, newLocalTab];
 
   SingleActivator get activator =>
       _isMac ? SingleActivator(_key, meta: true, shift: _macShift) : SingleActivator(_key, control: true, shift: true);

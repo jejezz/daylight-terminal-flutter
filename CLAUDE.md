@@ -25,7 +25,8 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 
 - `flutter test`는 서버 없이 돈다. 실제 SSH 서버가 필요한 `test/ssh_e2e_test.dart`,
   `test/ssh_ui_e2e_test.dart`는 `TEST_SSH_PORT`, `TEST_SSH_PASSWORD`(사용자 `tester`, SFTP 루트에 `sub/` 폴더)가
-  없으면 건너뛴다.
+  없으면 건너뛴다. `test/local_pty_e2e_test.dart`는 진짜 셸(ConPTY)로 도는 테스트라 `TEST_PTY=1`과 PATH에 빌드한
+  `flutter_pty.dll`이 필요하다 (`flutter build windows --debug` 후 `PATH="$PATH:build/windows/x64/runner/Debug"`).
 
 ## 끌어내기 (flutter_drag_out)
 
@@ -45,6 +46,25 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   `assets/licenses/agave-nerd-font.txt`). 목록에서 고르거나 설치된 글꼴 이름을 직접 적을 수 있고, 어느 쪽이든
   fallback 맨 앞에 내장 글꼴이 있어 아이콘 글리프는 항상 나온다. 설정 키: `terminal_font_family`, `terminal_font_size`, `terminal_scrollback`(스크롤백 줄 수, 기본 10000 — xterm2는 생성 때만 정해서 새로 여는 탭부터 적용).
   (규약 fonts.md §4의 기본 고정폭 목록 대신 Nerd Font를 기본으로 쓰는 것은 사용자 요청.)
+
+## 탭 종류: SSH와 로컬 셸
+
+- 새 탭 메뉴(+)에서 고른다. **SSH 탭** = 왼쪽 SFTP(서버 폴더) + SSH 터미널. **로컬 셸 탭** = 왼쪽 이 PC의 폴더 뷰 +
+  로컬 셸 터미널. 한 탭에서 로컬과 원격을 동시에 보지 않는다(양쪽 패널 없음).
+- 구조: `TerminalSession`(터미널, LineSender, 기록, 현재 경로 확인)을 `SshSessionProvider`와 `LocalShellSession`이
+  상속한다. 화면의 공통 위젯(터미널, LineSender, 상태 바, 탭)은 `TerminalSession`으로, 왼쪽 패널은 `SftpPane` /
+  `LocalFolderPane`이 자기 타입으로 찾는다. 두 패널은 `file_pane_parts.dart`(헤더·행)와 `ListSelection`을 공유한다.
+- 셸 탐지(`local_shell_finder.dart`): Windows는 pwsh, Windows PowerShell, cmd, Git Bash, WSL 배포판(`wsl -l -q`는
+  UTF-16). macOS/Linux는 `$SHELL`과 `/etc/shells`(macOS는 로그인 셸 `-l`). 첫 번째가 기본 셸(Ctrl+Shift+L).
+- 경로 이동도 **메뉴로만**: "터미널을 이 폴더로 이동"은 셸 종류별 명령(`local_paths.dart`)을 입력하고, "탐색기를
+  터미널 경로로 이동"은 셸에 OSC 7을 출력시키는 명령을 입력해 경로를 받는다. cmd는 현재 경로를 알려 줄 방법이 없어
+  이 메뉴 항목을 숨긴다. WSL은 `wslpath -u`와 `\\wsl.localhost\배포판` / `/mnt/c` 변환, Git Bash는 `cygpath -m`을 쓴다.
+- 로컬 폴더 뷰의 삭제는 휴지통 없이 영구 삭제다(확인 창에 그렇게 적혀 있다). 링크는 대상이 아니라 링크만 지운다.
+- 셸이 끝나면 탭은 남고 "다시 시작" 줄이 뜬다. 셸이 시작되지 않으면 오류와 함께 같은 줄이 뜬다.
+- **`packages/flutter_pty`는 pub.dev 0.4.2의 복사본**이다. 원본의 Windows 결함(명령줄에 실행 파일이 두 번,
+  UTF-8을 한 글자씩 UTF-16에 넣어 한글 경로가 깨짐, 인용 없음, 셸을 띄울 때마다 `Sleep(1000)`)을 고쳤다.
+  자세한 내용은 `packages/flutter_pty/PATCHES.md`. 원본이 고치면 되돌린다.
+- macOS 샌드박스는 꺼 둔다(`app-sandbox = false`, 규약). 켜져 있으면 로컬 셸도 SSH 연결도 막힌다.
 
 ## 창 위치 (Windows)
 

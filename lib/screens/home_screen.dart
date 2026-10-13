@@ -5,12 +5,15 @@ import '../app_identity.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/settings_menus.dart';
 import '../state/sessions_controller.dart';
+import '../state/local_shell_session.dart';
 import '../state/ssh_session_provider.dart';
+import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
 import '../widgets/address_book_dialog.dart';
 import '../widgets/connect_panel.dart';
 import '../widgets/line_sender.dart';
+import '../widgets/local_folder_pane.dart';
 import '../widgets/sftp_pane.dart';
 import '../widgets/status_bar.dart';
 import '../widgets/tab_bar_row.dart';
@@ -33,6 +36,7 @@ class HomeScreen extends StatelessWidget {
     return CallbackShortcuts(
       bindings: {
         AppShortcut.newTab.activator: controller.add,
+        AppShortcut.newLocalTab.activator: controller.addLocal,
         AppShortcut.closeTab.activator: controller.closeCurrent,
         AppShortcut.toggleLogging.activator: () {
           current?.toggleLogging(confirmButtonText: l10n.logSaveConfirm);
@@ -52,8 +56,10 @@ class HomeScreen extends StatelessWidget {
                   listenable: current,
                   builder: (context, _) => current.connected
                       ? IconButton(
-                          tooltip: l10n.connectDisconnect,
-                          icon: const Icon(Icons.link_off_rounded),
+                          tooltip: current is LocalShellSession ? l10n.shellTerminate : l10n.connectDisconnect,
+                          icon: Icon(
+                            current is LocalShellSession ? Icons.power_settings_new_rounded : Icons.link_off_rounded,
+                          ),
                           onPressed: current.disconnect,
                         )
                       : const SizedBox.shrink(),
@@ -85,10 +91,16 @@ class HomeScreen extends StatelessWidget {
                         index: controller.selected,
                         children: [
                           for (final s in controller.sessions)
-                            ChangeNotifierProvider<SshSessionProvider>.value(
+                            // 공통 위젯(터미널, LineSender, 상태 바)은 TerminalSession으로, 탭 종류별 위젯은
+                            // 자기 타입으로 찾을 수 있게 둘 다 제공한다.
+                            MultiProvider(
                               key: ObjectKey(s),
-                              value: s,
-                              child: const _SessionView(),
+                              providers: [
+                                ChangeNotifierProvider<TerminalSession>.value(value: s),
+                                if (s is SshSessionProvider) ChangeNotifierProvider<SshSessionProvider>.value(value: s),
+                                if (s is LocalShellSession) ChangeNotifierProvider<LocalShellSession>.value(value: s),
+                              ],
+                              child: _SessionView(session: s),
                             ),
                         ],
                       ),
@@ -126,7 +138,9 @@ class _EmptyState extends StatelessWidget {
 
 /// 한 탭의 내용: 연결 전에는 접속 폼, 연결 후에는 [탐색기 | 터미널 + LineSender] 분할 화면.
 class _SessionView extends StatefulWidget {
-  const _SessionView();
+  const _SessionView({required this.session});
+
+  final TerminalSession session;
 
   @override
   State<_SessionView> createState() => _SessionViewState();
@@ -142,8 +156,9 @@ class _SessionViewState extends State<_SessionView> {
 
   @override
   Widget build(BuildContext context) {
-    final session = context.watch<SshSessionProvider>();
-    if (!session.connected) return const ConnectPanel();
+    final session = context.watch<TerminalSession>();
+    // SSH 탭은 연결하기 전에 접속 폼을 보여 준다.
+    if (!session.connected && widget.session is SshSessionProvider) return const ConnectPanel();
 
     final scheme = Theme.of(context).colorScheme;
     return Column(
@@ -157,7 +172,11 @@ class _SessionViewState extends State<_SessionView> {
               final sender = _senderHeight.clamp(_minSender, maxSender);
               return Row(
                 children: [
-                  SizedBox(width: explorer, child: const SftpPane()),
+                  // 왼쪽: SSH 탭은 서버의 폴더(SFTP), 로컬 셸 탭은 이 PC의 폴더.
+                  SizedBox(
+                    width: explorer,
+                    child: widget.session is LocalShellSession ? const LocalFolderPane() : const SftpPane(),
+                  ),
                   _Divider(
                     axis: Axis.vertical,
                     color: scheme.outlineVariant,
@@ -166,6 +185,7 @@ class _SessionViewState extends State<_SessionView> {
                   Expanded(
                     child: Column(
                       children: [
+                        if (widget.session case final LocalShellSession local) _ShellBanner(session: local),
                         const Expanded(child: TerminalPane()),
                         _Divider(
                           axis: Axis.horizontal,
@@ -211,6 +231,41 @@ class _Divider extends StatelessWidget {
           child: Container(width: vertical ? 1 : null, height: vertical ? null : 1, color: color),
         ),
       ),
+    );
+  }
+}
+
+/// 로컬 셸이 끝났거나 띄우지 못했을 때 터미널 위에 보이는 안내 줄.
+class _ShellBanner extends StatelessWidget {
+  const _ShellBanner({required this.session});
+
+  final LocalShellSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: session,
+      builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
+        final scheme = Theme.of(context).colorScheme;
+        final failed = session.startError != null;
+        if (!failed && session.exitCode == null) return const SizedBox.shrink();
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+          color: failed ? scheme.error.withValues(alpha: 0.14) : scheme.surfaceContainerHighest,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  failed ? l10n.shellStartFailed(session.startError!) : l10n.shellExited(session.exitCode!),
+                  style: TextStyle(color: failed ? scheme.error : scheme.onSurface, fontSize: 12.5),
+                ),
+              ),
+              TextButton(onPressed: session.restart, child: Text(l10n.shellRestart)),
+            ],
+          ),
+        );
+      },
     );
   }
 }

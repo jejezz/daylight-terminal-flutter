@@ -9,13 +9,13 @@ import 'package:daylight_terminal/app_identity.dart';
 import 'package:daylight_terminal/l10n/app_localizations.dart';
 
 Widget _host(Locale locale) => MaterialApp(
-      locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(
-        body: AppAboutDialog(version: '1.4.2', buildNumber: '37', tagline: 'Tagline', description: 'Description'),
-      ),
-    );
+  locale: locale,
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: const Scaffold(
+    body: AppAboutDialog(version: '1.4.2', buildNumber: '37', tagline: 'Tagline', description: 'Description'),
+  ),
+);
 
 void main() {
   testWidgets('shows name, version, copyright and license (ko)', (tester) async {

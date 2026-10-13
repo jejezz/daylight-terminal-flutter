@@ -347,5 +347,37 @@
         "format": "decimalPattern"
       }
     }
-  }
+  },
+  "localOpen": "Open",
+  "localReveal": "Show in file manager",
+  "localPlaces": "Places",
+  "localFolderError": "Could not read the folder: {detail}",
+  "@localFolderError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "shellExited": "The shell has exited (exit code {code})",
+  "@shellExited": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "shellRestart": "Restart",
+  "shellStartFailed": "Could not start the shell: {detail}",
+  "@shellStartFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "shellTerminate": "End shell",
+  "newTabSsh": "SSH connection",
+  "newTabLocalShell": "Local shell",
+  "newTabNoShells": "No local shell was found"
 }

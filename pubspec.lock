@@ -253,6 +253,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_pty:
+    dependency: "direct main"
+    description:
+      path: "packages/flutter_pty"
+      relative: true
+    source: path
+    version: "0.4.2"
   flutter_test:
     dependency: "direct dev"
     description: flutter

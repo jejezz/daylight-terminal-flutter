@@ -57,6 +57,9 @@ dependencies:
       url: https://github.com/jejezz/flutter_drag_out.git
       ref: v0.5.0
   screen_retriever: ^0.2.2
+  # Windows 결함을 고친 복사본 (packages/flutter_pty/PATCHES.md)
+  flutter_pty:
+    path: packages/flutter_pty
 
 dev_dependencies:
   flutter_test:

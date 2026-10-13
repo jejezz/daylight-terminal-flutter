@@ -113,13 +113,15 @@ class _AddressBookDialogState extends State<_AddressBookDialog> {
     );
     if (credentials == null || !mounted) return;
     final controller = context.read<SessionsController>();
+    // 지금 탭이 비어 있는 SSH 탭이면 거기에, 아니면 새 SSH 탭에 연결한다.
     var session = controller.current;
-    if (session == null || session.connected || session.status == SessionStatus.connecting) {
+    if (session is! SshSessionProvider || session.connected || session.status == SessionStatus.connecting) {
       controller.add();
       session = controller.current!;
     }
+    final ssh = session as SshSessionProvider;
     Navigator.pop(context);
-    unawaited(session.connect(profile, password: credentials.password, keyPassphrase: credentials.passphrase));
+    unawaited(ssh.connect(profile, password: credentials.password, keyPassphrase: credentials.passphrase));
   }
 
   @override
