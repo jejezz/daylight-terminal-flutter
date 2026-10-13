@@ -12,6 +12,7 @@ import '../models/line_ending.dart';
 import '../services/sender_file.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
+import 'pass_through_cursor.dart';
 
 /// 여러 줄을 미리 써두고 한 줄씩 순서대로 전송하는 스크립트 러너.
 /// 그냥 Enter는 커서가 있는 줄을 전송하고, Ctrl+Enter는 평범한 줄바꿈이다.
@@ -30,6 +31,7 @@ class LineSender extends StatefulWidget {
 class _LineSenderState extends State<LineSender> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
+  final _scroll = ScrollController();
 
   /// 편집 중인 파일. 아직 저장한 적 없는 새 스크립트면 null.
   String? _path;
@@ -38,6 +40,16 @@ class _LineSenderState extends State<LineSender> {
   String _savedText = '';
   String _eol = '\n';
   bool _modified = false;
+
+  /// 내용이 칸보다 길어서 스크롤바가 생겼는가.
+  bool _scrollable = false;
+
+  /// 입력 칸 안쪽 여백. 스크롤바는 이 여백 안쪽에 그려지므로(손잡이가 상자 오른쪽 끝에서 18~24px 안쪽) 스크롤바
+  /// 영역을 잡을 때 여백을 더해야 한다.
+  static const _contentPadding = 10.0;
+
+  /// 스크롤바 위에서 화살표 커서를 보여 줄 오른쪽 가장자리의 폭: 여백 + 스크롤바(손잡이와 여백) 약 18px.
+  static const _scrollbarWidth = _contentPadding + 18.0;
 
   @override
   void initState() {
@@ -49,6 +61,7 @@ class _LineSenderState extends State<LineSender> {
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -59,6 +72,7 @@ class _LineSenderState extends State<LineSender> {
   static String _trimEnd(String s) => s.replaceFirst(RegExp(r'\n+$'), '');
 
   void _updateModified() {
+    _checkScrollable();
     final modified = _path != null ? _trimEnd(_controller.text) != _trimEnd(_savedText) : _controller.text.isNotEmpty;
     if (modified != _modified) setState(() => _modified = modified);
   }
@@ -248,6 +262,53 @@ class _LineSenderState extends State<LineSender> {
 
   // ───────────────────────── 화면 ─────────────────────────
 
+  bool _scrollCheckQueued = false;
+
+  /// 프레임이 끝난 뒤 칸이 스크롤되는지(= 스크롤바가 있는지) 다시 읽는다. Flutter의 스크롤 크기 알림은 글이 짧아져서
+  /// 스크롤할 필요가 없어진 경우에는 오지 않기도 해서(측정으로 확인), 알림만 믿으면 화살표 영역이 남는다.
+  /// 글이 바뀔 때, 칸의 크기가 바뀔 때, 알림이 올 때 부른다. 한 프레임에 한 번만 확인한다.
+  void _checkScrollable() {
+    if (_scrollCheckQueued) return;
+    _scrollCheckQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollCheckQueued = false;
+      if (!mounted || !_scroll.hasClients) return;
+      final scrollable = _scroll.position.maxScrollExtent > 0;
+      if (scrollable != _scrollable) setState(() => _scrollable = scrollable);
+    });
+  }
+
+  /// TextField는 칸 전체를 텍스트 입력용 I자 커서로 덮어서, 그 안의 스크롤바 위에서도 커서가 바뀌지 않는다.
+  /// 스크롤바가 있을 때만 오른쪽 가장자리에 화살표 커서 영역을 겹친다. 이 영역은 마우스 이벤트를 가로채지
+  /// 않아서([PassThroughCursorRegion]) 스크롤바를 눌러 끄는 동작은 그대로 된다.
+  Widget _withScrollbarCursor(Widget field) {
+    return NotificationListener<ScrollMetricsNotification>(
+      onNotification: (_) {
+        _checkScrollable();
+        return false;
+      },
+      // 칸 크기가 바뀌면(스크립트 영역을 끌어서 키우거나 줄일 때) 스크롤바가 생기거나 사라질 수 있다.
+      child: LayoutBuilder(
+        builder: (context, _) {
+          _checkScrollable();
+          return Stack(
+            children: [
+              Positioned.fill(child: field),
+              if (_scrollable)
+                const Positioned(
+                  top: 0,
+                  bottom: 0,
+                  right: 0,
+                  width: _scrollbarWidth,
+                  child: PassThroughCursorRegion(cursor: SystemMouseCursors.basic),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   static String get _commandKey => defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : 'Ctrl+';
 
   @override
@@ -286,22 +347,25 @@ class _LineSenderState extends State<LineSender> {
                 Expanded(
                   child: Focus(
                     onKeyEvent: _onKeyEvent,
-                    child: TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      maxLines: null,
-                      expands: true,
-                      textAlignVertical: TextAlignVertical.top,
-                      style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        hintText: l10n.senderHint,
-                        contentPadding: const EdgeInsets.all(10),
-                        filled: true,
-                        fillColor: scheme.surfaceContainerLowest,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.button),
-                          borderSide: BorderSide.none,
+                    child: _withScrollbarCursor(
+                      TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        scrollController: _scroll,
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          hintText: l10n.senderHint,
+                          contentPadding: const EdgeInsets.all(_contentPadding),
+                          filled: true,
+                          fillColor: scheme.surfaceContainerLowest,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.button),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                       ),
                     ),
