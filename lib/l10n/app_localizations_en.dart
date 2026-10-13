@@ -582,9 +582,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get senderMore => 'More';
-
-  @override
   String get senderSaveAs => 'Save as…';
 
   @override

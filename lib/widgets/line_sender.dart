@@ -309,13 +309,24 @@ class _LineSenderState extends State<LineSender> {
     );
   }
 
+  static String get _saveAsKey => defaultTargetPlatform == TargetPlatform.macOS ? '⌘⇧S' : 'Ctrl+Shift+S';
+
   static String get _commandKey => defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : 'Ctrl+';
 
   /// 제목 줄 높이. 영역의 높이가 어떻게 바뀌어도 이 줄은 항상 같은 크기로 맨 위에 있다.
   static const _titleBarHeight = 32.0;
 
-  /// 제목 줄: 왼쪽에 편집 중인 파일 이름(과 변경 여부), 오른쪽에 스크립트 파일 버튼(열기, 저장, 더 보기).
+  /// 제목 줄: 왼쪽에 편집 중인 파일 이름(과 변경 여부), 오른쪽에 스크립트 파일 버튼(새로 만들기, 열기, 저장, 다른 이름으로 저장).
   /// 버튼이 입력 칸 옆이 아니라 이 줄에 있어서 스크립트 영역을 줄여도 가려지거나 작아지지 않는다.
+  Widget _titleButton(IconData icon, String tooltip, VoidCallback onPressed, {Color? color}) => IconButton(
+    iconSize: 18,
+    visualDensity: VisualDensity.compact,
+    tooltip: tooltip,
+    icon: Icon(icon),
+    color: color,
+    onPressed: onPressed,
+  );
+
   Widget _titleBar(ColorScheme scheme, AppLocalizations l10n) {
     final name = _path != null
         ? (_modified ? '● $_displayName (${l10n.senderModified})' : _displayName)
@@ -336,32 +347,16 @@ class _LineSenderState extends State<LineSender> {
               child: _path == null ? title : Tooltip(message: _path!, child: title),
             ),
           ),
-          IconButton(
-            iconSize: 18,
-            visualDensity: VisualDensity.compact,
-            tooltip: l10n.senderOpen('${_commandKey}O'),
-            icon: const Icon(Icons.folder_open_rounded),
-            onPressed: _open,
-          ),
-          IconButton(
-            iconSize: 18,
-            visualDensity: VisualDensity.compact,
-            tooltip: l10n.senderSave('${_commandKey}S'),
-            icon: const Icon(Icons.save_outlined),
+          // 한 줄에 모두 놓는다 (편집기의 새 파일 · 열기 · 저장 · 다른 이름으로 저장 순서).
+          _titleButton(Icons.note_add_outlined, l10n.senderNew, _new),
+          _titleButton(Icons.folder_open_rounded, l10n.senderOpen('${_commandKey}O'), _open),
+          _titleButton(
+            Icons.save_outlined,
+            l10n.senderSave('${_commandKey}S'),
+            _save,
             color: _modified ? scheme.primary : null,
-            onPressed: _save,
           ),
-          PopupMenuButton<String>(
-            tooltip: l10n.senderMore,
-            iconSize: 18,
-            padding: EdgeInsets.zero,
-            icon: const Icon(Icons.more_horiz_rounded),
-            onSelected: (v) => v == 'saveAs' ? _saveAs() : _new(),
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'saveAs', child: Text(l10n.senderSaveAs)),
-              PopupMenuItem(value: 'new', child: Text(l10n.senderNew)),
-            ],
-          ),
+          _titleButton(Icons.save_as_outlined, '${l10n.senderSaveAs} ($_saveAsKey)', _saveAs),
         ],
       ),
     );

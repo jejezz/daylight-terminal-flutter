@@ -1070,12 +1070,6 @@ abstract class AppLocalizations {
   /// **'저장 ({key})'**
   String senderSave(String key);
 
-  /// No description provided for @senderMore.
-  ///
-  /// In ko, this message translates to:
-  /// **'더 보기'**
-  String get senderMore;
-
   /// No description provided for @senderSaveAs.
   ///
   /// In ko, this message translates to:

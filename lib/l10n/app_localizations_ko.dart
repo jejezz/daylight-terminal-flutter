@@ -575,9 +575,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get senderMore => '더 보기';
-
-  @override
   String get senderSaveAs => '다른 이름으로 저장…';
 
   @override

@@ -50,19 +50,25 @@ void main() {
   Rect rectOf(WidgetTester tester, Finder f) => tester.getRect(f);
   Finder open() => find.byIcon(Icons.folder_open_rounded);
   Finder save() => find.byIcon(Icons.save_outlined);
-  Finder more() => find.byIcon(Icons.more_horiz_rounded);
+  Finder saveAs() => find.byIcon(Icons.save_as_outlined);
+  Finder newFile() => find.byIcon(Icons.note_add_outlined);
+  List<Finder> buttons() => [newFile(), open(), save(), saveAs()];
 
   /// LineSender 왼쪽 위 모서리를 기준으로 한 위치 — 영역이 아래쪽에 붙어 있어서 높이가 달라지면 화면 좌표는 바뀐다.
   Offset fromTopLeft(WidgetTester tester, Finder f) => tester.getCenter(f) - tester.getTopLeft(find.byType(LineSender));
 
-  testWidgets('the file buttons sit in a title bar above the box, in order: open, save, more', (tester) async {
+  testWidgets('the file buttons sit in a title bar above the box, in order: new, open, save, save as', (tester) async {
     await pumpSender(tester, height: 160);
     final field = rectOf(tester, find.byType(TextField));
-    for (final b in [open(), save(), more()]) {
+    for (final b in buttons()) {
       expect(rectOf(tester, b).bottom, lessThanOrEqualTo(field.top + 1), reason: '버튼이 입력 칸 위(제목 줄)에 있어야 한다');
     }
-    expect(rectOf(tester, open()).right, lessThanOrEqualTo(rectOf(tester, save()).left + 1));
-    expect(rectOf(tester, save()).right, lessThanOrEqualTo(rectOf(tester, more()).left + 1));
+    // 한 줄에 쭉 — 모두 같은 높이에 놓이고 왼쪽부터 새로 만들기, 열기, 저장, 다른 이름으로 저장 순서다.
+    final rects = [for (final b in buttons()) rectOf(tester, b)];
+    for (var i = 0; i < rects.length - 1; i++) {
+      expect(rects[i].right, lessThanOrEqualTo(rects[i + 1].left + 1), reason: '버튼 $i가 다음 버튼과 겹친다');
+      expect(rects[i].center.dy, closeTo(rects[i + 1].center.dy, 0.01), reason: '한 줄이 아니다');
+    }
   });
 
   testWidgets('the buttons are right-aligned on the title bar, with the file name on the left', (tester) async {
@@ -70,10 +76,11 @@ void main() {
     final sender = tester.getRect(find.byType(LineSender));
     // 버튼 줄의 오른쪽 끝이 LineSender의 오른쪽 안쪽 여백(8)에 닿아 있다.
     // (아이콘이 아니라 버튼 전체 영역으로 잰다: 아이콘 둘레에 눌리는 여백이 있다.)
-    expect(rectOf(tester, find.byType(PopupMenuButton<String>)).right, closeTo(sender.right - 8, 1));
+    final lastButton = find.ancestor(of: saveAs(), matching: find.byType(IconButton));
+    expect(rectOf(tester, lastButton).right, closeTo(sender.right - 8, 1));
     final name = rectOf(tester, find.text('제목 없음'));
     expect(name.left, lessThan(sender.left + 40));
-    expect(name.right, lessThan(rectOf(tester, open()).left));
+    expect(name.right, lessThan(rectOf(tester, newFile()).left));
   });
 
   testWidgets('their position and size do not depend on the height of the LineSender', (tester) async {
@@ -81,17 +88,13 @@ void main() {
     final sizes = <double, List<Size>>{};
     for (final h in [96.0, 120.0, 200.0, 400.0]) {
       await pumpSender(tester, height: h);
-      positions[h] = [
-        for (final b in [open(), save(), more()]) fromTopLeft(tester, b),
-      ];
-      sizes[h] = [
-        for (final b in [open(), save(), more()]) tester.getSize(b),
-      ];
+      positions[h] = [for (final b in buttons()) fromTopLeft(tester, b)];
+      sizes[h] = [for (final b in buttons()) tester.getSize(b)];
       expect(tester.takeException(), isNull, reason: '높이 $h에서 넘침이 있다');
     }
     final base = positions[96.0]!;
     for (final h in positions.keys) {
-      for (var i = 0; i < 3; i++) {
+      for (var i = 0; i < base.length; i++) {
         expect(positions[h]![i].dx, closeTo(base[i].dx, 0.01), reason: '높이 $h, 버튼 $i의 가로 위치');
         expect(positions[h]![i].dy, closeTo(base[i].dy, 0.01), reason: '높이 $h, 버튼 $i의 세로 위치');
         expect(sizes[h]![i], sizes[96.0]![i], reason: '높이 $h, 버튼 $i의 크기');
@@ -114,7 +117,7 @@ void main() {
     expect(send.left, greaterThan(field.right - 1));
     expect(ending.left, greaterThan(field.right - 1));
     // 파일 버튼은 제목 줄에 있어서 옆 열의 위쪽(입력 칸 위)에 놓인다 — 옆 열 안에 끼어 있지 않다.
-    for (final b in [open(), save(), more()]) {
+    for (final b in buttons()) {
       expect(rectOf(tester, b).bottom, lessThanOrEqualTo(field.top + 1));
       expect(rectOf(tester, b).bottom, lessThanOrEqualTo(ending.top + 1), reason: '줄 끝 선택 위쪽이어야 한다');
     }

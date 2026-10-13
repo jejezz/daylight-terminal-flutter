@@ -116,12 +116,9 @@ void main() {
   Future<void> tapOpen(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.folder_open_rounded)));
   Future<void> tapSave(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.save_outlined)));
 
-  Future<void> menu(WidgetTester tester, String item) async {
-    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
-    await act(tester, () => tester.tap(find.text(item)));
-  }
+  Future<void> tapSaveAs(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.save_as_outlined)));
+
+  Future<void> tapNew(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.note_add_outlined)));
 
   Future<void> pressCommand(WidgetTester tester, LogicalKeyboardKey key, {bool shift = false}) async {
     await tester.runAsync(() async {
@@ -213,7 +210,7 @@ void main() {
     await tapOpen(tester);
     await typeText(tester, 'v2');
 
-    await menu(tester, '다른 이름으로 저장…');
+    await tapSaveAs(tester);
     expect(dialogs.lastSuggestedName, 'orig.txt'); // 지금 이름을 제안
     expect(File(file('copy.txt')).readAsStringSync(), 'v2');
     expect(File(file('orig.txt')).readAsStringSync(), 'v1'); // 원본은 그대로
@@ -280,12 +277,12 @@ void main() {
     await pumpSender(tester);
     await tapOpen(tester);
 
-    await menu(tester, '새로 만들기'); // 변경 없음 → 묻지 않는다
+    await tapNew(tester); // 변경 없음 → 묻지 않는다
     expect(text(tester), '');
     expect(find.text('n.txt'), findsNothing);
 
     await typeText(tester, 'draft');
-    await menu(tester, '새로 만들기'); // 내용이 있다 → 묻는다 ("제목 없음")
+    await tapNew(tester); // 내용이 있다 → 묻는다 ("제목 없음")
     expect(find.text('저장하지 않은 변경 사항'), findsOneWidget);
     expect(find.textContaining('제목 없음의 변경 사항'), findsOneWidget);
     await act(tester, () => tester.tap(find.text('취소')));
@@ -342,14 +339,14 @@ void main() {
     await pumpSender(tester);
     final before = [
       tester.getRect(find.byIcon(Icons.folder_open_rounded)),
-      tester.getRect(find.byType(PopupMenuButton<String>)),
+      tester.getRect(find.byIcon(Icons.save_as_outlined)),
     ];
 
     await tapOpen(tester);
     expect(tester.takeException(), isNull);
     final after = [
       tester.getRect(find.byIcon(Icons.folder_open_rounded)),
-      tester.getRect(find.byType(PopupMenuButton<String>)),
+      tester.getRect(find.byIcon(Icons.save_as_outlined)),
     ];
     expect(after, before, reason: '긴 이름이 버튼을 밀어냈다');
     expect(find.text(longName), findsOneWidget); // 줄임표(...)로 잘려 보이지만 글은 그대로 하나
