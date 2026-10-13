@@ -313,20 +313,10 @@ class _LineSenderState extends State<LineSender> {
 
   static String get _commandKey => defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : 'Ctrl+';
 
-  /// 제목 줄 높이. 영역의 높이가 어떻게 바뀌어도 이 줄은 항상 같은 크기로 맨 위에 있다.
-  static const _titleBarHeight = 32.0;
+  /// 제목 줄 높이. 영역의 높이가 어떻게 바뀌어도 항상 같은 크기로 맨 위에 있다.
+  static const _titleBarHeight = 24.0;
 
-  /// 제목 줄: 왼쪽에 편집 중인 파일 이름(과 변경 여부), 오른쪽에 스크립트 파일 버튼(새로 만들기, 열기, 저장, 다른 이름으로 저장).
-  /// 버튼이 입력 칸 옆이 아니라 이 줄에 있어서 스크립트 영역을 줄여도 가려지거나 작아지지 않는다.
-  Widget _titleButton(IconData icon, String tooltip, VoidCallback onPressed, {Color? color}) => IconButton(
-    iconSize: 18,
-    visualDensity: VisualDensity.compact,
-    tooltip: tooltip,
-    icon: Icon(icon),
-    color: color,
-    onPressed: onPressed,
-  );
-
+  /// 제목 줄: 편집 중인 파일 이름과 변경 여부만 보인다 (파일이 없으면 '제목 없음').
   Widget _titleBar(ColorScheme scheme, AppLocalizations l10n) {
     final name = _path != null
         ? (_modified ? '● $_displayName (${l10n.senderModified})' : _displayName)
@@ -339,40 +329,58 @@ class _LineSenderState extends State<LineSender> {
     );
     return SizedBox(
       height: _titleBarHeight,
+      child: Padding(
+        padding: const EdgeInsets.only(left: AppSpacing.xs),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: _path == null ? title : Tooltip(message: _path!, child: title),
+        ),
+      ),
+    );
+  }
+
+  /// 하단 줄 높이. 영역의 높이와 상관없이 항상 같은 크기로 맨 아래에 있다.
+  static const _bottomBarHeight = 44.0;
+
+  /// 파일 버튼 한 개. 하단 줄에서 눌러 쓰기 편하게 조금 크다 (아이콘 22, 누르는 영역 40x40).
+  Widget _fileButton(IconData icon, String tooltip, VoidCallback onPressed, {Color? color}) => IconButton(
+    iconSize: 22,
+    tooltip: tooltip,
+    icon: Icon(icon),
+    color: color,
+    onPressed: onPressed,
+    style: IconButton.styleFrom(
+      minimumSize: const Size(40, 40),
+      fixedSize: const Size(40, 40),
+      padding: EdgeInsets.zero,
+      // 누르는 영역을 48로 불리지 않는다 — 그러면 하단 줄이 좁은 폭에서 넘친다.
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    ),
+  );
+
+  /// 하단 줄: 왼쪽에 파일 버튼 네 개(새로 만들기, 열기, 저장, 다른 이름으로 저장), 오른쪽 끝에 줄 끝 문자 선택과
+  /// 전송 버튼. 입력 칸 옆에 열을 두지 않아서 폭이 좁아도 입력 칸이 전체 폭을 쓴다.
+  Widget _bottomBar(TerminalSession session, ColorScheme scheme, AppLocalizations l10n) {
+    final ending = session.lineEnding.label ?? l10n.senderLineEndingNone;
+    // 위쪽에 선을 그어 입력 칸과 버튼 줄을 구분한다 (선의 두께도 이 높이 안에 들어간다).
+    return Container(
+      height: _bottomBarHeight,
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: scheme.outlineVariant)),
+      ),
       child: Row(
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: AppSpacing.xs),
-              child: _path == null ? title : Tooltip(message: _path!, child: title),
-            ),
-          ),
-          // 한 줄에 모두 놓는다 (편집기의 새 파일 · 열기 · 저장 · 다른 이름으로 저장 순서).
-          _titleButton(Icons.note_add_outlined, l10n.senderNew, _new),
-          _titleButton(Icons.folder_open_rounded, l10n.senderOpen('${_commandKey}O'), _open),
-          _titleButton(
+          // 편집기의 새 파일 · 열기 · 저장 · 다른 이름으로 저장 순서.
+          _fileButton(Icons.note_add_outlined, l10n.senderNew, _new),
+          _fileButton(Icons.folder_open_rounded, l10n.senderOpen('${_commandKey}O'), _open),
+          _fileButton(
             Icons.save_outlined,
             l10n.senderSave('${_commandKey}S'),
             _save,
             color: _modified ? scheme.primary : null,
           ),
-          _titleButton(Icons.save_as_outlined, '${l10n.senderSaveAs} ($_saveAsKey)', _saveAs),
-        ],
-      ),
-    );
-  }
-
-  /// 하단 줄 높이. 제목 줄처럼 영역의 높이와 상관없이 항상 같은 크기로 맨 아래에 있다.
-  static const _bottomBarHeight = 36.0;
-
-  /// 하단 줄: 왼쪽에 줄 끝 문자 선택(작은 윤곽선 칩), 오른쪽 끝에 전송 버튼. 입력 칸 옆에 열을 두면 폭이 좁은 화면에서
-  /// 입력 칸이 거의 안 남으므로 칸 아래 한 줄로 둔다.
-  Widget _bottomBar(TerminalSession session, ColorScheme scheme, AppLocalizations l10n) {
-    final ending = session.lineEnding.label ?? l10n.senderLineEndingNone;
-    return SizedBox(
-      height: _bottomBarHeight,
-      child: Row(
-        children: [
+          _fileButton(Icons.save_as_outlined, '${l10n.senderSaveAs} ($_saveAsKey)', _saveAs),
+          const Spacer(),
           PopupMenuButton<LineEnding>(
             tooltip: l10n.senderLineEndingTooltip,
             initialValue: session.lineEnding,
@@ -385,7 +393,7 @@ class _LineSenderState extends State<LineSender> {
                 ),
             ],
             child: Container(
-              height: 28,
+              height: 36,
               padding: const EdgeInsets.only(left: AppSpacing.sm, right: AppSpacing.xs),
               decoration: BoxDecoration(
                 border: Border.all(color: scheme.outlineVariant),
@@ -394,24 +402,25 @@ class _LineSenderState extends State<LineSender> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.keyboard_return_rounded, size: 14, color: scheme.onSurfaceVariant),
+                  Icon(Icons.keyboard_return_rounded, size: 16, color: scheme.onSurfaceVariant),
                   const SizedBox(width: AppSpacing.xs),
-                  Text(ending, style: AppFonts.mono.copyWith(fontSize: 12, color: scheme.onSurface)),
-                  Icon(Icons.arrow_drop_down_rounded, size: 18, color: scheme.onSurfaceVariant),
+                  Text(ending, style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface)),
+                  Icon(Icons.arrow_drop_down_rounded, size: 20, color: scheme.onSurfaceVariant),
                 ],
               ),
             ),
           ),
-          const Spacer(),
-          // 위의 아이콘 버튼들과 같은 모서리 모양. 크고 진한 원 대신 한 단계 작은 채운 버튼.
+          const SizedBox(width: AppSpacing.sm),
+          // 파일 버튼과 같은 모서리 모양의 채운 버튼.
           IconButton.filled(
             tooltip: l10n.senderSend,
             onPressed: session.connected ? _sendCurrentLine : null,
-            iconSize: 18,
+            iconSize: 20,
             style: IconButton.styleFrom(
-              minimumSize: const Size(40, 30),
-              fixedSize: const Size(40, 30),
+              minimumSize: const Size(48, 36),
+              fixedSize: const Size(48, 36),
               padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
             ),
             icon: const Icon(Icons.send_rounded),

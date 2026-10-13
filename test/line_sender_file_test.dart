@@ -332,7 +332,9 @@ void main() {
     expect(ptys.made, isEmpty);
   });
 
-  testWidgets('a very long file name is cut with an ellipsis and never pushes the buttons around', (tester) async {
+  testWidgets('a very long file name is cut with an ellipsis within the title bar and never moves the buttons', (
+    tester,
+  ) async {
     final longName = '${'very-long-script-name-' * 5}end.txt';
     File(file(longName)).writeAsStringSync('echo hi');
     dialogs.openAnswers.add(file(longName));
@@ -350,6 +352,12 @@ void main() {
     ];
     expect(after, before, reason: '긴 이름이 버튼을 밀어냈다');
     expect(find.text(longName), findsOneWidget); // 줄임표(...)로 잘려 보이지만 글은 그대로 하나
-    expect(tester.getRect(find.text(longName)).right, lessThanOrEqualTo(before.first.left + 1));
+    // 이름 줄은 버튼과 따로(맨 위)라서, 긴 이름도 LineSender 폭 안에서 잘린다.
+    final sender = tester.getRect(find.byType(LineSender));
+    expect(tester.getRect(find.text(longName)).right, lessThanOrEqualTo(sender.right));
+    expect(
+      tester.getRect(find.text(longName)).bottom,
+      lessThanOrEqualTo(tester.getRect(find.byType(TextField)).top + 1),
+    );
   });
 }
