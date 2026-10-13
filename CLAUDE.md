@@ -46,6 +46,13 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   fallback 맨 앞에 내장 글꼴이 있어 아이콘 글리프는 항상 나온다. 설정 키: `terminal_font_family`, `terminal_font_size`, `terminal_scrollback`(스크롤백 줄 수, 기본 10000 — xterm2는 생성 때만 정해서 새로 여는 탭부터 적용).
   (규약 fonts.md §4의 기본 고정폭 목록 대신 Nerd Font를 기본으로 쓰는 것은 사용자 요청.)
 
+## 창 위치 (Windows)
+
+- `lib/window/window_placement.dart`: 마지막 창 위치·크기를 `window_placement` 키로 저장하고(물리 픽셀, 최대화 여부 포함) 다시 켤 때 복원한다.
+  저장한 모니터가 없어졌거나 화면 밖이면 주 모니터 가운데에 연다. window_manager의 `center`는 커서가 있는 모니터를
+  고르고, 모니터마다 배율이 다르면 위치 단위가 어긋나 창이 한쪽으로 쏠리므로 Windows에서는 쓰지 않는다.
+  다른 OS는 기존대로 `center: true`.
+
 ## 알려진 한계
 
 - 실제 OS 끌기(Explorer/Finder로 놓기)는 자동 테스트로 확인하지 못했다 — 사람이 직접 눌러 봐야 한다.

@@ -10,6 +10,7 @@ import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'about/about_dialog.dart';
@@ -22,6 +23,7 @@ import 'screens/home_screen.dart';
 import 'services/profile_store.dart';
 import 'settings/terminal_prefs.dart';
 import 'state/sessions_controller.dart';
+import 'window/window_placement.dart';
 import 'theme/app_theme.dart';
 import 'update/update_scope.dart';
 import 'update/update_service.dart';
@@ -32,16 +34,25 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   registerExtraLicenses();
 
+  WindowPlacement? placement;
   if (_isDesktop) {
     await windowManager.ensureInitialized();
     // ui-ux.md §5: 최소 크기는 960×600 이하 (1366×768 노트북).
-    const options = WindowOptions(
-      size: Size(1200, 720),
-      minimumSize: Size(960, 600),
-      center: true,
+    const defaultSize = Size(1200, 720);
+    // Windows: 모니터마다 배율이 다르면 window_manager의 center가 창을 한쪽으로 쏠리게 해서, 마지막 위치를
+    // 기억하고 물리 픽셀로 직접 배치한다 (window_placement.dart). 다른 OS는 기존대로 center.
+    if (WindowPlacement.enabled) {
+      placement = WindowPlacement(await SharedPreferences.getInstance(), defaultSize: defaultSize);
+    }
+    final options = WindowOptions(
+      size: defaultSize,
+      minimumSize: const Size(960, 600),
+      center: placement == null,
       title: AppIdentity.displayName,
     );
     await windowManager.waitUntilReadyToShow(options, () async {
+      await placement?.placeInitially();
+      placement?.attach();
       await windowManager.show();
       await windowManager.focus();
     });
@@ -53,15 +64,16 @@ Future<void> main() async {
   // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
   final updates = await UpdateService.create();
   // UpdateScope 는 MaterialApp 위에 둔다 — 정보 창이 이것을 읽어 "업데이트 확인" 단추를 붙인다.
-  runApp(UpdateScope(service: updates, child: App(settings: settings, sessions: sessions, terminalPrefs: terminalPrefs, updates: updates)));
+  runApp(UpdateScope(service: updates, child: App(settings: settings, sessions: sessions, terminalPrefs: terminalPrefs, placement: placement, updates: updates)));
 }
 
 class App extends StatefulWidget {
-  const App({super.key, required this.settings, required this.sessions, required this.terminalPrefs, this.updates});
+  const App({super.key, required this.settings, required this.sessions, required this.terminalPrefs, this.placement, this.updates});
 
   final AppSettings settings;
   final SessionsController sessions;
   final TerminalPrefs terminalPrefs;
+  final WindowPlacement? placement;
   final UpdateService? updates;
 
   @override
@@ -91,6 +103,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   // 기록 중인 파일을 먼저 flush/close 한다.
   @override
   Future<AppExitResponse> didRequestAppExit() async {
+    await widget.placement?.saveNow();
     await widget.sessions.prepareForExit();
     return AppExitResponse.exit;
   }
