@@ -313,36 +313,61 @@ class _LineSenderState extends State<LineSender> {
 
   static String get _commandKey => defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : 'Ctrl+';
 
-  /// 입력 칸 안 왼쪽 위에 고정해서 보이는 파일 이름과 변경 여부 (파일이 없으면 '제목 없음'). 글이 스크롤되어도 이름은
-  /// 그대로 있고, 이름 줄을 누르면 입력 칸에 포커스가 간다.
+  /// 입력 칸 안 맨 위에 고정해서 보이는 파일 이름과 변경 여부 (파일이 없으면 '제목 없음'). 글이 스크롤되어도 이름은
+  /// 그대로 있고, 눌러도 입력 칸에 포커스가 간다.
+  ///
+  /// 본문과 헷갈리지 않게 새 연결 화면의 셸 버튼처럼 둥근 윤곽선 칩으로 감싸고, 본문(밝은 글자)과 다른 강조색을 쓴다
+  /// (저장하지 않은 변경이 있으면 경고색).
   Widget _nameRow(ColorScheme scheme, AppLocalizations l10n) {
     final name = _path != null
         ? (_modified ? '● $_displayName (${l10n.senderModified})' : _displayName)
         : (_modified ? '● ${l10n.senderUntitled}' : l10n.senderUntitled);
-    final title = Text(
-      name,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: AppFonts.userContent.copyWith(fontSize: 11.5, color: _modified ? scheme.primary : scheme.onSurfaceVariant),
+    final dark = scheme.brightness == Brightness.dark;
+    final color = _modified ? (dark ? AppColors.warning : AppColors.warningTextLight) : scheme.primary;
+    final chip = Container(
+      key: const ValueKey('line-sender-name-chip'),
+      height: _nameChipHeight,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      decoration: BoxDecoration(
+        border: Border.all(color: color.withValues(alpha: 0.55)),
+        borderRadius: BorderRadius.circular(AppRadius.button),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_path == null ? Icons.edit_note_rounded : Icons.description_outlined, size: 15, color: color),
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppFonts.userContent.copyWith(fontSize: 12, fontWeight: FontWeight.w700, color: color),
+            ),
+          ),
+        ],
+      ),
     );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _focusNode.requestFocus,
       child: SizedBox(
+        key: const ValueKey('line-sender-name-row'),
         height: _nameRowHeight,
         child: Padding(
-          padding: const EdgeInsets.only(left: _contentPadding, right: _contentPadding, top: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: _path == null ? title : Tooltip(message: _path!, child: title),
+            child: _path == null ? chip : Tooltip(message: _path!, child: chip),
           ),
         ),
       ),
     );
   }
 
-  /// 이름 줄 높이 (입력 칸 안, 맨 위).
-  static const _nameRowHeight = 24.0;
+  /// 이름 줄 높이 (입력 칸 안, 맨 위)와 그 안의 칩 높이.
+  static const _nameRowHeight = 36.0;
+  static const _nameChipHeight = 28.0;
 
   /// 하단 줄 높이. 영역의 높이와 상관없이 항상 같은 크기로 맨 아래에 있다.
   static const _bottomBarHeight = 44.0;

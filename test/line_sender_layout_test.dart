@@ -110,7 +110,7 @@ void main() {
     expect(inputBox.top, closeTo(sender.top + 8, 1));
     // 이름은 그 상자 안 왼쪽 위에 있고, 글을 쓰는 영역 위에 있다.
     expect(name.left, greaterThanOrEqualTo(inputBox.left));
-    expect(name.left, lessThan(inputBox.left + 24));
+    expect(name.left, lessThan(inputBox.left + 48)); // 칩 안쪽 여백과 아이콘 뒤
     expect(name.top, greaterThanOrEqualTo(inputBox.top));
     expect(name.bottom, lessThanOrEqualTo(field.top + 1));
     expect(field.top, greaterThanOrEqualTo(inputBox.top));
@@ -151,7 +151,7 @@ void main() {
     final fromBottom = <double, List<double>>{};
     final sizes = <double, List<Size>>{};
     final lefts = <double, List<double>>{};
-    for (final h in [132.0, 150.0, 220.0, 400.0]) {
+    for (final h in [144.0, 150.0, 220.0, 400.0]) {
       await pumpSender(tester, height: h);
       final sender = tester.getRect(find.byType(LineSender));
       final targets = [...fileButtons().map(buttonOf), endingChip(), sendButton()];
@@ -163,15 +163,15 @@ void main() {
     }
     for (final h in fromBottom.keys) {
       for (var i = 0; i < fromBottom[h]!.length; i++) {
-        expect(fromBottom[h]![i], closeTo(fromBottom[132.0]![i], 0.01), reason: '높이 $h, 컨트롤 $i가 맨 아래에서 떨어졌다');
-        expect(lefts[h]![i], closeTo(lefts[132.0]![i], 0.01), reason: '높이 $h, 컨트롤 $i의 가로 위치가 바뀌었다');
-        expect(sizes[h]![i], sizes[132.0]![i], reason: '높이 $h, 컨트롤 $i의 크기가 바뀌었다');
+        expect(fromBottom[h]![i], closeTo(fromBottom[144.0]![i], 0.01), reason: '높이 $h, 컨트롤 $i가 맨 아래에서 떨어졌다');
+        expect(lefts[h]![i], closeTo(lefts[144.0]![i], 0.01), reason: '높이 $h, 컨트롤 $i의 가로 위치가 바뀌었다');
+        expect(sizes[h]![i], sizes[144.0]![i], reason: '높이 $h, 컨트롤 $i의 크기가 바뀌었다');
       }
     }
   });
 
   testWidgets('at the smallest height everything is intact and the box still has room for a line', (tester) async {
-    await pumpSender(tester, height: 132);
+    await pumpSender(tester, height: 144);
     expect(tester.takeException(), isNull);
     expect(rectOf(tester, find.byType(TextField)).height, greaterThanOrEqualTo(40));
     final sender = tester.getRect(find.byType(LineSender));
@@ -257,7 +257,7 @@ void main() {
 
   testWidgets('the line stays glued above the bar at any height', (tester) async {
     double? distance;
-    for (final h in [132.0, 200.0, 400.0]) {
+    for (final h in [144.0, 200.0, 400.0]) {
       await pumpSender(tester, height: h);
       final sender = tester.getRect(find.byType(LineSender));
       final d = sender.bottom - rectOf(tester, dividerBar()).top;
@@ -265,5 +265,94 @@ void main() {
       expect(d, closeTo(distance, 0.01), reason: '높이 $h에서 선의 위치가 달라졌다');
       expect(tester.takeException(), isNull);
     }
+  });
+
+  Color? textColor(WidgetTester tester, Finder f) => tester.widget<Text>(f).style?.color;
+
+  Finder nameChip() => find.byKey(const ValueKey('line-sender-name-chip'));
+
+  BoxDecoration chipDecoration(WidgetTester tester) =>
+      tester.widget<Container>(nameChip()).decoration! as BoxDecoration;
+
+  testWidgets(
+    'the file name is wrapped in a rounded outlined chip, like the shell buttons on the new-connection screen',
+    (tester) async {
+      await pumpSender(tester, height: 200);
+      final inputBox = rectOf(tester, box());
+      final chip = rectOf(tester, nameChip());
+      final name = rectOf(tester, find.text('제목 없음'));
+
+      // 윤곽선이 있는 둥근 모양이다 (배경으로 칠하는 띠가 아니다).
+      final d = chipDecoration(tester);
+      expect(d.border, isNotNull);
+      expect(d.borderRadius, isNotNull);
+      expect(d.color, isNull, reason: '칩은 윤곽선만 — 본문 상자 배경 위에 얹힌다');
+      // 이름은 칩 안에 들어 있고, 칩은 상자 안 왼쪽 위에 있다.
+      expect(name.left, greaterThanOrEqualTo(chip.left));
+      expect(name.right, lessThanOrEqualTo(chip.right));
+      expect(chip.left, greaterThanOrEqualTo(inputBox.left));
+      expect(chip.left, lessThan(inputBox.left + 16));
+      expect(chip.top, greaterThanOrEqualTo(inputBox.top));
+      expect(chip.bottom, lessThanOrEqualTo(rectOf(tester, find.byType(TextField)).top + 1));
+    },
+  );
+
+  testWidgets('the chip is vertically centered in the name row and the row gives it room', (tester) async {
+    await pumpSender(tester, height: 200);
+    final row = rectOf(tester, find.byKey(const ValueKey('line-sender-name-row')));
+    final chip = rectOf(tester, nameChip());
+    expect(chip.center.dy, closeTo(row.center.dy, 0.5));
+    expect(chip.height, 28);
+    expect(row.height, 36);
+    expect(row.height - chip.height, greaterThanOrEqualTo(8), reason: '칩 위아래에 숨 쉴 여백이 있어야 한다');
+    // 이름 글자도 칩의 가운데.
+    expect(rectOf(tester, find.text('제목 없음')).center.dy, closeTo(chip.center.dy, 1.5));
+  });
+
+  testWidgets('the chip text color is clearly different from the body text color', (tester) async {
+    await pumpSender(tester, height: 200);
+    final scheme = Theme.of(tester.element(find.byType(LineSender))).colorScheme;
+    final bodyColor = tester.widget<TextField>(find.byType(TextField)).style?.color;
+    final nameColor = textColor(tester, find.text('제목 없음'));
+    expect(bodyColor, scheme.onSurface);
+    expect(nameColor, scheme.primary);
+    expect(nameColor, isNot(bodyColor));
+    // 칩이 놓이는 본문 상자 배경 위에서 읽힌다.
+    final boxFill = (tester.widget<Container>(box()).decoration! as BoxDecoration).color!;
+    expect((nameColor!.computeLuminance() - boxFill.computeLuminance()).abs(), greaterThan(0.1));
+  });
+
+  testWidgets('unsaved changes switch the chip (text, icon and outline) to the warning color', (tester) async {
+    await pumpSender(tester, height: 200);
+    final cleanText = textColor(tester, find.text('제목 없음'));
+    final cleanBorder = (chipDecoration(tester).border! as Border).top.color;
+    await tester.enterText(find.byType(TextField), 'echo hi');
+    await tester.pump();
+    final modifiedText = textColor(tester, find.textContaining('제목 없음'));
+    expect(modifiedText, isNot(cleanText));
+    expect(
+      modifiedText,
+      isNot(tester.widget<TextField>(find.byType(TextField)).style?.color),
+      reason: '경고색도 본문 색과 달라야 한다',
+    );
+    expect((chipDecoration(tester).border! as Border).top.color, isNot(cleanBorder));
+    // 아이콘도 같은 색.
+    final icon = tester.widget<Icon>(find.descendant(of: nameChip(), matching: find.byType(Icon)));
+    expect(icon.color, modifiedText);
+  });
+
+  testWidgets('a file shows the document icon, no file shows the edit-note icon', (tester) async {
+    await pumpSender(tester, height: 200);
+    Icon iconInChip() => tester.widget<Icon>(find.descendant(of: nameChip(), matching: find.byType(Icon)));
+    expect(iconInChip().icon, Icons.edit_note_rounded);
+  });
+
+  testWidgets('tapping the chip focuses the input box', (tester) async {
+    await pumpSender(tester, height: 200);
+    final node = tester.widget<TextField>(find.byType(TextField)).focusNode!;
+    expect(node.hasFocus, isFalse);
+    await tester.tap(nameChip());
+    await tester.pump();
+    expect(node.hasFocus, isTrue);
   });
 }

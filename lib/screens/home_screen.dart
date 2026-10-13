@@ -148,12 +148,12 @@ class _SessionView extends StatefulWidget {
 
 class _SessionViewState extends State<_SessionView> {
   double _explorerWidth = 320;
-  double _senderHeight = 150;
+  double _senderHeight = 160;
 
   static const _minExplorer = 220.0;
   static const _minTerminal = 360.0;
-  // 입력 칸(이름 줄 24 + 글 영역이 최소한 보일 높이) + 하단 줄(44) + 여백. LineSender의 버튼 줄이 가려지지 않게 그 아래로는 못 줄인다.
-  static const _minSender = 132.0;
+  // 입력 칸(이름 줄 36 + 글 영역이 최소한 보일 높이) + 하단 줄(44) + 여백. LineSender의 버튼 줄이 가려지지 않게 그 아래로는 못 줄인다.
+  static const _minSender = 144.0;
 
   @override
   Widget build(BuildContext context) {
