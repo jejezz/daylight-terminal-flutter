@@ -311,6 +311,62 @@ class _LineSenderState extends State<LineSender> {
 
   static String get _commandKey => defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : 'Ctrl+';
 
+  /// 제목 줄 높이. 영역의 높이가 어떻게 바뀌어도 이 줄은 항상 같은 크기로 맨 위에 있다.
+  static const _titleBarHeight = 32.0;
+
+  /// 제목 줄: 왼쪽에 편집 중인 파일 이름(과 변경 여부), 오른쪽에 스크립트 파일 버튼(열기, 저장, 더 보기).
+  /// 버튼이 입력 칸 옆이 아니라 이 줄에 있어서 스크립트 영역을 줄여도 가려지거나 작아지지 않는다.
+  Widget _titleBar(ColorScheme scheme, AppLocalizations l10n) {
+    final name = _path != null
+        ? (_modified ? '● $_displayName (${l10n.senderModified})' : _displayName)
+        : (_modified ? '● ${l10n.senderUntitled}' : l10n.senderUntitled);
+    final title = Text(
+      name,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: AppFonts.userContent.copyWith(fontSize: 11.5, color: _modified ? scheme.primary : scheme.onSurfaceVariant),
+    );
+    return SizedBox(
+      height: _titleBarHeight,
+      child: Row(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.xs),
+              child: _path == null ? title : Tooltip(message: _path!, child: title),
+            ),
+          ),
+          IconButton(
+            iconSize: 18,
+            visualDensity: VisualDensity.compact,
+            tooltip: l10n.senderOpen('${_commandKey}O'),
+            icon: const Icon(Icons.folder_open_rounded),
+            onPressed: _open,
+          ),
+          IconButton(
+            iconSize: 18,
+            visualDensity: VisualDensity.compact,
+            tooltip: l10n.senderSave('${_commandKey}S'),
+            icon: const Icon(Icons.save_outlined),
+            color: _modified ? scheme.primary : null,
+            onPressed: _save,
+          ),
+          PopupMenuButton<String>(
+            tooltip: l10n.senderMore,
+            iconSize: 18,
+            padding: EdgeInsets.zero,
+            icon: const Icon(Icons.more_horiz_rounded),
+            onSelected: (v) => v == 'saveAs' ? _saveAs() : _new(),
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'saveAs', child: Text(l10n.senderSaveAs)),
+              PopupMenuItem(value: 'new', child: Text(l10n.senderNew)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = context.watch<TerminalSession>();
@@ -319,31 +375,15 @@ class _LineSenderState extends State<LineSender> {
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.sm),
-      child: Row(
-        // 부모가 드래그로 조절하는 높이를 주므로, 입력 칸도 그 높이에 맞춰 늘어난다.
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _titleBar(scheme, l10n),
           Expanded(
-            child: Column(
+            child: Row(
+              // 부모가 드래그로 조절하는 높이를 주므로, 입력 칸도 그 높이에 맞춰 늘어난다.
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 어느 파일을 편집 중인지, 저장하지 않은 변경이 있는지. 파일과 연결되지 않았으면 자리를 차지하지 않는다.
-                if (_path != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                    child: Tooltip(
-                      message: _path!,
-                      child: Text(
-                        _modified ? '● $_displayName (${l10n.senderModified})' : _displayName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppFonts.userContent.copyWith(
-                          fontSize: 11.5,
-                          color: _modified ? scheme.primary : scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ),
                 Expanded(
                   child: Focus(
                     onKeyEvent: _onKeyEvent,
@@ -371,77 +411,45 @@ class _LineSenderState extends State<LineSender> {
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          SizedBox(
-            width: 132,
-            // 높이를 줄여도 넘치지 않게, 안 들어가면 통째로 줄여서 보여 준다.
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.topRight,
-              child: SizedBox(
-                width: 132,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Tooltip(
-                      message: l10n.senderLineEndingTooltip,
-                      child: DropdownButton<LineEnding>(
-                        value: session.lineEnding,
-                        isDense: true,
-                        items: [
-                          for (final e in LineEnding.values)
-                            DropdownMenuItem(value: e, child: Text(e.label ?? l10n.senderLineEndingNone)),
+                const SizedBox(width: AppSpacing.sm),
+                SizedBox(
+                  width: 96,
+                  // 높이를 줄여도 넘치지 않게, 안 들어가면 통째로 줄여서 보여 준다.
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.topRight,
+                    child: SizedBox(
+                      width: 96,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Tooltip(
+                            message: l10n.senderLineEndingTooltip,
+                            child: DropdownButton<LineEnding>(
+                              value: session.lineEnding,
+                              isDense: true,
+                              items: [
+                                for (final e in LineEnding.values)
+                                  DropdownMenuItem(value: e, child: Text(e.label ?? l10n.senderLineEndingNone)),
+                              ],
+                              onChanged: (value) {
+                                if (value != null) session.setLineEnding(value);
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          IconButton.filledTonal(
+                            tooltip: l10n.senderSend,
+                            onPressed: session.connected ? _sendCurrentLine : null,
+                            icon: const Icon(Icons.send_rounded),
+                          ),
                         ],
-                        onChanged: (value) {
-                          if (value != null) session.setLineEnding(value);
-                        },
                       ),
                     ),
-                    // 스크립트 파일: 열기, 저장, 그 밖(다른 이름으로 저장, 새로 만들기)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          iconSize: 18,
-                          visualDensity: VisualDensity.compact,
-                          tooltip: l10n.senderOpen('${_commandKey}O'),
-                          icon: const Icon(Icons.folder_open_rounded),
-                          onPressed: _open,
-                        ),
-                        IconButton(
-                          iconSize: 18,
-                          visualDensity: VisualDensity.compact,
-                          tooltip: l10n.senderSave('${_commandKey}S'),
-                          icon: const Icon(Icons.save_outlined),
-                          color: _modified ? scheme.primary : null,
-                          onPressed: _save,
-                        ),
-                        PopupMenuButton<String>(
-                          tooltip: l10n.senderMore,
-                          iconSize: 18,
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.more_horiz_rounded),
-                          onSelected: (v) => v == 'saveAs' ? _saveAs() : _new(),
-                          itemBuilder: (context) => [
-                            PopupMenuItem(value: 'saveAs', child: Text(l10n.senderSaveAs)),
-                            PopupMenuItem(value: 'new', child: Text(l10n.senderNew)),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    IconButton.filledTonal(
-                      tooltip: l10n.senderSend,
-                      onPressed: session.connected ? _sendCurrentLine : null,
-                      icon: const Icon(Icons.send_rounded),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],

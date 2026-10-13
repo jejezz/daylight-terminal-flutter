@@ -334,4 +334,25 @@ void main() {
     expect(File(file('ahead.txt')).readAsStringSync(), 'later 1\nlater 2');
     expect(ptys.made, isEmpty);
   });
+
+  testWidgets('a very long file name is cut with an ellipsis and never pushes the buttons around', (tester) async {
+    final longName = '${'very-long-script-name-' * 5}end.txt';
+    File(file(longName)).writeAsStringSync('echo hi');
+    dialogs.openAnswers.add(file(longName));
+    await pumpSender(tester);
+    final before = [
+      tester.getRect(find.byIcon(Icons.folder_open_rounded)),
+      tester.getRect(find.byType(PopupMenuButton<String>)),
+    ];
+
+    await tapOpen(tester);
+    expect(tester.takeException(), isNull);
+    final after = [
+      tester.getRect(find.byIcon(Icons.folder_open_rounded)),
+      tester.getRect(find.byType(PopupMenuButton<String>)),
+    ];
+    expect(after, before, reason: '긴 이름이 버튼을 밀어냈다');
+    expect(find.text(longName), findsOneWidget); // 줄임표(...)로 잘려 보이지만 글은 그대로 하나
+    expect(tester.getRect(find.text(longName)).right, lessThanOrEqualTo(before.first.left + 1));
+  });
 }
