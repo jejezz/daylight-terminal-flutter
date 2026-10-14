@@ -22,6 +22,7 @@ import 'l10n/app_localizations.dart';
 import 'settings/app_settings.dart';
 import 'screens/home_screen.dart';
 import 'services/profile_store.dart';
+import 'settings/refresh_prefs.dart';
 import 'settings/terminal_prefs.dart';
 import 'state/sessions_controller.dart';
 import 'window/window_placement.dart';
@@ -61,7 +62,12 @@ Future<void> main() async {
 
   final settings = await AppSettings.load();
   final terminalPrefs = await TerminalPrefs.load();
-  final sessions = SessionsController(await ProfileStore.load(), scrollback: () => terminalPrefs.scrollback);
+  final refreshPrefs = await RefreshPrefs.load();
+  final sessions = SessionsController(
+    await ProfileStore.load(),
+    scrollback: () => terminalPrefs.scrollback,
+    refreshPrefs: refreshPrefs,
+  );
   unawaited(sessions.loadShells()); // 새 탭 메뉴에 보일 로컬 셸 목록 (Windows는 WSL 배포판을 묻느라 잠깐 걸린다)
   // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
   final updates = await UpdateService.create();
@@ -73,6 +79,7 @@ Future<void> main() async {
         settings: settings,
         sessions: sessions,
         terminalPrefs: terminalPrefs,
+        refreshPrefs: refreshPrefs,
         placement: placement,
         updates: updates,
       ),
@@ -86,6 +93,7 @@ class App extends StatefulWidget {
     required this.settings,
     required this.sessions,
     required this.terminalPrefs,
+    required this.refreshPrefs,
     this.placement,
     this.updates,
   });
@@ -93,6 +101,7 @@ class App extends StatefulWidget {
   final AppSettings settings;
   final SessionsController sessions;
   final TerminalPrefs terminalPrefs;
+  final RefreshPrefs refreshPrefs;
   final WindowPlacement? placement;
   final UpdateService? updates;
 
@@ -165,6 +174,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       providers: [
         ChangeNotifierProvider<SessionsController>.value(value: widget.sessions),
         ChangeNotifierProvider<TerminalPrefs>.value(value: widget.terminalPrefs),
+        ChangeNotifierProvider<RefreshPrefs>.value(value: widget.refreshPrefs),
       ],
       child: AppSettingsScope(
         settings: widget.settings,

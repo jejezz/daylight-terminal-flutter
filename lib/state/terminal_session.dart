@@ -74,7 +74,9 @@ abstract class TerminalSession extends ChangeNotifier {
   /// 해제된 뒤에는 알리지 않는다.
   @protected
   void notify() {
-    if (!_disposed) notifyListeners();
+    if (_disposed) return;
+    _updateAutoRefresh();
+    notifyListeners();
   }
 
   // ───────────────────────── 터미널 ─────────────────────────
@@ -215,6 +217,62 @@ abstract class TerminalSession extends ChangeNotifier {
     if (waiter != null && !waiter.isCompleted) waiter.complete(null);
   }
 
+  // ───────────────────────── 탐색기 자동 새로 고침 ─────────────────────────
+
+  static const autoRefreshInterval = Duration(seconds: 5);
+
+  /// 테스트가 끈다 (끝나지 않은 타이머가 남으면 위젯 테스트가 실패한다).
+  @visibleForTesting
+  static bool autoRefreshEnabled = true;
+
+  Timer? _autoRefreshTimer;
+  bool _active = false;
+  bool _autoRefreshAllowed = true;
+
+  /// 탐색기 목록을 조용히 다시 읽는다 (로딩 표시나 오류 없이). 하위 클래스가 채운다.
+  @protected
+  Future<void> autoRefresh() async {}
+
+  /// 자동 새로 고침을 하는 탭인가. 기본은 하지 않는다 (SSH는 네트워크 오류가 잦아 직접 새로 고칠 때만 읽는다).
+  @protected
+  bool get autoRefreshReady => false;
+
+  /// 이 탭이 지금 보이는 탭인지 알린다. 활성화되면 바로 한 번 새로 고치고 [autoRefreshInterval]마다 되풀이하며,
+  /// 비활성화되면 멈춘다.
+  void setActive(bool value) {
+    if (_active == value || _disposed) return;
+    _active = value;
+    _updateAutoRefresh();
+    if (value && _autoRefreshTimer != null) unawaited(autoRefresh());
+  }
+
+  /// 설정에서 이 종류의 탭(SSH/로컬)에 자동 새로 고침을 허용했는지. 꺼지면 타이머가 멈춘다.
+  void setAutoRefreshAllowed(bool value) {
+    if (_autoRefreshAllowed == value || _disposed) return;
+    _autoRefreshAllowed = value;
+    _updateAutoRefresh();
+    if (value && _autoRefreshTimer != null) unawaited(autoRefresh());
+  }
+
+  /// 사용자가 직접 새로 고쳤을 때: 다음 자동 새로 고침을 다시 [autoRefreshInterval] 뒤로 미룬다.
+  @protected
+  void restartAutoRefreshTimer() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = null;
+    _updateAutoRefresh();
+  }
+
+  // 보이는 탭이고 읽을 수 있는 상태일 때만 타이머가 돈다. 상태가 바뀔 때마다([notify]) 맞춘다.
+  void _updateAutoRefresh() {
+    final shouldRun = autoRefreshEnabled && _autoRefreshAllowed && _active && !_disposed && autoRefreshReady;
+    if (!shouldRun) {
+      _autoRefreshTimer?.cancel();
+      _autoRefreshTimer = null;
+    } else {
+      _autoRefreshTimer ??= Timer.periodic(autoRefreshInterval, (_) => unawaited(autoRefresh()));
+    }
+  }
+
   // ───────────────────────── 종료 ─────────────────────────
 
   /// 앱 종료 요청(⌘Q 등) 시 위젯 dispose가 보장되지 않으므로, 종료 직전에 호출해서
@@ -228,6 +286,7 @@ abstract class TerminalSession extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _autoRefreshTimer?.cancel();
     unawaited(stopLogging());
     terminal.dispose();
     super.dispose();

@@ -358,8 +358,14 @@
     }
   },
   "connectPromptHint": "비밀번호는 저장되지 않습니다",
-  "terminalFontTooltip": "터미널 글꼴",
-  "terminalFontTitle": "터미널 글꼴",
+  "settingsTooltip": "설정",
+  "settingsTitle": "설정",
+  "settingsSectionRefresh": "새로 고침 옵션",
+  "settingsSectionTerminalFont": "터미널 글꼴",
+  "refreshLocal": "로컬 폴더 자동 새로 고침",
+  "refreshLocalHelp": "보이는 탭의 폴더를 5초마다 다시 읽습니다.",
+  "refreshSsh": "SFTP 폴더 자동 새로 고침",
+  "refreshSshHelp": "보이는 탭의 서버 폴더를 5초마다 다시 읽습니다. 네트워크를 쓰므로 기본은 꺼짐입니다.",
   "terminalFontFamily": "글꼴",
   "terminalFontBundled": "{name} (내장)",
   "@terminalFontBundled": {

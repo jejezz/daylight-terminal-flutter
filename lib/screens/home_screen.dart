@@ -17,7 +17,7 @@ import '../widgets/local_folder_pane.dart';
 import '../widgets/sftp_pane.dart';
 import '../widgets/status_bar.dart';
 import '../widgets/tab_bar_row.dart';
-import '../widgets/terminal_font_dialog.dart';
+import '../widgets/settings_dialog.dart';
 import '../widgets/terminal_pane.dart';
 import '../window/focus_tint.dart';
 
@@ -70,9 +70,9 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () => showAddressBook(context),
               ),
               IconButton(
-                tooltip: l10n.terminalFontTooltip,
-                icon: const Icon(Icons.text_fields_rounded),
-                onPressed: () => showTerminalFontDialog(context),
+                tooltip: l10n.settingsTooltip,
+                icon: const Icon(Icons.settings_rounded),
+                onPressed: () => showSettingsDialog(context),
               ),
               const ThemeMenuButton(),
               const LanguageMenuButton(),

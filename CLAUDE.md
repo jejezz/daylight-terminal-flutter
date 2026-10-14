@@ -42,10 +42,19 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 
 - 주소록(`address_book_dialog.dart`, Ctrl+Shift+O / ⌘O): 이름·그룹·메모를 붙여 저장하고, 검색·편집·삭제·연결.
   연결할 때마다 비밀번호를 묻는다 (저장하지 않는다). 지금 탭이 비어 있으면 그 탭에, 아니면 새 탭에 연결한다.
-- 터미널 글꼴(`terminal_prefs.dart`, `terminal_font_dialog.dart`): 기본은 내장 Agave Nerd Font Mono(OFL 1.1,
+- 터미널 글꼴(`terminal_prefs.dart`, 설정 창 `settings_dialog.dart`의 "터미널 글꼴" 섹션): 기본은 내장 Agave Nerd Font Mono(OFL 1.1,
   `assets/licenses/agave-nerd-font.txt`). 목록에서 고르거나 설치된 글꼴 이름을 직접 적을 수 있고, 어느 쪽이든
   fallback 맨 앞에 내장 글꼴이 있어 아이콘 글리프는 항상 나온다. 설정 키: `terminal_font_family`, `terminal_font_size`, `terminal_scrollback`(스크롤백 줄 수, 기본 10000 — xterm2는 생성 때만 정해서 새로 여는 탭부터 적용).
   (규약 fonts.md §4의 기본 고정폭 목록 대신 Nerd Font를 기본으로 쓰는 것은 사용자 요청.)
+
+## 설정 창과 탐색기 자동 새로 고침
+
+- 툴바의 설정(톱니) 버튼 = `settings_dialog.dart`. 섹션: "새로 고침 옵션", "터미널 글꼴".
+- 보이는 탭의 목록만 5초마다 조용히(로딩 표시·오류 없이, 바뀐 것이 있을 때만 갱신) 다시 읽는다. 탭이 활성화되면 바로 한 번 읽고,
+  비활성화되면 멈추고, 사용자가 새로 고치면 5초가 다시 시작된다 (`TerminalSession.setActive` / `restartAutoRefreshTimer`).
+- 설정(`refresh_prefs.dart`): `auto_refresh_local`(기본 켜짐), `auto_refresh_ssh`(기본 꺼짐 — 네트워크 오류가 잦아서).
+  `SessionsController`가 설정과 선택된 탭에 맞춰 각 세션에 알린다.
+- 테스트는 `test/flutter_test_config.dart`가 타이머를 꺼 둔다 (남은 타이머가 있으면 위젯 테스트가 실패). `auto_refresh_test.dart`만 켠다.
 
 ## 탭 종류: SSH와 로컬 셸
 
