@@ -267,6 +267,15 @@
   "statusSaveBuffer": "Copy everything in the terminal to a file (including scrollback)",
   "statusSaveBufferConfirm": "Save",
   "statusBufferEmpty": "The terminal is empty",
+  "pathCopyHint": "Click to copy the path",
+  "pathCopied": "Copied the path to the clipboard: {path}",
+  "@pathCopied": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "statusBufferCopied": "Copied {lines} lines to the clipboard",
   "@statusBufferCopied": {
     "placeholders": {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
@@ -28,6 +29,15 @@ class PaneHeader extends StatelessWidget {
   final VoidCallback? onExplorerToTerminal;
   final List<Widget> extraActions;
 
+  Future<void> _copyPath(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    await Clipboard.setData(ClipboardData(text: path));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.pathCopied(path)), duration: const Duration(seconds: 3)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -49,13 +59,21 @@ class PaneHeader extends StatelessWidget {
           ),
           ...extraActions,
           Expanded(
+            // 누르면 전체 경로를 클립보드에 복사한다.
             child: Tooltip(
-              message: path,
-              child: Text(
-                path,
-                overflow: TextOverflow.ellipsis,
-                textDirection: TextDirection.rtl, // 길면 앞이 아니라 뒤(현재 폴더)가 보이게
-                style: AppFonts.mono.copyWith(fontSize: 12, color: scheme.onSurface),
+              message: '$path\n${l10n.pathCopyHint}',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.button),
+                onTap: () => _copyPath(context),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: AppSpacing.xs),
+                  child: Text(
+                    path,
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: TextDirection.rtl, // 길면 앞이 아니라 뒤(현재 폴더)가 보이게
+                    style: AppFonts.mono.copyWith(fontSize: 12, color: scheme.onSurface),
+                  ),
+                ),
               ),
             ),
           ),
