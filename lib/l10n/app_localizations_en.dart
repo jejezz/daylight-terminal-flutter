@@ -406,6 +406,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusNoLogFile => 'Nothing has been recorded yet';
 
   @override
+  String get statusCopyBuffer =>
+      'Copy everything in the terminal to the clipboard (including scrollback)';
+
+  @override
+  String get statusSaveBuffer =>
+      'Copy everything in the terminal to a file (including scrollback)';
+
+  @override
+  String get statusSaveBufferConfirm => 'Save';
+
+  @override
+  String get statusBufferEmpty => 'The terminal is empty';
+
+  @override
+  String statusBufferCopied(int lines) {
+    return 'Copied $lines lines to the clipboard';
+  }
+
+  @override
+  String statusBufferSaved(String file) {
+    return 'Saved to $file';
+  }
+
+  @override
   String get statusStripAnsi => 'Strip escapes';
 
   @override

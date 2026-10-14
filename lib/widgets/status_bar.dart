@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -10,9 +11,36 @@ import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
 
-/// 연결 상태, 기록(Recording) 토글, 기록 파일 위치 열기.
+/// 연결 상태, 기록(Recording) 토글, 기록 파일 위치 열기, 터미널 내용 전체를 클립보드/파일로.
 class StatusBar extends StatelessWidget {
   const StatusBar({super.key});
+
+  static void _toast(BuildContext context, String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 3)));
+  }
+
+  static Future<void> _copyBuffer(BuildContext context, TerminalSession session) async {
+    final l10n = AppLocalizations.of(context);
+    final text = session.bufferText();
+    if (text.isEmpty) {
+      _toast(context, l10n.statusBufferEmpty);
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: text));
+    if (context.mounted) _toast(context, l10n.statusBufferCopied('\n'.allMatches(text).length));
+  }
+
+  static Future<void> _saveBuffer(BuildContext context, TerminalSession session) async {
+    final l10n = AppLocalizations.of(context);
+    if (session.bufferText().isEmpty) {
+      _toast(context, l10n.statusBufferEmpty);
+      return;
+    }
+    final path = await session.saveBufferToFile(confirmButtonText: l10n.statusSaveBufferConfirm);
+    if (path != null && context.mounted) _toast(context, l10n.statusBufferSaved(path.split(Platform.pathSeparator).last));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +86,22 @@ class StatusBar extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            iconSize: 18,
+            visualDensity: VisualDensity.compact,
+            tooltip: l10n.statusCopyBuffer,
+            color: scheme.onSurfaceVariant,
+            icon: const Icon(Icons.content_copy_rounded),
+            onPressed: () => _copyBuffer(context, session),
+          ),
+          IconButton(
+            iconSize: 18,
+            visualDensity: VisualDensity.compact,
+            tooltip: l10n.statusSaveBuffer,
+            color: scheme.onSurfaceVariant,
+            icon: const Icon(Icons.save_alt_rounded),
+            onPressed: () => _saveBuffer(context, session),
           ),
           IconButton(
             iconSize: 18,

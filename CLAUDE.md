@@ -95,6 +95,11 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   고르고, 모니터마다 배율이 다르면 위치 단위가 어긋나 창이 한쪽으로 쏠리므로 Windows에서는 쓰지 않는다.
   다른 OS는 기존대로 `center: true`.
 
+## xterm2 복사본
+
+- `packages/xterm2`는 pub.dev 5.3.0의 복사본이다. 드래그로 글을 고르는 중 스크롤되면 선택 시작점이 딴 줄로 옮겨가던
+  결함을 고쳤다(시작점을 버퍼 칸으로 저장). 자세한 내용은 `packages/xterm2/PATCHES.md`. 원본이 고치면 되돌린다.
+
 ## 알려진 한계
 
 - 실제 OS 끌기(Explorer/Finder로 놓기)는 자동 테스트로 확인하지 못했다 — 사람이 직접 눌러 봐야 한다.
