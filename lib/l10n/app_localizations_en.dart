@@ -675,4 +675,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String senderFileError(String detail) {
     return 'Could not handle the file: $detail';
   }
+
+  @override
+  String get helpModeTooltip => 'Help mode';
+
+  @override
+  String get helpButton =>
+      'Help mode\nHover over a control to see what it does. Click anywhere or press Esc to leave.';
+
+  @override
+  String get helpDisconnect =>
+      'Disconnect / end shell\nCloses the SSH connection or ends the local shell. The tab stays open.';
+
+  @override
+  String get helpAddressBook =>
+      'Address book\nSearch, edit and connect to saved SSH hosts. Passwords are never saved.';
+
+  @override
+  String get helpSettings =>
+      'Settings\nChange explorer auto-refresh and the terminal font, size and scrollback.';
+
+  @override
+  String get helpTheme => 'Theme\nChoose light, dark, or follow the system.';
+
+  @override
+  String get helpLanguage =>
+      'Language\nChange the display language of the app.';
+
+  @override
+  String get helpAbout =>
+      'About\nShows the version, licenses and update check.';
+
+  @override
+  String get helpTabs =>
+      'Tabs\nOpen SSH connections and local shells as tabs. Each tab has its own terminal and explorer.';
+
+  @override
+  String get helpExplorerSftp =>
+      'Server explorer (SFTP)\nFolders and files on the server. Drop files here to upload, drag them out to download.';
+
+  @override
+  String get helpExplorerLocal =>
+      'Folder view\nFolders and files on this PC. Deleting is permanent; there is no Recycle Bin.';
+
+  @override
+  String get helpTerminal =>
+      'Terminal\nThe shell screen. Drag to select and copy text; type directly with the keyboard.';
+
+  @override
+  String get helpSender =>
+      'Line sender\nWrite a multi-line script or load one from a file and send it to the terminal line by line. Open and save are here too.';
+
+  @override
+  String get helpStatusBar =>
+      'Status bar\nShows the state of this tab, such as the connection and current path.';
+
+  @override
+  String get helpConnectPanel =>
+      'Connection screen\nEnter host, user and credentials to connect over SSH. The local shell buttons below open a shell on this PC.';
+
+  @override
+  String get helpEmptyAction =>
+      'New connection\nOpens a new tab with the connection screen.';
 }

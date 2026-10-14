@@ -1225,6 +1225,102 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'파일을 처리하지 못했습니다: {detail}'**
   String senderFileError(String detail);
+
+  /// No description provided for @helpModeTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'도움말 모드'**
+  String get helpModeTooltip;
+
+  /// No description provided for @helpButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'도움말 모드\n마우스를 올린 컨트롤의 설명을 봅니다. 아무 곳이나 클릭하거나 Esc를 누르면 끝납니다.'**
+  String get helpButton;
+
+  /// No description provided for @helpDisconnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결 끊기 / 셸 종료\nSSH 연결을 끊거나 로컬 셸을 종료합니다. 탭은 남습니다.'**
+  String get helpDisconnect;
+
+  /// No description provided for @helpAddressBook.
+  ///
+  /// In ko, this message translates to:
+  /// **'주소록\n저장해 둔 SSH 접속 정보를 검색·편집하고 연결합니다. 비밀번호는 저장하지 않습니다.'**
+  String get helpAddressBook;
+
+  /// No description provided for @helpSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정\n탐색기 자동 새로 고침과 터미널 글꼴·크기·스크롤백을 바꿉니다.'**
+  String get helpSettings;
+
+  /// No description provided for @helpTheme.
+  ///
+  /// In ko, this message translates to:
+  /// **'테마\n밝게, 어둡게, 시스템 설정 중에서 고릅니다.'**
+  String get helpTheme;
+
+  /// No description provided for @helpLanguage.
+  ///
+  /// In ko, this message translates to:
+  /// **'언어\n앱 표시 언어를 바꿉니다.'**
+  String get helpLanguage;
+
+  /// No description provided for @helpAbout.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보\n버전, 라이선스, 업데이트 확인을 봅니다.'**
+  String get helpAbout;
+
+  /// No description provided for @helpTabs.
+  ///
+  /// In ko, this message translates to:
+  /// **'탭\nSSH 연결과 로컬 셸을 탭으로 나눠 엽니다. 탭마다 터미널과 탐색기가 따로 있습니다.'**
+  String get helpTabs;
+
+  /// No description provided for @helpExplorerSftp.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버 탐색기 (SFTP)\n서버의 폴더와 파일입니다. 파일을 끌어넣으면 업로드, 밖으로 끌어내면 다운로드됩니다.'**
+  String get helpExplorerSftp;
+
+  /// No description provided for @helpExplorerLocal.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 보기\n이 PC의 폴더와 파일입니다. 삭제는 휴지통 없이 영구 삭제됩니다.'**
+  String get helpExplorerLocal;
+
+  /// No description provided for @helpTerminal.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널\n셸 화면입니다. 글을 드래그해 복사하고, 키보드로 바로 입력합니다.'**
+  String get helpTerminal;
+
+  /// No description provided for @helpSender.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 전송 입력 칸\n여러 줄 스크립트를 쓰거나 파일에서 불러와 한 줄씩 터미널로 보냅니다. 열기·저장도 여기서 합니다.'**
+  String get helpSender;
+
+  /// No description provided for @helpStatusBar.
+  ///
+  /// In ko, this message translates to:
+  /// **'상태 표시줄\n연결 상태와 현재 경로 등 이 탭의 상태를 보여 줍니다.'**
+  String get helpStatusBar;
+
+  /// No description provided for @helpConnectPanel.
+  ///
+  /// In ko, this message translates to:
+  /// **'접속 화면\n호스트와 사용자, 인증 정보를 입력해 SSH로 연결합니다. 아래 로컬 셸 버튼으로 이 PC의 셸을 열 수도 있습니다.'**
+  String get helpConnectPanel;
+
+  /// No description provided for @helpEmptyAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 연결\n새 탭을 열어 접속 화면으로 이동합니다.'**
+  String get helpEmptyAction;
 }
 
 class _AppLocalizationsDelegate
