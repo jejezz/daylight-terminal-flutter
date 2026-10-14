@@ -29,6 +29,55 @@ abstract final class SenderFile {
 
   static const suggestedName = 'line-sender.txt';
 
+  /// 끌어넣기로 바로 열 수 있는 텍스트 파일 확장자(소문자, 점 없음). 이 밖의 파일은 열지 않는다.
+  static const textExtensions = {
+    'txt',
+    'md',
+    'markdown',
+    'cfg',
+    'conf',
+    'config',
+    'ini',
+    'env',
+    'properties',
+    'toml',
+    'yaml',
+    'yml',
+    'json',
+    'xml',
+    'csv',
+    'tsv',
+    'log',
+    'sh',
+    'bash',
+    'zsh',
+    'fish',
+    'bat',
+    'cmd',
+    'ps1',
+    'sql',
+    'py',
+    'rb',
+    'pl',
+    'js',
+    'ts',
+    'service',
+    'rules',
+    'list',
+    'repo',
+    'hosts',
+    'cnf',
+    'gitignore',
+  };
+
+  /// [path]가 끌어넣어 열 수 있는 텍스트 파일 형식인가. 확장자 없는 점 파일(`.env`, `.gitignore`)도 이름으로 본다.
+  static bool isSupportedText(String path) {
+    final name = path.split(RegExp(r'[\\/]')).last.toLowerCase();
+    final dot = name.lastIndexOf('.');
+    if (dot == -1) return false;
+    return textExtensions.contains(name.substring(dot + 1));
+  }
+
   static Future<SenderDocument> read(String path) async {
     try {
       final file = File(path);

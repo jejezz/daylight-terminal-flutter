@@ -86,6 +86,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   때만 오른쪽 가장자리(안쪽 여백 10px + 스크롤바 18px)에 `PassThroughCursorRegion`(화살표 커서, 마우스 이벤트는 통과)을
   겹친다. 손잡이는 상자 오른쪽 끝에서 13~20px 안쪽에 있다(측정, 입력 칸 안쪽 여백이 바뀌면 달라지니 다시 잰다). `MouseRegion`은 이벤트를 막아서 스크롤바를 못 끌게 되므로
   쓰지 않는다. 스크롤바 유무는 알림만 믿지 않고 글·크기가 바뀔 때마다 프레임 뒤에 직접 읽는다(글이 짧아지면 알림이 안 온다).
+- 끌어넣기: 입력 칸에 텍스트 파일(`SenderFile.textExtensions`: txt, md, cfg, ini, conf, json, yaml, sh 등)을 끌어놓으면 열기와 같이 내용을 불러온다(변경이 있으면 먼저 묻는다). 목록에 없는 형식은 안내만 하고 열지 않는다. 이 앱에서 끌어낸 것(`FlutterDragOut.inProgress`)은 무시한다.
 - 테스트의 파일 선택창은 `FileSelectorPlatform.instance`를 가짜로 바꿔서 쓴다 (`test/line_sender_file_test.dart`).
 
 ## 창 위치 (Windows)
