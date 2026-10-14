@@ -237,6 +237,12 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                           onDragStarted: () => _onDragStarted(session, e),
                           onDragUpdate: _onDragUpdate,
                           onDragEnd: () => _dragPaths = null,
+                          dragData: PaneDragData(
+                            (accept) async => [
+                              for (final i in _targetsFor(session, e))
+                                if (accept(i)) session.pathOf(i),
+                            ],
+                          ),
                         );
                       },
                     ),

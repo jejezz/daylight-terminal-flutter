@@ -126,6 +126,7 @@ class FileRow extends StatelessWidget {
     required this.onDragStarted,
     required this.onDragUpdate,
     required this.onDragEnd,
+    required this.dragData,
   });
 
   final FileItem entry;
@@ -137,6 +138,7 @@ class FileRow extends StatelessWidget {
   final VoidCallback onDragStarted;
   final void Function(DragUpdateDetails details) onDragUpdate;
   final VoidCallback onDragEnd;
+  final PaneDragData dragData;
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +170,8 @@ class FileRow extends StatelessWidget {
     );
     return GestureDetector(
       onSecondaryTapDown: (d) => onMenu(d.globalPosition),
-      child: Draggable<List<FileItem>>(
+      child: Draggable<PaneDragData>(
+        data: dragData,
         maxSimultaneousDrags: 1,
         feedback: Builder(
           builder: (context) {
@@ -191,6 +194,15 @@ class FileRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 탐색기 행을 앱 안의 다른 곳(LineSender 등)에 놓았을 때 받는 쪽이 쓰는 꾸러미.
+/// [resolve]는 놓은 뒤에 이 PC의 파일 경로로 바꿔 준다 (SFTP는 임시 폴더에 받는다).
+/// 받는 쪽이 열 수 있는 파일만 받도록 [accept]로 거른다.
+class PaneDragData {
+  const PaneDragData(this.resolve);
+
+  final Future<List<String>> Function(bool Function(FileItem item) accept) resolve;
 }
 
 String formatFileSize(int bytes) {
