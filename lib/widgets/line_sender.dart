@@ -9,6 +9,7 @@ import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
+import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../models/line_ending.dart';
 import '../services/sender_file.dart';
@@ -413,7 +414,7 @@ class _LineSenderState extends State<LineSender> {
   static const _bottomBarHeight = 44.0;
 
   /// 파일 버튼 한 개. 하단 줄에서 눌러 쓰기 편하게 조금 크다 (아이콘 22, 누르는 영역 40x40).
-  Widget _fileButton(IconData icon, String tooltip, VoidCallback onPressed, {Color? color}) => IconButton(
+  Widget _fileButton(HelpId help, IconData icon, String tooltip, VoidCallback onPressed, {Color? color}) => IconButton(
     iconSize: 22,
     tooltip: tooltip,
     icon: Icon(icon),
@@ -426,7 +427,7 @@ class _LineSenderState extends State<LineSender> {
       // 누르는 영역을 48로 불리지 않는다 — 그러면 하단 줄이 좁은 폭에서 넘친다.
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
     ),
-  );
+  ).help(help);
 
   /// 하단 줄: 왼쪽에 파일 버튼 네 개(새로 만들기, 열기, 저장, 다른 이름으로 저장), 오른쪽 끝에 줄 끝 문자 선택과
   /// 전송 버튼. 입력 칸 옆에 열을 두지 않아서 폭이 좁아도 입력 칸이 전체 폭을 쓴다.
@@ -441,42 +442,46 @@ class _LineSenderState extends State<LineSender> {
       child: Row(
         children: [
           // 편집기의 새 파일 · 열기 · 저장 · 다른 이름으로 저장 순서.
-          _fileButton(Icons.note_add_outlined, l10n.senderNew, _new),
-          _fileButton(Icons.folder_open_rounded, l10n.senderOpen('${_commandKey}O'), _open),
+          _fileButton(HelpId.senderNew, Icons.note_add_outlined, l10n.senderNew, _new),
+          _fileButton(HelpId.senderOpen, Icons.folder_open_rounded, l10n.senderOpen('${_commandKey}O'), _open),
           _fileButton(
+            HelpId.senderSave,
             Icons.save_outlined,
             l10n.senderSave('${_commandKey}S'),
             _save,
             color: _modified ? scheme.primary : null,
           ),
-          _fileButton(Icons.save_as_outlined, '${l10n.senderSaveAs} ($_saveAsKey)', _saveAs),
+          _fileButton(HelpId.senderSaveAs, Icons.save_as_outlined, '${l10n.senderSaveAs} ($_saveAsKey)', _saveAs),
           const Spacer(),
-          PopupMenuButton<LineEnding>(
-            tooltip: l10n.senderLineEndingTooltip,
-            initialValue: session.lineEnding,
-            onSelected: session.setLineEnding,
-            itemBuilder: (context) => [
-              for (final e in LineEnding.values)
-                PopupMenuItem(
-                  value: e,
-                  child: Text(e.label ?? l10n.senderLineEndingNone, style: AppFonts.mono.copyWith(fontSize: 13)),
+          HelpTarget(
+            id: HelpId.senderLineEnding,
+            child: PopupMenuButton<LineEnding>(
+              tooltip: l10n.senderLineEndingTooltip,
+              initialValue: session.lineEnding,
+              onSelected: session.setLineEnding,
+              itemBuilder: (context) => [
+                for (final e in LineEnding.values)
+                  PopupMenuItem(
+                    value: e,
+                    child: Text(e.label ?? l10n.senderLineEndingNone, style: AppFonts.mono.copyWith(fontSize: 13)),
+                  ),
+              ],
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.only(left: AppSpacing.sm, right: AppSpacing.xs),
+                decoration: BoxDecoration(
+                  border: Border.all(color: scheme.outlineVariant),
+                  borderRadius: BorderRadius.circular(AppRadius.button),
                 ),
-            ],
-            child: Container(
-              height: 36,
-              padding: const EdgeInsets.only(left: AppSpacing.sm, right: AppSpacing.xs),
-              decoration: BoxDecoration(
-                border: Border.all(color: scheme.outlineVariant),
-                borderRadius: BorderRadius.circular(AppRadius.button),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.keyboard_return_rounded, size: 16, color: scheme.onSurfaceVariant),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(ending, style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface)),
-                  Icon(Icons.arrow_drop_down_rounded, size: 20, color: scheme.onSurfaceVariant),
-                ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.keyboard_return_rounded, size: 16, color: scheme.onSurfaceVariant),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(ending, style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface)),
+                    Icon(Icons.arrow_drop_down_rounded, size: 20, color: scheme.onSurfaceVariant),
+                  ],
+                ),
               ),
             ),
           ),
@@ -494,7 +499,7 @@ class _LineSenderState extends State<LineSender> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
             ),
             icon: const Icon(Icons.send_rounded),
-          ),
+          ).help(HelpId.senderSend),
         ],
       ),
     );
@@ -524,55 +529,55 @@ class _LineSenderState extends State<LineSender> {
               child: DragTarget<PaneDragData>(
                 onAcceptWithDetails: (d) => _onPaneDrop(d.data),
                 builder: (context, candidates, _) => Container(
-                key: const ValueKey('line-sender-box'),
-                foregroundDecoration: _dragging || candidates.isNotEmpty
-                    ? BoxDecoration(
-                        border: Border.all(color: scheme.primary, width: 2),
-                        borderRadius: BorderRadius.circular(AppRadius.button),
-                        color: scheme.primary.withValues(alpha: 0.08),
-                      )
-                    : null,
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _nameRow(scheme, l10n),
-                    Expanded(
-                      child: Focus(
-                        onKeyEvent: _onKeyEvent,
-                        child: _withScrollbarCursor(
-                          TextField(
-                            controller: _controller,
-                            focusNode: _focusNode,
-                            scrollController: _scroll,
-                            maxLines: null,
-                            expands: true,
-                            textAlignVertical: TextAlignVertical.top,
-                            style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
-                            // 바깥 상자(Container)가 배경과 모서리를 맡으므로, 테마의 기본 채움과 테두리는 끈다.
-                            decoration: InputDecoration(
-                              isDense: true,
-                              hintText: l10n.senderHint,
-                              contentPadding: const EdgeInsets.fromLTRB(
-                                _contentPadding,
-                                AppSpacing.xs,
-                                _contentPadding,
-                                _contentPadding,
+                  key: const ValueKey('line-sender-box'),
+                  foregroundDecoration: _dragging || candidates.isNotEmpty
+                      ? BoxDecoration(
+                          border: Border.all(color: scheme.primary, width: 2),
+                          borderRadius: BorderRadius.circular(AppRadius.button),
+                          color: scheme.primary.withValues(alpha: 0.08),
+                        )
+                      : null,
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _nameRow(scheme, l10n),
+                      Expanded(
+                        child: Focus(
+                          onKeyEvent: _onKeyEvent,
+                          child: _withScrollbarCursor(
+                            TextField(
+                              controller: _controller,
+                              focusNode: _focusNode,
+                              scrollController: _scroll,
+                              maxLines: null,
+                              expands: true,
+                              textAlignVertical: TextAlignVertical.top,
+                              style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
+                              // 바깥 상자(Container)가 배경과 모서리를 맡으므로, 테마의 기본 채움과 테두리는 끈다.
+                              decoration: InputDecoration(
+                                isDense: true,
+                                hintText: l10n.senderHint,
+                                contentPadding: const EdgeInsets.fromLTRB(
+                                  _contentPadding,
+                                  AppSpacing.xs,
+                                  _contentPadding,
+                                  _contentPadding,
+                                ),
+                                filled: false,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
                               ),
-                              filled: false,
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:provider/provider.dart';
 
+import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/transfer.dart';
@@ -431,7 +432,7 @@ class _TransferList extends StatelessWidget {
               style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
               onPressed: session.clearFinishedTransfers,
               child: Text(l10n.transferClear, style: const TextStyle(fontSize: 11)),
-            ),
+            ).help(HelpId.transferClear),
           ),
         ],
       ),

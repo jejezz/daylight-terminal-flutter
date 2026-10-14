@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../services/file_reveal_service.dart';
 import '../state/terminal_session.dart';
@@ -73,18 +74,21 @@ class StatusBar extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.md),
           ],
-          Tooltip(
-            message: l10n.statusStripAnsiTooltip,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l10n.statusStripAnsi, style: small),
-                const SizedBox(width: AppSpacing.xs),
-                Transform.scale(
-                  scale: 0.7,
-                  child: Switch(value: session.stripAnsi, onChanged: session.setStripAnsi),
-                ),
-              ],
+          HelpTarget(
+            id: HelpId.statusStripAnsi,
+            child: Tooltip(
+              message: l10n.statusStripAnsiTooltip,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.statusStripAnsi, style: small),
+                  const SizedBox(width: AppSpacing.xs),
+                  Transform.scale(
+                    scale: 0.7,
+                    child: Switch(value: session.stripAnsi, onChanged: session.setStripAnsi),
+                  ),
+                ],
+              ),
             ),
           ),
           IconButton(
@@ -94,7 +98,7 @@ class StatusBar extends StatelessWidget {
             color: scheme.onSurfaceVariant,
             icon: const Icon(Icons.content_copy_rounded),
             onPressed: () => _copyBuffer(context, session),
-          ),
+          ).help(HelpId.statusCopyBuffer),
           IconButton(
             iconSize: 18,
             visualDensity: VisualDensity.compact,
@@ -102,7 +106,7 @@ class StatusBar extends StatelessWidget {
             color: scheme.onSurfaceVariant,
             icon: const Icon(Icons.save_alt_rounded),
             onPressed: () => _saveBuffer(context, session),
-          ),
+          ).help(HelpId.statusSaveBuffer),
           IconButton(
             iconSize: 18,
             visualDensity: VisualDensity.compact,
@@ -112,14 +116,14 @@ class StatusBar extends StatelessWidget {
             onPressed: session.connected || session.isLogging
                 ? () => session.toggleLogging(confirmButtonText: l10n.logSaveConfirm)
                 : null,
-          ),
+          ).help(HelpId.statusRecord),
           IconButton(
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: session.logFilePath == null ? l10n.statusNoLogFile : l10n.statusRevealLog,
             icon: const Icon(Icons.folder_open_rounded),
             onPressed: session.logFilePath == null ? null : () => FileRevealService.reveal(session.logFilePath!),
-          ),
+          ).help(HelpId.statusRevealLog),
         ],
       ),
     );
