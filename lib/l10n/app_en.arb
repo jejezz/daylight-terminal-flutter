@@ -341,8 +341,14 @@
     }
   },
   "connectPromptHint": "The password is not saved",
-  "terminalFontTooltip": "Terminal font",
-  "terminalFontTitle": "Terminal font",
+  "settingsTooltip": "Settings",
+  "settingsTitle": "Settings",
+  "settingsSectionRefresh": "Refresh",
+  "settingsSectionTerminalFont": "Terminal font",
+  "refreshLocal": "Refresh local folders automatically",
+  "refreshLocalHelp": "Re-reads the folder of the visible tab every 5 seconds.",
+  "refreshSsh": "Refresh SFTP folders automatically",
+  "refreshSshHelp": "Re-reads the server folder of the visible tab every 5 seconds. Off by default because it uses the network.",
   "terminalFontFamily": "Font",
   "terminalFontBundled": "{name} (bundled)",
   "@terminalFontBundled": {

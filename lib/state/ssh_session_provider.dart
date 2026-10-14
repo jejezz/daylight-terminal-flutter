@@ -194,16 +194,7 @@ class SshSessionProvider extends TerminalSession {
     notify();
     try {
       final abs = await sftp.absolute(path);
-      final names = await sftp.listdir(abs);
-      final entries = await Future.wait([
-        for (final n in names)
-          if (n.filename != '.' && n.filename != '..') _toEntry(sftp, abs, n),
-      ]);
-      entries.sort((a, b) {
-        if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      });
-      _entries = entries;
+      _entries = await _list(sftp, abs);
       _remotePath = abs;
       _sftpError = null;
     } catch (e) {
@@ -212,6 +203,19 @@ class SshSessionProvider extends TerminalSession {
       _sftpLoading = false;
       notify();
     }
+  }
+
+  Future<List<FileItem>> _list(SftpClient sftp, String abs) async {
+    final names = await sftp.listdir(abs);
+    final entries = await Future.wait([
+      for (final n in names)
+        if (n.filename != '.' && n.filename != '..') _toEntry(sftp, abs, n),
+    ]);
+    entries.sort((a, b) {
+      if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return entries;
   }
 
   Future<FileItem> _toEntry(SftpClient sftp, String dir, SftpName n) async {

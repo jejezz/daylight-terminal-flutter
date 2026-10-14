@@ -6,6 +6,7 @@ import '../models/local_shell.dart';
 import '../services/local_shell_finder.dart';
 import '../services/profile_store.dart';
 import '../services/pty_backend.dart';
+import '../settings/refresh_prefs.dart';
 import 'local_shell_session.dart';
 import 'ssh_session_provider.dart';
 import 'terminal_session.dart';
@@ -14,12 +15,16 @@ import 'terminal_session.dart';
 class SessionsController extends ChangeNotifier {
   /// [scrollback]은 새 탭을 만들 때마다 불러 스크롤백 줄 수를 얻는다 (설정이 바뀌어도 새 탭부터 적용).
   /// [shellFinder]와 [ptyFactory]는 테스트에서 가짜로 바꿔 끼운다.
-  SessionsController(this.store, {this.scrollback, this.shellFinder, this.ptyFactory}) {
+  SessionsController(this.store, {this.scrollback, this.refreshPrefs, this.shellFinder, this.ptyFactory}) {
+    refreshPrefs?.addListener(_syncActive);
     add();
   }
 
   final ProfileStore store;
   final int Function()? scrollback;
+
+  /// 탐색기 자동 새로 고침 설정. 없으면 로컬만 켠다.
+  final RefreshPrefs? refreshPrefs;
   final LocalShellFinder? shellFinder;
   final PtyFactory? ptyFactory;
   final List<TerminalSession> sessions = [];
@@ -64,6 +69,7 @@ class SessionsController extends ChangeNotifier {
     if (!reusable) return addLocal(shell)!;
     final session = LocalShellSession(shell, scrollback: scrollback?.call() ?? 10000, ptyFactory: ptyFactory);
     sessions[_selected] = session;
+    _syncActive();
     notifyListeners();
     unawaited(session.start());
     // 위젯 트리가 옛 탭을 내려놓은 다음에 정리한다.
@@ -74,12 +80,23 @@ class SessionsController extends ChangeNotifier {
   void _addSession(TerminalSession session) {
     sessions.add(session);
     _selected = sessions.length - 1;
+    _syncActive();
     notifyListeners();
+  }
+
+  /// 선택된 탭만, 설정이 허용한 종류의 탭만 탐색기를 자동으로 새로 고치게 한다.
+  void _syncActive() {
+    for (var i = 0; i < sessions.length; i++) {
+      final s = sessions[i];
+      s.setAutoRefreshAllowed(s is SshSessionProvider ? refreshPrefs?.ssh ?? false : refreshPrefs?.local ?? true);
+      s.setActive(i == _selected);
+    }
   }
 
   void select(int index) {
     if (index < 0 || index >= sessions.length || index == _selected) return;
     _selected = index;
+    _syncActive();
     notifyListeners();
   }
 
@@ -89,6 +106,7 @@ class SessionsController extends ChangeNotifier {
     if (_selected > index || _selected >= sessions.length) {
       _selected = (_selected - 1).clamp(0, sessions.isEmpty ? 0 : sessions.length - 1);
     }
+    _syncActive();
     notifyListeners();
     // 위젯 트리가 이 세션을 내려놓은 다음에 정리한다.
     Future<void>.microtask(removed.dispose);
@@ -104,6 +122,7 @@ class SessionsController extends ChangeNotifier {
 
   @override
   void dispose() {
+    refreshPrefs?.removeListener(_syncActive);
     for (final s in sessions) {
       s.dispose();
     }

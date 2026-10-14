@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
@@ -31,6 +31,7 @@ class LocalShellSession extends TerminalSession {
   String _folderPath;
   List<FileItem> _entries = const [];
   bool _folderLoading = false;
+  bool _autoRefreshing = false;
   String? _folderError;
 
   /// 셸이 끝났을 때의 종료 코드. 아직 돌고 있으면 null.
@@ -162,21 +163,47 @@ class LocalShellSession extends TerminalSession {
 
   // ───────────────────────── 폴더 뷰 ─────────────────────────
 
+  Future<List<FileItem>> _list(Directory dir) async {
+    final raw = <FileSystemEntity>[];
+    await for (final e in dir.list(followLinks: false)) {
+      raw.add(e);
+    }
+    final items = await Future.wait(raw.map(_toItem));
+    items.sort((a, b) {
+      if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return items;
+  }
+
+  /// 자동 새로 고침: 로딩 표시와 오류 없이 현재 폴더를 다시 읽고, 바뀐 것이 있을 때만 화면을 갱신한다.
+  /// 읽는 동안 사용자가 다른 폴더로 옮겼으면 결과를 버린다.
+  @override
+  bool get autoRefreshReady => true;
+
+  @override
+  Future<void> autoRefresh() async {
+    if (_folderLoading || _autoRefreshing) return;
+    final path = _folderPath;
+    _autoRefreshing = true;
+    try {
+      final items = await _list(Directory(path));
+      if (disposed || _folderLoading || _folderPath != path || listEquals(items, _entries)) return;
+      _entries = items;
+      notify();
+    } catch (_) {
+      // 일시적인 오류는 다음 주기에 다시 시도한다.
+    } finally {
+      _autoRefreshing = false;
+    }
+  }
+
   Future<void> loadFolder(String path) async {
     _folderLoading = true;
     notify();
     try {
       final dir = Directory(path);
-      final raw = <FileSystemEntity>[];
-      await for (final e in dir.list(followLinks: false)) {
-        raw.add(e);
-      }
-      final items = await Future.wait(raw.map(_toItem));
-      items.sort((a, b) {
-        if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      });
-      _entries = items;
+      _entries = await _list(dir);
       _folderPath = dir.absolute.path;
       _folderError = null;
     } catch (e) {
@@ -208,7 +235,11 @@ class LocalShellSession extends TerminalSession {
     return FileItem(name: name, isDirectory: isDir, isLink: isLink, size: size, modified: modified);
   }
 
-  Future<void> refreshFolder() => loadFolder(_folderPath);
+  Future<void> refreshFolder() {
+    restartAutoRefreshTimer();
+    return loadFolder(_folderPath);
+  }
+
   Future<void> goUp() => loadFolder(p.dirname(_folderPath));
   Future<void> openEntry(FileItem e) => loadFolder(pathOf(e));
   String pathOf(FileItem e) => p.join(_folderPath, e.name);

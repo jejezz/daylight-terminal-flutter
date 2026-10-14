@@ -7,4 +7,16 @@ class FileItem {
   final bool isLink;
   final int? size;
   final DateTime? modified;
+
+  @override
+  bool operator ==(Object other) =>
+      other is FileItem &&
+      other.name == name &&
+      other.isDirectory == isDirectory &&
+      other.isLink == isLink &&
+      other.size == size &&
+      other.modified == modified;
+
+  @override
+  int get hashCode => Object.hash(name, isDirectory, isLink, size, modified);
 }

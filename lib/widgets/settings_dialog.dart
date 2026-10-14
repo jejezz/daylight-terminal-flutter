@@ -2,21 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../settings/refresh_prefs.dart';
 import '../settings/terminal_prefs.dart';
 import '../theme/app_theme.dart';
 
-/// 터미널 글꼴과 크기를 고른다. 바꾸는 즉시 모든 탭의 터미널에 적용되고 저장된다.
-Future<void> showTerminalFontDialog(BuildContext context) =>
-    showDialog<void>(context: context, builder: (_) => const _TerminalFontDialog());
+/// 설정 창: 새로 고침 옵션, 터미널 글꼴·크기·스크롤백. 바꾸는 즉시 적용되고 저장된다.
+Future<void> showSettingsDialog(BuildContext context) =>
+    showDialog<void>(context: context, builder: (_) => const _SettingsDialog());
 
-class _TerminalFontDialog extends StatefulWidget {
-  const _TerminalFontDialog();
+class _SettingsDialog extends StatefulWidget {
+  const _SettingsDialog();
 
   @override
-  State<_TerminalFontDialog> createState() => _TerminalFontDialogState();
+  State<_SettingsDialog> createState() => _SettingsDialogState();
 }
 
-class _TerminalFontDialogState extends State<_TerminalFontDialog> {
+class _SettingsDialogState extends State<_SettingsDialog> {
   static const _customValue = '\u0000custom';
 
   late final TextEditingController _custom;
@@ -45,16 +46,34 @@ class _TerminalFontDialogState extends State<_TerminalFontDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final prefs = context.watch<TerminalPrefs>();
+    final refresh = context.watch<RefreshPrefs>();
     final preview = prefs.style;
 
     return AlertDialog(
-      title: Text(l10n.terminalFontTitle),
-      content: SizedBox(
+      title: Text(l10n.settingsTitle),
+      content: SingleChildScrollView(child: SizedBox(
         width: 440,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _SectionHeader(l10n.settingsSectionRefresh),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.refreshLocal),
+              subtitle: Text(l10n.refreshLocalHelp),
+              value: refresh.local,
+              onChanged: refresh.setLocal,
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.refreshSsh),
+              subtitle: Text(l10n.refreshSshHelp),
+              value: refresh.ssh,
+              onChanged: refresh.setSsh,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _SectionHeader(l10n.settingsSectionTerminalFont),
             DropdownButtonFormField<String>(
               initialValue: _customMode ? _customValue : prefs.family,
               decoration: InputDecoration(labelText: l10n.terminalFontFamily),
@@ -142,11 +161,12 @@ class _TerminalFontDialogState extends State<_TerminalFontDialog> {
             ),
           ],
         ),
-      ),
+      )),
       actions: [
         TextButton(
           onPressed: () async {
             await prefs.reset();
+            await refresh.reset();
             setState(() {
               _customMode = false;
               _custom.clear();
@@ -158,4 +178,19 @@ class _TerminalFontDialogState extends State<_TerminalFontDialog> {
       ],
     );
   }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+    child: Text(
+      title,
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
+    ),
+  );
 }
