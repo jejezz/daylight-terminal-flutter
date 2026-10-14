@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/demo.gif" width="720" alt="Daylight Terminal 데모: 접속해서 명령을 실행하고, 탐색기와 바탕화면 사이에 파일을 끌어다 놓는 흐름">
+  <img src="docs/screenshots/demo.gif" width="720" alt="Daylight Terminal 데모: 주소록에서 서버를 골라 접속하고, 명령을 실행하고, 탐색기에 파일을 올리는 흐름">
 </p>
 
 ## 기능
@@ -37,8 +37,8 @@
 - **라이트·다크, 한국어·English** — 시스템 설정을 따르거나 툴바에서 고를 수 있습니다
 
 <p align="center">
-  <img src="docs/screenshots/home.png" width="360" alt="{{TODO: 화면 1}}">
-  <img src="docs/screenshots/detail.png" width="360" alt="{{TODO: 화면 2}}">
+  <img src="docs/screenshots/home.png" width="360" alt="Daylight Terminal: SFTP 탐색기, 터미널, LineSender를 한 창에서 (라이트·다크)">
+  <img src="docs/screenshots/detail.png" width="360" alt="Daylight Terminal 주소록: 그룹별로 저장한 접속 정보">
 </p>
 
 ## 설치
@@ -53,18 +53,12 @@
 
 **Windows:** 설치 프로그램에 아직 코드 서명이 없어서 SmartScreen이 "Windows의 PC 보호" 창을 띄웁니다. **추가 정보 → 실행**을 누르세요.
 
-## 동작 방식
-
-{{TODO: 궁금한 사람을 위한 2~4문장 — 흥미로운 기술적 선택 한 가지. 말할 것이 없으면 이 절을 지웁니다.}}
-
 ## 개발
 
 ```bash
 flutter pub get
 flutter run -d macos
 ```
-
-{{TODO: 빌드에 더 필요한 것(네이티브 도구, 환경 변수). 구조 문서 링크: [ARCHITECTURE.md](ARCHITECTURE.md), [UI_UX.md](UI_UX.md).}}
 
 릴리스: `scripts/bump-version.sh patch` → 병합 → `vX.Y.Z` 태그. CI가 모든 플랫폼을 빌드해서 올립니다. 규칙: [application-release-templates/conventions](https://github.com/jejezz/application-release-templates/tree/main/conventions).
 
