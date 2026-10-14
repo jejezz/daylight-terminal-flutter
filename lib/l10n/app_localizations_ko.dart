@@ -395,6 +395,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get statusNoLogFile => '기록한 파일이 아직 없습니다';
 
   @override
+  String get statusCopyBuffer => '터미널 내용 전체를 클립보드로 복사 (스크롤백 포함)';
+
+  @override
+  String get statusSaveBuffer => '터미널 내용 전체를 파일로 복사 (스크롤백 포함)';
+
+  @override
+  String get statusSaveBufferConfirm => '저장';
+
+  @override
+  String get statusBufferEmpty => '터미널에 내용이 없습니다';
+
+  @override
+  String statusBufferCopied(int lines) {
+    return '$lines줄을 클립보드에 복사했습니다';
+  }
+
+  @override
+  String statusBufferSaved(String file) {
+    return '$file에 저장했습니다';
+  }
+
+  @override
   String get statusStripAnsi => '이스케이프 제거';
 
   @override

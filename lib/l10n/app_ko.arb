@@ -280,6 +280,26 @@
   },
   "statusRevealLog": "탐색기에서 기록 파일 보기",
   "statusNoLogFile": "기록한 파일이 아직 없습니다",
+  "statusCopyBuffer": "터미널 내용 전체를 클립보드로 복사 (스크롤백 포함)",
+  "statusSaveBuffer": "터미널 내용 전체를 파일로 복사 (스크롤백 포함)",
+  "statusSaveBufferConfirm": "저장",
+  "statusBufferEmpty": "터미널에 내용이 없습니다",
+  "statusBufferCopied": "{lines}줄을 클립보드에 복사했습니다",
+  "@statusBufferCopied": {
+    "placeholders": {
+      "lines": {
+        "type": "int"
+      }
+    }
+  },
+  "statusBufferSaved": "{file}에 저장했습니다",
+  "@statusBufferSaved": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
   "statusStripAnsi": "이스케이프 제거",
   "statusStripAnsiTooltip": "색·커서 이동 같은 제어 시퀀스를 빼고 텍스트만 기록합니다",
   "logSaveConfirm": "기록 시작",

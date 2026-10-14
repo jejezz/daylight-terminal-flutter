@@ -263,6 +263,26 @@
   },
   "statusRevealLog": "Show the recording in the file manager",
   "statusNoLogFile": "Nothing has been recorded yet",
+  "statusCopyBuffer": "Copy everything in the terminal to the clipboard (including scrollback)",
+  "statusSaveBuffer": "Copy everything in the terminal to a file (including scrollback)",
+  "statusSaveBufferConfirm": "Save",
+  "statusBufferEmpty": "The terminal is empty",
+  "statusBufferCopied": "Copied {lines} lines to the clipboard",
+  "@statusBufferCopied": {
+    "placeholders": {
+      "lines": {
+        "type": "int"
+      }
+    }
+  },
+  "statusBufferSaved": "Saved to {file}",
+  "@statusBufferSaved": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
   "statusStripAnsi": "Strip escapes",
   "statusStripAnsiTooltip": "Record plain text without control sequences such as colors and cursor moves",
   "logSaveConfirm": "Start recording",

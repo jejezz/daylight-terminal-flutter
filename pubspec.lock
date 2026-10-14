@@ -758,10 +758,9 @@ packages:
   xterm2:
     dependency: "direct main"
     description:
-      name: xterm2
-      sha256: "6b627b7d1fa1403dfc9a7906cb11e5733e545a044a0136efb3948fe2f9ec5220"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/xterm2"
+      relative: true
+    source: path
     version: "5.3.0"
   zmodem:
     dependency: transitive

@@ -779,6 +779,42 @@ abstract class AppLocalizations {
   /// **'기록한 파일이 아직 없습니다'**
   String get statusNoLogFile;
 
+  /// No description provided for @statusCopyBuffer.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널 내용 전체를 클립보드로 복사 (스크롤백 포함)'**
+  String get statusCopyBuffer;
+
+  /// No description provided for @statusSaveBuffer.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널 내용 전체를 파일로 복사 (스크롤백 포함)'**
+  String get statusSaveBuffer;
+
+  /// No description provided for @statusSaveBufferConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get statusSaveBufferConfirm;
+
+  /// No description provided for @statusBufferEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널에 내용이 없습니다'**
+  String get statusBufferEmpty;
+
+  /// No description provided for @statusBufferCopied.
+  ///
+  /// In ko, this message translates to:
+  /// **'{lines}줄을 클립보드에 복사했습니다'**
+  String statusBufferCopied(int lines);
+
+  /// No description provided for @statusBufferSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'{file}에 저장했습니다'**
+  String statusBufferSaved(String file);
+
   /// No description provided for @statusStripAnsi.
   ///
   /// In ko, this message translates to:

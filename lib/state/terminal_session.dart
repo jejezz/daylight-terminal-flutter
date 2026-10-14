@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
@@ -148,6 +149,25 @@ abstract class TerminalSession extends ChangeNotifier {
         if (text.isNotEmpty) _log.write(Uint8List.fromList(utf8.encode(text)));
       }),
     );
+  }
+
+  /// 터미널 안의 모든 글(스크롤백 포함)을 텍스트로. 기록을 켜 두지 않았을 때 쏟아진 출력을 건지는 용도다.
+  /// 줄 끝 공백과 맨 끝의 빈 줄은 뺀다. 스크롤백 줄 수(`terminal_scrollback`)를 넘어 밀려난 줄은 없다.
+  String bufferText() {
+    final text = terminal.buffer.getText(null, true).trimRight();
+    return text.isEmpty ? '' : '$text\n';
+  }
+
+  /// [bufferText]를 저장 위치를 물어 파일로 쓴다. 취소하면 null, 썼으면 파일 경로.
+  Future<String?> saveBufferToFile({required String confirmButtonText}) async {
+    final location = await getSaveLocation(
+      initialDirectory: await LogFileService.defaultDirectory(),
+      suggestedName: LogFileService.suggestedFileName(logName),
+      confirmButtonText: confirmButtonText,
+    );
+    if (location == null) return null;
+    await File(location.path).writeAsString(bufferText());
+    return location.path;
   }
 
   @protected
