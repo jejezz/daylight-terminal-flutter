@@ -1,3 +1,4 @@
+// ignore_for_file: invalid_use_of_visible_for_testing_member, use_build_context_synchronously
 // README 스크린샷용 하니스 (tool/readme/capture.sh의 수동 클릭을 대신한다). 실제 앱(App)을 그대로 띄우고, 데모 SSH 서버에
 // 접속해 명령을 치고, 창을 screencapture로 찍은 뒤 끝난다. 사용자의 실제 설정은 건드리지 않는다(메모리 전용 SharedPreferences).
 //
