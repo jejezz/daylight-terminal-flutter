@@ -201,7 +201,7 @@ class _SessionViewState extends State<_SessionView> {
     final session = context.watch<TerminalSession>();
     // SSH 탭은 연결하기 전에 접속 폼을 보여 준다.
     if (!session.connected && widget.session is SshSessionProvider) {
-      return const ConnectPanel().help(HelpId.connectPanel);
+      return const ConnectPanel();
     }
 
     final scheme = Theme.of(context).colorScheme;

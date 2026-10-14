@@ -731,10 +731,91 @@ class AppLocalizationsEn extends AppLocalizations {
       'Status bar\nShows the state of this tab, such as the connection and current path.';
 
   @override
-  String get helpConnectPanel =>
-      'Connection screen\nEnter host, user and credentials to connect over SSH. The local shell buttons below open a shell on this PC.';
-
-  @override
   String get helpEmptyAction =>
       'New connection\nOpens a new tab with the connection screen.';
+
+  @override
+  String get helpTabItem =>
+      'Tab\nClick to switch to this tab. Each tab has its own terminal and explorer.';
+
+  @override
+  String get helpTabNew =>
+      'New tab\nOpen an SSH connection or a local shell on this PC in a new tab.';
+
+  @override
+  String get helpTabClose =>
+      'Close tab\nCloses this tab. An active connection is disconnected.';
+
+  @override
+  String get helpPaneUp => 'Parent folder\nGo up one level.';
+
+  @override
+  String get helpPanePath =>
+      'Current path\nClick to copy the full path to the clipboard.';
+
+  @override
+  String get helpPaneRefresh => 'Refresh\nReload the folder listing.';
+
+  @override
+  String get helpPaneNewFolder =>
+      'New folder\nCreate a new folder in the current folder.';
+
+  @override
+  String get helpPanePathSync =>
+      'Sync paths\nMove the terminal to this folder, or the explorer to the terminal\'s current path. Nothing moves automatically.';
+
+  @override
+  String get helpPanePlaces =>
+      'Places\nJump to common folders such as Home and Desktop.';
+
+  @override
+  String get helpFileRow =>
+      'File / folder\nDouble-click to open; Ctrl/⌘ and Shift select several. Right-click for a menu; drag to move, upload or download.';
+
+  @override
+  String get helpTransferClear =>
+      'Clear finished\nRemove completed transfers from the list.';
+
+  @override
+  String get helpStatusStripAnsi =>
+      'Strip escapes\nWhen on, recordings, copies and saves keep only plain text without colors and control codes.';
+
+  @override
+  String get helpStatusCopyBuffer =>
+      'Copy terminal contents\nCopy everything in the terminal buffer to the clipboard.';
+
+  @override
+  String get helpStatusSaveBuffer =>
+      'Save terminal contents\nSave everything in the terminal buffer to a file.';
+
+  @override
+  String get helpStatusRecord =>
+      'Start / stop recording\nRecord the terminal output to a file. Available while connected.';
+
+  @override
+  String get helpStatusRevealLog =>
+      'Show log file\nOpen the folder containing the recording in your file manager.';
+
+  @override
+  String get helpSenderNew =>
+      'New\nClear the box and detach it from the file. Asks first if there are changes.';
+
+  @override
+  String get helpSenderOpen => 'Open\nLoad a UTF-8 text file into the box.';
+
+  @override
+  String get helpSenderSave =>
+      'Save\nSave the box to the linked file. Asks for a name if there is none.';
+
+  @override
+  String get helpSenderSaveAs =>
+      'Save as\nSave the box contents to a different file.';
+
+  @override
+  String get helpSenderLineEnding =>
+      'Line ending\nChoose the character appended after each line sent (CR, LF, CRLF or none). Usually CR for SSH.';
+
+  @override
+  String get helpSenderSend =>
+      'Send\nSend the line at the cursor to the terminal and move to the next. Requires a connection.';
 }

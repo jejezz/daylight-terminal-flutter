@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../theme/app_theme.dart';
@@ -56,22 +57,25 @@ class PaneHeader extends StatelessWidget {
             tooltip: l10n.sftpUp,
             icon: const Icon(Icons.arrow_upward_rounded),
             onPressed: canGoUp ? onUp : null,
-          ),
+          ).help(HelpId.paneUp),
           ...extraActions,
           Expanded(
             // 누르면 전체 경로를 클립보드에 복사한다.
-            child: Tooltip(
-              message: '$path\n${l10n.pathCopyHint}',
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppRadius.button),
-                onTap: () => _copyPath(context),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: AppSpacing.xs),
-                  child: Text(
-                    path,
-                    overflow: TextOverflow.ellipsis,
-                    textDirection: TextDirection.rtl, // 길면 앞이 아니라 뒤(현재 폴더)가 보이게
-                    style: AppFonts.mono.copyWith(fontSize: 12, color: scheme.onSurface),
+            child: HelpTarget(
+              id: HelpId.panePath,
+              child: Tooltip(
+                message: '$path\n${l10n.pathCopyHint}',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                  onTap: () => _copyPath(context),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: AppSpacing.xs),
+                    child: Text(
+                      path,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: TextDirection.rtl, // 길면 앞이 아니라 뒤(현재 폴더)가 보이게
+                      style: AppFonts.mono.copyWith(fontSize: 12, color: scheme.onSurface),
+                    ),
                   ),
                 ),
               ),
@@ -83,29 +87,32 @@ class PaneHeader extends StatelessWidget {
             tooltip: l10n.sftpRefresh,
             icon: const Icon(Icons.refresh_rounded),
             onPressed: onRefresh,
-          ),
+          ).help(HelpId.paneRefresh),
           IconButton(
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: l10n.sftpNewFolder,
             icon: const Icon(Icons.create_new_folder_outlined),
             onPressed: onNewFolder,
-          ),
+          ).help(HelpId.paneNewFolder),
           if (onTerminalToHere != null || onExplorerToTerminal != null)
-            PopupMenuButton<String>(
-              tooltip: l10n.pathMenuTooltip,
-              iconSize: 18,
-              icon: const Icon(Icons.sync_alt_rounded),
-              onSelected: (v) {
-                if (v == 'terminal') onTerminalToHere?.call();
-                if (v == 'explorer') onExplorerToTerminal?.call();
-              },
-              itemBuilder: (context) => [
-                if (onTerminalToHere != null)
-                  PopupMenuItem(value: 'terminal', child: Text(l10n.pathMenuTerminalToHere)),
-                if (onExplorerToTerminal != null)
-                  PopupMenuItem(value: 'explorer', child: Text(l10n.pathMenuExplorerToTerminal)),
-              ],
+            HelpTarget(
+              id: HelpId.panePathSync,
+              child: PopupMenuButton<String>(
+                tooltip: l10n.pathMenuTooltip,
+                iconSize: 18,
+                icon: const Icon(Icons.sync_alt_rounded),
+                onSelected: (v) {
+                  if (v == 'terminal') onTerminalToHere?.call();
+                  if (v == 'explorer') onExplorerToTerminal?.call();
+                },
+                itemBuilder: (context) => [
+                  if (onTerminalToHere != null)
+                    PopupMenuItem(value: 'terminal', child: Text(l10n.pathMenuTerminalToHere)),
+                  if (onExplorerToTerminal != null)
+                    PopupMenuItem(value: 'explorer', child: Text(l10n.pathMenuExplorerToTerminal)),
+                ],
+              ),
             ),
         ],
       ),
@@ -168,29 +175,32 @@ class FileRow extends StatelessWidget {
         ],
       ),
     );
-    return GestureDetector(
-      onSecondaryTapDown: (d) => onMenu(d.globalPosition),
-      child: Draggable<PaneDragData>(
-        data: dragData,
-        maxSimultaneousDrags: 1,
-        feedback: Builder(
-          builder: (context) {
-            final n = dragCount();
-            return Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(AppRadius.button),
-              color: scheme.surfaceContainerHighest,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-                child: Text(n == 1 ? entry.name : l10n.sftpDragCount(n), style: const TextStyle(fontSize: 13)),
-              ),
-            );
-          },
+    return HelpTarget(
+      id: HelpId.fileRow,
+      child: GestureDetector(
+        onSecondaryTapDown: (d) => onMenu(d.globalPosition),
+        child: Draggable<PaneDragData>(
+          data: dragData,
+          maxSimultaneousDrags: 1,
+          feedback: Builder(
+            builder: (context) {
+              final n = dragCount();
+              return Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(AppRadius.button),
+                color: scheme.surfaceContainerHighest,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                  child: Text(n == 1 ? entry.name : l10n.sftpDragCount(n), style: const TextStyle(fontSize: 13)),
+                ),
+              );
+            },
+          ),
+          onDragStarted: onDragStarted,
+          onDragUpdate: onDragUpdate,
+          onDragEnd: (_) => onDragEnd(),
+          child: InkWell(splashFactory: NoSplash.splashFactory, onTap: onTap, onDoubleTap: onOpen, child: content),
         ),
-        onDragStarted: onDragStarted,
-        onDragUpdate: onDragUpdate,
-        onDragEnd: (_) => onDragEnd(),
-        child: InkWell(splashFactory: NoSplash.splashFactory, onTap: onTap, onDoubleTap: onOpen, child: content),
       ),
     );
   }
