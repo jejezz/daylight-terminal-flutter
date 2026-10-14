@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -52,10 +53,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSystemShort => 'System';
 
   @override
-  String get aboutTagline => 'SSH terminal and SFTP file explorer in one window';
+  String get aboutTagline =>
+      'SSH terminal and SFTP file explorer in one window';
 
   @override
-  String get aboutDescription => 'Shows a terminal and an SFTP file explorer side by side over a single SSH connection. Drag and drop to upload and download, and sync the terminal and explorer paths only when you ask.';
+  String get aboutDescription =>
+      'Shows a terminal and an SFTP file explorer side by side over a single SSH connection. Drag and drop to upload and download, and sync the terminal and explorer paths only when you ask.';
 
   @override
   String get homeEmptyTitle => 'Connect to a server to get started';
@@ -110,16 +113,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateCheckFailedTitle => 'Couldn\'t check for updates';
 
   @override
-  String get updateErrorNetwork => 'Couldn\'t reach the update server. Check your internet connection and try again.';
+  String get updateErrorNetwork =>
+      'Couldn\'t reach the update server. Check your internet connection and try again.';
 
   @override
-  String get updateErrorChecksum => 'The downloaded file didn\'t pass verification, so it was not installed. Please try again later.';
+  String get updateErrorChecksum =>
+      'The downloaded file didn\'t pass verification, so it was not installed. Please try again later.';
 
   @override
   String get updateErrorInstall => 'Couldn\'t start the installation.';
 
   @override
-  String get updateErrorGeneric => 'The update server sent an unexpected response. Please try again later.';
+  String get updateErrorGeneric =>
+      'The update server sent an unexpected response. Please try again later.';
 
   @override
   String get updateUpToDateTitle => 'You\'re up to date';
@@ -184,7 +190,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateBusyTitle => 'Can\'t update right now';
 
   @override
-  String get updateBusyBody => 'A task is in progress. Please try again when it has finished.';
+  String get updateBusyBody =>
+      'A task is in progress. Please try again when it has finished.';
 
   @override
   String get tabNew => 'New connection';
@@ -223,7 +230,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectKeyPassphrase => 'Key passphrase (if any)';
 
   @override
-  String get connectSaveProfile => 'Save this connection (the password is never saved)';
+  String get connectSaveProfile =>
+      'Save this connection (the password is never saved)';
 
   @override
   String get connectDeleteProfile => 'Delete saved connection';
@@ -292,7 +300,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sftpEmpty => 'This folder is empty';
 
   @override
-  String get sftpDropHint => 'Drop files or folders here to upload to this folder';
+  String get sftpDropHint =>
+      'Drop files or folders here to upload to this folder';
 
   @override
   String get sftpDropActive => 'Drop to upload';
@@ -338,7 +347,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pathMenuExplorerToTerminal => 'Move explorer to the terminal path';
 
   @override
-  String get pathCwdFailed => 'Could not get the terminal\'s current path. Check that the shell is ready for commands.';
+  String get pathCwdFailed =>
+      'Could not get the terminal\'s current path. Check that the shell is ready for commands.';
 
   @override
   String transferUploading(String name) {
@@ -362,7 +372,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transferClear => 'Clear finished';
 
   @override
-  String get senderHint => 'Write several lines ahead and send them one by one with Enter (Ctrl+Enter: new line)';
+  String get senderHint =>
+      'Write several lines ahead and send them one by one with Enter (Ctrl+Enter: new line)';
 
   @override
   String get senderLineEndingNone => 'None';
@@ -395,10 +406,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusNoLogFile => 'Nothing has been recorded yet';
 
   @override
-  String get statusCopyBuffer => 'Copy everything in the terminal to the clipboard (including scrollback)';
+  String get statusCopyBuffer =>
+      'Copy everything in the terminal to the clipboard (including scrollback)';
 
   @override
-  String get statusSaveBuffer => 'Copy everything in the terminal to a file (including scrollback)';
+  String get statusSaveBuffer =>
+      'Copy everything in the terminal to a file (including scrollback)';
 
   @override
   String get statusSaveBufferConfirm => 'Save';
@@ -428,7 +441,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusStripAnsi => 'Strip escapes';
 
   @override
-  String get statusStripAnsiTooltip => 'Record plain text without control sequences such as colors and cursor moves';
+  String get statusStripAnsiTooltip =>
+      'Record plain text without control sequences such as colors and cursor moves';
 
   @override
   String get logSaveConfirm => 'Start recording';
@@ -458,7 +472,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addressBookSearch => 'Search name, host or group';
 
   @override
-  String get addressBookEmpty => 'No saved connections yet. Add one with \'New connection\' below.';
+  String get addressBookEmpty =>
+      'No saved connections yet. Add one with \'New connection\' below.';
 
   @override
   String get addressBookNoMatch => 'No matches';
@@ -519,13 +534,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refreshLocal => 'Refresh local folders automatically';
 
   @override
-  String get refreshLocalHelp => 'Re-reads the folder of the visible tab every 5 seconds.';
+  String get refreshLocalHelp =>
+      'Re-reads the folder of the visible tab every 5 seconds.';
 
   @override
   String get refreshSsh => 'Refresh SFTP folders automatically';
 
   @override
-  String get refreshSshHelp => 'Re-reads the server folder of the visible tab every 5 seconds. Off by default because it uses the network.';
+  String get refreshSshHelp =>
+      'Re-reads the server folder of the visible tab every 5 seconds. Off by default because it uses the network.';
 
   @override
   String get terminalFontFamily => 'Font';
@@ -542,7 +559,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalFontCustomName => 'Installed font name';
 
   @override
-  String get terminalFontCustomHelp => 'Type the exact name of a font installed on this computer. If it is not found, the bundled font is used instead.';
+  String get terminalFontCustomHelp =>
+      'Type the exact name of a font installed on this computer. If it is not found, the bundled font is used instead.';
 
   @override
   String get terminalFontSize => 'Size';
@@ -554,11 +572,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalScrollback => 'Scrollback lines';
 
   @override
-  String get terminalScrollbackHelp => 'The most past output lines you can scroll back to. Applies to tabs opened from now on; open tabs keep their current setting.';
+  String get terminalScrollbackHelp =>
+      'The most past output lines you can scroll back to. Applies to tabs opened from now on; open tabs keep their current setting.';
 
   @override
   String terminalScrollbackLines(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     return '$countString lines';
@@ -648,7 +668,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get senderFileNotUtf8 => 'Only UTF-8 text files can be opened';
 
   @override
-  String get senderDropUnsupported => 'Only text files (txt, md, cfg, ini, ...) can be dropped here';
+  String get senderDropUnsupported =>
+      'Only text files (txt, md, cfg, ini, ...) can be dropped here';
 
   @override
   String senderFileError(String detail) {

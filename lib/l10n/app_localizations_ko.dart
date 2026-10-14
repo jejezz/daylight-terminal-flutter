@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -55,7 +56,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aboutTagline => 'SSH 터미널과 SFTP 파일 탐색기를 한 창에서';
 
   @override
-  String get aboutDescription => '하나의 SSH 연결로 터미널과 SFTP 파일 탐색기를 나란히 보여 줍니다. 파일을 끌어다 놓아 올리고 내려받고, 원할 때만 터미널과 탐색기의 경로를 맞춥니다.';
+  String get aboutDescription =>
+      '하나의 SSH 연결로 터미널과 SFTP 파일 탐색기를 나란히 보여 줍니다. 파일을 끌어다 놓아 올리고 내려받고, 원할 때만 터미널과 탐색기의 경로를 맞춥니다.';
 
   @override
   String get homeEmptyTitle => '서버에 연결해 시작하세요';
@@ -110,16 +112,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get updateCheckFailedTitle => '업데이트를 확인하지 못했습니다';
 
   @override
-  String get updateErrorNetwork => '업데이트 서버에 연결하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
+  String get updateErrorNetwork =>
+      '업데이트 서버에 연결하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
 
   @override
-  String get updateErrorChecksum => '내려받은 파일이 올바르지 않아 설치하지 않았습니다. 잠시 뒤에 다시 시도해 주세요.';
+  String get updateErrorChecksum =>
+      '내려받은 파일이 올바르지 않아 설치하지 않았습니다. 잠시 뒤에 다시 시도해 주세요.';
 
   @override
   String get updateErrorInstall => '설치를 시작하지 못했습니다.';
 
   @override
-  String get updateErrorGeneric => '업데이트 서버에서 예상하지 못한 응답을 받았습니다. 잠시 뒤에 다시 시도해 주세요.';
+  String get updateErrorGeneric =>
+      '업데이트 서버에서 예상하지 못한 응답을 받았습니다. 잠시 뒤에 다시 시도해 주세요.';
 
   @override
   String get updateUpToDateTitle => '최신 버전입니다';
@@ -338,7 +343,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pathMenuExplorerToTerminal => '탐색기를 터미널 경로로 이동';
 
   @override
-  String get pathCwdFailed => '터미널의 현재 경로를 가져오지 못했습니다. 셸이 명령을 받을 수 있는 상태인지 확인하세요.';
+  String get pathCwdFailed =>
+      '터미널의 현재 경로를 가져오지 못했습니다. 셸이 명령을 받을 수 있는 상태인지 확인하세요.';
 
   @override
   String transferUploading(String name) {
@@ -525,7 +531,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get refreshSsh => 'SFTP 폴더 자동 새로 고침';
 
   @override
-  String get refreshSshHelp => '보이는 탭의 서버 폴더를 5초마다 다시 읽습니다. 네트워크를 쓰므로 기본은 꺼짐입니다.';
+  String get refreshSshHelp =>
+      '보이는 탭의 서버 폴더를 5초마다 다시 읽습니다. 네트워크를 쓰므로 기본은 꺼짐입니다.';
 
   @override
   String get terminalFontFamily => '글꼴';
@@ -542,7 +549,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get terminalFontCustomName => '설치된 글꼴 이름';
 
   @override
-  String get terminalFontCustomHelp => 'OS에 설치된 글꼴의 이름을 그대로 적으세요. 없는 이름이면 내장 글꼴로 대신 표시됩니다.';
+  String get terminalFontCustomHelp =>
+      'OS에 설치된 글꼴의 이름을 그대로 적으세요. 없는 이름이면 내장 글꼴로 대신 표시됩니다.';
 
   @override
   String get terminalFontSize => '크기';
@@ -554,11 +562,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get terminalScrollback => '스크롤백 줄 수';
 
   @override
-  String get terminalScrollbackHelp => '위로 스크롤해 다시 볼 수 있는 지난 출력의 최대 줄 수입니다. 새로 여는 탭부터 적용되고, 열려 있는 탭은 그대로입니다.';
+  String get terminalScrollbackHelp =>
+      '위로 스크롤해 다시 볼 수 있는 지난 출력의 최대 줄 수입니다. 새로 여는 탭부터 적용되고, 열려 있는 탭은 그대로입니다.';
 
   @override
   String terminalScrollbackLines(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     return '$countString줄';
@@ -648,7 +658,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get senderFileNotUtf8 => 'UTF-8 텍스트 파일만 열 수 있습니다';
 
   @override
-  String get senderDropUnsupported => '텍스트 파일(txt, md, cfg, ini 등)만 끌어넣어 열 수 있습니다';
+  String get senderDropUnsupported =>
+      '텍스트 파일(txt, md, cfg, ini 등)만 끌어넣어 열 수 있습니다';
 
   @override
   String senderFileError(String detail) {
