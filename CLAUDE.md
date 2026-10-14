@@ -110,6 +110,15 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - `packages/xterm2`는 pub.dev 5.3.0의 복사본이다. 드래그로 글을 고르는 중 스크롤되면 선택 시작점이 딴 줄로 옮겨가던
   결함을 고쳤다(시작점을 버퍼 칸으로 저장). 자세한 내용은 `packages/xterm2/PATCHES.md`. 원본이 고치면 되돌린다.
 
+## 도움말 모드
+
+- 앱 바의 `?` 버튼(`HelpModeButton`) → `HelpModeController.start`. 켜지면 `HomeScreen`의 `Stack` 맨 위에 `HelpModeOverlay`가 올라와
+  화면을 살짝 어둡게 하고(마우스가 올라간 컨트롤만 도려내 밝게) 커서를 `help`(화살표+?)로 바꾼다. 아무 곳이나 클릭하거나 Esc면 끝나며,
+  그 클릭·키는 아래로 전달하지 않는다. 창 크기는 고정하지 않는다(박스는 매번 실제 위치를 읽어 따라온다).
+- 설명이 필요한 컨트롤은 `child.help(HelpId.x)`(= `HelpTarget`)로 감싸고, 글은 `app_*.arb`의 `help*` 키(첫 줄 이름, 나머지 설명)에 둔다.
+  겹치면 가장 작은(안쪽) 영역이 이긴다. `IndexedStack`이 가린 탭의 컨트롤은 뺀다.
+- 다이얼로그가 떠 있으면(`ModalRoute.isCurrent == false`) `?` 버튼이 꺼져 진입할 수 없다. 오버레이는 메인 화면만 덮는다.
+
 ## 알려진 한계
 
 - 실제 OS 끌기(Explorer/Finder로 놓기)는 자동 테스트로 확인하지 못했다 — 사람이 직접 눌러 봐야 한다.

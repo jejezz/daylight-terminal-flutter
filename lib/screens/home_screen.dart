@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_identity.dart';
+import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/settings_menus.dart';
 import '../state/sessions_controller.dart';
@@ -21,10 +22,23 @@ import '../widgets/settings_dialog.dart';
 import '../widgets/terminal_pane.dart';
 import '../window/focus_tint.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.onAbout});
 
   final VoidCallback onAbout;
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _help = HelpModeController();
+
+  @override
+  void dispose() {
+    _help.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,70 +58,97 @@ class HomeScreen extends StatelessWidget {
         AppShortcut.clearTerminal.activator: () => current?.clearTerminal(),
         AppShortcut.addressBook.activator: () => showAddressBook(context),
       },
-      child: Focus(
-        autofocus: true,
-        child: Scaffold(
-          appBar: AppBar(
-            flexibleSpace: const FocusTint(),
-            title: const Text(AppIdentity.displayName),
-            actions: [
-              if (current != null)
-                ListenableBuilder(
-                  listenable: current,
-                  builder: (context, _) => current.connected
-                      ? IconButton(
-                          tooltip: current is LocalShellSession ? l10n.shellTerminate : l10n.connectDisconnect,
-                          icon: Icon(
-                            current is LocalShellSession ? Icons.power_settings_new_rounded : Icons.link_off_rounded,
-                          ),
-                          onPressed: current.disconnect,
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              IconButton(
-                tooltip: l10n.addressBookTooltip(AppShortcut.addressBook.label),
-                icon: const Icon(Icons.menu_book_rounded),
-                onPressed: () => showAddressBook(context),
-              ),
-              IconButton(
-                tooltip: l10n.settingsTooltip,
-                icon: const Icon(Icons.settings_rounded),
-                onPressed: () => showSettingsDialog(context),
-              ),
-              const ThemeMenuButton(),
-              const LanguageMenuButton(),
-              IconButton(tooltip: l10n.aboutTooltip, icon: const Icon(Icons.info_outline_rounded), onPressed: onAbout),
-              const SizedBox(width: AppSpacing.sm),
-            ],
-          ),
-          body: current == null
-              ? _EmptyState(onConnect: controller.add)
-              : Column(
-                  children: [
-                    const TabBarRow(),
-                    Expanded(
-                      // 탭을 바꿔도 각 탭의 터미널·탐색기 상태가 유지되도록 모두 살려 둔다.
-                      child: IndexedStack(
-                        index: controller.selected,
-                        children: [
-                          for (final s in controller.sessions)
-                            // 공통 위젯(터미널, LineSender, 상태 바)은 TerminalSession으로, 탭 종류별 위젯은
-                            // 자기 타입으로 찾을 수 있게 둘 다 제공한다.
-                            MultiProvider(
-                              key: ObjectKey(s),
-                              providers: [
-                                ChangeNotifierProvider<TerminalSession>.value(value: s),
-                                if (s is SshSessionProvider) ChangeNotifierProvider<SshSessionProvider>.value(value: s),
-                                if (s is LocalShellSession) ChangeNotifierProvider<LocalShellSession>.value(value: s),
-                              ],
-                              child: _SessionView(session: s),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+      child: HelpModeScope(
+        controller: _help,
+        // 도움말 모드일 때만 화면 전체를 덮는 막을 올린다 (다이얼로그가 떠 있으면 ? 버튼이 꺼져 있어 들어올 수 없다).
+        child: Stack(
+          children: [
+            Positioned.fill(child: _buildScaffold(context, l10n, controller, current)),
+            ListenableBuilder(
+              listenable: _help,
+              builder: (context, _) =>
+                  _help.active ? Positioned.fill(child: HelpModeOverlay(controller: _help)) : const SizedBox.shrink(),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildScaffold(
+    BuildContext context,
+    AppLocalizations l10n,
+    SessionsController controller,
+    TerminalSession? current,
+  ) {
+    return Focus(
+      autofocus: true,
+      child: Scaffold(
+        appBar: AppBar(
+          flexibleSpace: const FocusTint(),
+          title: const Text(AppIdentity.displayName),
+          actions: [
+            const HelpModeButton(),
+            if (current != null)
+              ListenableBuilder(
+                listenable: current,
+                builder: (context, _) => current.connected
+                    ? IconButton(
+                        tooltip: current is LocalShellSession ? l10n.shellTerminate : l10n.connectDisconnect,
+                        icon: Icon(
+                          current is LocalShellSession ? Icons.power_settings_new_rounded : Icons.link_off_rounded,
+                        ),
+                        onPressed: current.disconnect,
+                      ).help(HelpId.disconnect)
+                    : const SizedBox.shrink(),
+              ),
+            IconButton(
+              tooltip: l10n.addressBookTooltip(AppShortcut.addressBook.label),
+              icon: const Icon(Icons.menu_book_rounded),
+              onPressed: () => showAddressBook(context),
+            ).help(HelpId.addressBook),
+            IconButton(
+              tooltip: l10n.settingsTooltip,
+              icon: const Icon(Icons.settings_rounded),
+              onPressed: () => showSettingsDialog(context),
+            ).help(HelpId.settings),
+            const ThemeMenuButton().help(HelpId.theme),
+            const LanguageMenuButton().help(HelpId.language),
+            IconButton(
+              tooltip: l10n.aboutTooltip,
+              icon: const Icon(Icons.info_outline_rounded),
+              onPressed: widget.onAbout,
+            ).help(HelpId.about),
+            const SizedBox(width: AppSpacing.sm),
+          ],
+        ),
+        body: current == null
+            ? _EmptyState(onConnect: controller.add)
+            : Column(
+                children: [
+                  const TabBarRow().help(HelpId.tabs),
+                  Expanded(
+                    // 탭을 바꿔도 각 탭의 터미널·탐색기 상태가 유지되도록 모두 살려 둔다.
+                    child: IndexedStack(
+                      index: controller.selected,
+                      children: [
+                        for (final s in controller.sessions)
+                          // 공통 위젯(터미널, LineSender, 상태 바)은 TerminalSession으로, 탭 종류별 위젯은
+                          // 자기 타입으로 찾을 수 있게 둘 다 제공한다.
+                          MultiProvider(
+                            key: ObjectKey(s),
+                            providers: [
+                              ChangeNotifierProvider<TerminalSession>.value(value: s),
+                              if (s is SshSessionProvider) ChangeNotifierProvider<SshSessionProvider>.value(value: s),
+                              if (s is LocalShellSession) ChangeNotifierProvider<LocalShellSession>.value(value: s),
+                            ],
+                            child: _SessionView(session: s),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -129,7 +170,7 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(l10n.homeEmptyTitle, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppSpacing.lg),
-          FilledButton(onPressed: onConnect, child: Text(l10n.homeEmptyAction)),
+          FilledButton(onPressed: onConnect, child: Text(l10n.homeEmptyAction)).help(HelpId.emptyAction),
         ],
       ),
     );
@@ -159,7 +200,9 @@ class _SessionViewState extends State<_SessionView> {
   Widget build(BuildContext context) {
     final session = context.watch<TerminalSession>();
     // SSH 탭은 연결하기 전에 접속 폼을 보여 준다.
-    if (!session.connected && widget.session is SshSessionProvider) return const ConnectPanel();
+    if (!session.connected && widget.session is SshSessionProvider) {
+      return const ConnectPanel().help(HelpId.connectPanel);
+    }
 
     final scheme = Theme.of(context).colorScheme;
     return Column(
@@ -176,7 +219,9 @@ class _SessionViewState extends State<_SessionView> {
                   // 왼쪽: SSH 탭은 서버의 폴더(SFTP), 로컬 셸 탭은 이 PC의 폴더.
                   SizedBox(
                     width: explorer,
-                    child: widget.session is LocalShellSession ? const LocalFolderPane() : const SftpPane(),
+                    child: widget.session is LocalShellSession
+                        ? const LocalFolderPane().help(HelpId.explorerLocal)
+                        : const SftpPane().help(HelpId.explorerSftp),
                   ),
                   _Divider(
                     axis: Axis.vertical,
@@ -187,13 +232,13 @@ class _SessionViewState extends State<_SessionView> {
                     child: Column(
                       children: [
                         if (widget.session case final LocalShellSession local) _ShellBanner(session: local),
-                        const Expanded(child: TerminalPane()),
+                        Expanded(child: const TerminalPane().help(HelpId.terminal)),
                         _Divider(
                           axis: Axis.horizontal,
                           color: scheme.outlineVariant,
                           onDrag: (d) => setState(() => _senderHeight = (sender - d).clamp(_minSender, maxSender)),
                         ),
-                        SizedBox(height: sender, child: const LineSender()),
+                        SizedBox(height: sender, child: const LineSender().help(HelpId.sender)),
                       ],
                     ),
                   ),
@@ -202,7 +247,7 @@ class _SessionViewState extends State<_SessionView> {
             },
           ),
         ),
-        const StatusBar(),
+        const StatusBar().help(HelpId.statusBar),
       ],
     );
   }
