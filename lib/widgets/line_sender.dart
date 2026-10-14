@@ -1,9 +1,11 @@
 // portside-flutter의 LineSender에서 가져와 SSH에 맞게 고침 (로컬 에코 제거, 줄 끝 기본값 CR).
 // 거기에 편집기처럼 스크립트 파일을 열고 저장하는 기능을 더했다.
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
@@ -179,6 +181,28 @@ class _LineSenderState extends State<LineSender> {
     _modified = false;
     _controller.value = TextEditingValue(text: text, selection: const TextSelection.collapsed(offset: 0));
     setState(() {});
+  }
+
+  // ───────────────────────── 끌어넣기 ─────────────────────────
+
+  bool _dragging = false;
+
+  /// 끌어넣은 파일 중 텍스트로 열 수 있는 첫 파일을 불러온다. 형식이 맞지 않으면 알리기만 한다.
+  Future<void> _onDrop(List<String> paths) async {
+    if (FlutterDragOut.inProgress || paths.isEmpty) return;
+    final path = paths.firstWhere(SenderFile.isSupportedText, orElse: () => '');
+    if (path.isEmpty) {
+      _toast(AppLocalizations.of(context).senderDropUnsupported);
+      return;
+    }
+    if (!await _confirmDiscard()) return;
+    try {
+      final doc = await SenderFile.read(path);
+      _setDocument(path, doc.text, doc.eol);
+      _focusNode.requestFocus();
+    } catch (e) {
+      _toast(_errorText(e));
+    }
   }
 
   // ───────────────────────── 키보드 ─────────────────────────
@@ -472,48 +496,65 @@ class _LineSenderState extends State<LineSender> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: Container(
-              key: const ValueKey('line-sender-box'),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerLowest,
-                borderRadius: BorderRadius.circular(AppRadius.button),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _nameRow(scheme, l10n),
-                  Expanded(
-                    child: Focus(
-                      onKeyEvent: _onKeyEvent,
-                      child: _withScrollbarCursor(
-                        TextField(
-                          controller: _controller,
-                          focusNode: _focusNode,
-                          scrollController: _scroll,
-                          maxLines: null,
-                          expands: true,
-                          textAlignVertical: TextAlignVertical.top,
-                          style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
-                          // 바깥 상자(Container)가 배경과 모서리를 맡으므로, 테마의 기본 채움과 테두리는 끈다.
-                          decoration: InputDecoration(
-                            isDense: true,
-                            hintText: l10n.senderHint,
-                            contentPadding: const EdgeInsets.fromLTRB(
-                              _contentPadding,
-                              AppSpacing.xs,
-                              _contentPadding,
-                              _contentPadding,
+            child: DropTarget(
+              onDragEntered: (_) {
+                if (!FlutterDragOut.inProgress) setState(() => _dragging = true);
+              },
+              onDragExited: (_) => setState(() => _dragging = false),
+              onDragDone: (details) {
+                setState(() => _dragging = false);
+                _onDrop([for (final f in details.files) f.path]);
+              },
+              child: Container(
+                key: const ValueKey('line-sender-box'),
+                foregroundDecoration: _dragging
+                    ? BoxDecoration(
+                        border: Border.all(color: scheme.primary, width: 2),
+                        borderRadius: BorderRadius.circular(AppRadius.button),
+                        color: scheme.primary.withValues(alpha: 0.08),
+                      )
+                    : null,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _nameRow(scheme, l10n),
+                    Expanded(
+                      child: Focus(
+                        onKeyEvent: _onKeyEvent,
+                        child: _withScrollbarCursor(
+                          TextField(
+                            controller: _controller,
+                            focusNode: _focusNode,
+                            scrollController: _scroll,
+                            maxLines: null,
+                            expands: true,
+                            textAlignVertical: TextAlignVertical.top,
+                            style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface),
+                            // 바깥 상자(Container)가 배경과 모서리를 맡으므로, 테마의 기본 채움과 테두리는 끈다.
+                            decoration: InputDecoration(
+                              isDense: true,
+                              hintText: l10n.senderHint,
+                              contentPadding: const EdgeInsets.fromLTRB(
+                                _contentPadding,
+                                AppSpacing.xs,
+                                _contentPadding,
+                                _contentPadding,
+                              ),
+                              filled: false,
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
                             ),
-                            filled: false,
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
