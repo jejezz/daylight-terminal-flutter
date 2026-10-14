@@ -116,6 +116,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   화면을 살짝 어둡게 하고(마우스가 올라간 컨트롤만 도려내 밝게) 커서를 `help`(화살표+?)로 바꾼다. 아무 곳이나 클릭하거나 Esc면 끝나며,
   그 클릭·키는 아래로 전달하지 않는다. 창 크기는 고정하지 않는다(박스는 매번 실제 위치를 읽어 따라온다).
 - 설명이 필요한 컨트롤은 `child.help(HelpId.x)`(= `HelpTarget`)로 감싸고, 글은 `app_*.arb`의 `help*` 키(첫 줄 이름, 나머지 설명)에 둔다.
+  패널뿐 아니라 안의 버튼(탭, 탐색기 헤더·행, LineSender 하단 줄, 상태 바)도 각각 감싼다. 서버 연결 화면(`ConnectPanel`)은 대상이 아니다.
   겹치면 가장 작은(안쪽) 영역이 이긴다. `IndexedStack`이 가린 탭의 컨트롤은 뺀다.
 - 다이얼로그가 떠 있으면(`ModalRoute.isCurrent == false`) `?` 버튼이 꺼져 진입할 수 없다. 오버레이는 메인 화면만 덮는다.
 

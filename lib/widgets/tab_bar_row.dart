@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../models/local_shell.dart';
 import '../state/local_shell_session.dart';
@@ -38,27 +39,30 @@ class TabBarRow extends StatelessWidget {
               ),
             ),
           ),
-          PopupMenuButton<Object>(
-            iconSize: 18,
-            tooltip: l10n.tabNew,
-            icon: const Icon(Icons.add_rounded),
-            onSelected: (choice) => choice is LocalShell ? controller.addLocal(choice) : controller.add(),
-            itemBuilder: (context) => [
-              PopupMenuItem<Object>(
-                value: 'ssh',
-                child: _MenuRow(Icons.dns_outlined, l10n.newTabSsh, AppShortcut.newTab.label),
-              ),
-              const PopupMenuDivider(),
-              if (controller.shells.isEmpty)
-                PopupMenuItem<Object>(enabled: false, child: Text(l10n.newTabNoShells))
-              else
-                for (final (i, shell) in controller.shells.indexed)
-                  PopupMenuItem<Object>(
-                    value: shell,
-                    // 첫 번째가 기본 셸이고, 단축키는 그 셸을 연다.
+          HelpTarget(
+            id: HelpId.tabNew,
+            child: PopupMenuButton<Object>(
+              iconSize: 18,
+              tooltip: l10n.tabNew,
+              icon: const Icon(Icons.add_rounded),
+              onSelected: (choice) => choice is LocalShell ? controller.addLocal(choice) : controller.add(),
+              itemBuilder: (context) => [
+                PopupMenuItem<Object>(
+                  value: 'ssh',
+                  child: _MenuRow(Icons.dns_outlined, l10n.newTabSsh, AppShortcut.newTab.label),
+                ),
+                const PopupMenuDivider(),
+                if (controller.shells.isEmpty)
+                  PopupMenuItem<Object>(enabled: false, child: Text(l10n.newTabNoShells))
+                else
+                  for (final (i, shell) in controller.shells.indexed)
+                    PopupMenuItem<Object>(
+                      value: shell,
+                      // 첫 번째가 기본 셸이고, 단축키는 그 셸을 연다.
                     child: _MenuRow(Icons.terminal_rounded, shell.name, i == 0 ? AppShortcut.newLocalTab.label : null),
-                  ),
-            ],
+                    ),
+              ],
+            ),
           ),
         ],
       ),
@@ -82,54 +86,57 @@ class _Tab extends StatelessWidget {
       listenable: session,
       builder: (context, _) {
         final title = session.tabTitle.isEmpty ? l10n.tabNew : session.tabTitle;
-        return InkWell(
-          splashFactory: NoSplash.splashFactory,
-          onTap: onSelect,
-          child: Container(
-            constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
-            padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.xs),
-            decoration: BoxDecoration(
-              color: selected ? scheme.surface : null,
-              border: Border(
-                bottom: BorderSide(color: selected ? scheme.primary : Colors.transparent, width: 2),
-                right: BorderSide(color: scheme.outlineVariant),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(session is LocalShellSession ? Icons.terminal_rounded : Icons.dns_outlined, size: 13),
-                const SizedBox(width: AppSpacing.xs),
-                Icon(
-                  Icons.circle,
-                  size: 8,
-                  color: switch (session.status) {
-                    SessionStatus.connected => AppColors.success,
-                    SessionStatus.connecting => AppColors.warning,
-                    SessionStatus.error => AppColors.danger,
-                    SessionStatus.idle => scheme.outline,
-                  },
+        return HelpTarget(
+          id: HelpId.tabItem,
+          child: InkWell(
+            splashFactory: NoSplash.splashFactory,
+            onTap: onSelect,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
+              padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.xs),
+              decoration: BoxDecoration(
+                color: selected ? scheme.surface : null,
+                border: Border(
+                  bottom: BorderSide(color: selected ? scheme.primary : Colors.transparent, width: 2),
+                  right: BorderSide(color: scheme.outlineVariant),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Flexible(
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                      color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(session is LocalShellSession ? Icons.terminal_rounded : Icons.dns_outlined, size: 13),
+                  const SizedBox(width: AppSpacing.xs),
+                  Icon(
+                    Icons.circle,
+                    size: 8,
+                    color: switch (session.status) {
+                      SessionStatus.connected => AppColors.success,
+                      SessionStatus.connecting => AppColors.warning,
+                      SessionStatus.error => AppColors.danger,
+                      SessionStatus.idle => scheme.outline,
+                    },
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Flexible(
+                    child: Text(
+                      title,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                        color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  iconSize: 14,
-                  visualDensity: VisualDensity.compact,
-                  tooltip: '${l10n.tabClose} (${AppShortcut.closeTab.label})',
-                  icon: const Icon(Icons.close_rounded),
-                  onPressed: onClose,
-                ),
-              ],
+                  IconButton(
+                    iconSize: 14,
+                    visualDensity: VisualDensity.compact,
+                    tooltip: '${l10n.tabClose} (${AppShortcut.closeTab.label})',
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: onClose,
+                  ).help(HelpId.tabClose),
+                ],
+              ),
             ),
           ),
         );

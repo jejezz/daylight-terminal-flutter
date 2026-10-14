@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:provider/provider.dart';
 
+import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../services/file_reveal_service.dart';
@@ -202,7 +203,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                     tooltip: l10n.localPlaces,
                     icon: const Icon(Icons.home_outlined),
                     onPressed: () => _showPlaces(session, buttonContext),
-                  ),
+                  ).help(HelpId.panePlaces),
                 ),
               ],
             ),

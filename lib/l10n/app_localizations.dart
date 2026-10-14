@@ -1310,17 +1310,143 @@ abstract class AppLocalizations {
   /// **'상태 표시줄\n연결 상태와 현재 경로 등 이 탭의 상태를 보여 줍니다.'**
   String get helpStatusBar;
 
-  /// No description provided for @helpConnectPanel.
-  ///
-  /// In ko, this message translates to:
-  /// **'접속 화면\n호스트와 사용자, 인증 정보를 입력해 SSH로 연결합니다. 아래 로컬 셸 버튼으로 이 PC의 셸을 열 수도 있습니다.'**
-  String get helpConnectPanel;
-
   /// No description provided for @helpEmptyAction.
   ///
   /// In ko, this message translates to:
   /// **'새 연결\n새 탭을 열어 접속 화면으로 이동합니다.'**
   String get helpEmptyAction;
+
+  /// No description provided for @helpTabItem.
+  ///
+  /// In ko, this message translates to:
+  /// **'탭\n눌러서 이 탭으로 전환합니다. 탭마다 터미널과 탐색기가 따로 있습니다.'**
+  String get helpTabItem;
+
+  /// No description provided for @helpTabNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 탭\nSSH 연결 또는 이 PC의 로컬 셸을 새 탭으로 엽니다.'**
+  String get helpTabNew;
+
+  /// No description provided for @helpTabClose.
+  ///
+  /// In ko, this message translates to:
+  /// **'탭 닫기\n이 탭을 닫습니다. 연결 중이면 끊깁니다.'**
+  String get helpTabClose;
+
+  /// No description provided for @helpPaneUp.
+  ///
+  /// In ko, this message translates to:
+  /// **'상위 폴더\n한 단계 위 폴더로 이동합니다.'**
+  String get helpPaneUp;
+
+  /// No description provided for @helpPanePath.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 경로\n누르면 전체 경로를 클립보드에 복사합니다.'**
+  String get helpPanePath;
+
+  /// No description provided for @helpPaneRefresh.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로 고침\n폴더 목록을 다시 읽습니다.'**
+  String get helpPaneRefresh;
+
+  /// No description provided for @helpPaneNewFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 폴더\n현재 폴더 안에 새 폴더를 만듭니다.'**
+  String get helpPaneNewFolder;
+
+  /// No description provided for @helpPanePathSync.
+  ///
+  /// In ko, this message translates to:
+  /// **'경로 동기화\n터미널을 이 폴더로 옮기거나, 탐색기를 터미널의 현재 경로로 옮깁니다. 자동으로는 옮겨지지 않습니다.'**
+  String get helpPanePathSync;
+
+  /// No description provided for @helpPanePlaces.
+  ///
+  /// In ko, this message translates to:
+  /// **'자주 가는 곳\n홈, 바탕 화면 등 자주 쓰는 폴더로 바로 이동합니다.'**
+  String get helpPanePlaces;
+
+  /// No description provided for @helpFileRow.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 / 폴더\n두 번 누르면 열고, Ctrl/⌘·Shift로 여러 개를 고릅니다. 오른쪽 버튼으로 메뉴를 열고, 끌어서 옮기거나 업로드·다운로드합니다.'**
+  String get helpFileRow;
+
+  /// No description provided for @helpTransferClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'완료 항목 지우기\n끝난 전송 기록을 목록에서 지웁니다.'**
+  String get helpTransferClear;
+
+  /// No description provided for @helpStatusStripAnsi.
+  ///
+  /// In ko, this message translates to:
+  /// **'이스케이프 제거\n켜면 기록·복사·저장 때 색상 등 제어 문자를 뺀 글만 남깁니다.'**
+  String get helpStatusStripAnsi;
+
+  /// No description provided for @helpStatusCopyBuffer.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널 내용 복사\n터미널에 쌓인 내용 전체를 클립보드로 복사합니다.'**
+  String get helpStatusCopyBuffer;
+
+  /// No description provided for @helpStatusSaveBuffer.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널 내용 저장\n터미널에 쌓인 내용 전체를 파일로 저장합니다.'**
+  String get helpStatusSaveBuffer;
+
+  /// No description provided for @helpStatusRecord.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 시작 / 중지\n터미널 출력을 파일에 기록합니다. 연결되어 있을 때 시작할 수 있습니다.'**
+  String get helpStatusRecord;
+
+  /// No description provided for @helpStatusRevealLog.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 파일 보기\n기록한 파일이 있는 폴더를 파일 관리자에서 엽니다.'**
+  String get helpStatusRevealLog;
+
+  /// No description provided for @helpSenderNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로 만들기\n입력 칸을 비우고 파일과의 연결을 끊습니다. 변경이 있으면 먼저 묻습니다.'**
+  String get helpSenderNew;
+
+  /// No description provided for @helpSenderOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'열기\n텍스트 파일(UTF-8)을 입력 칸으로 불러옵니다.'**
+  String get helpSenderOpen;
+
+  /// No description provided for @helpSenderSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장\n입력 칸의 내용을 연결된 파일에 저장합니다. 연결된 파일이 없으면 새 이름을 묻습니다.'**
+  String get helpSenderSave;
+
+  /// No description provided for @helpSenderSaveAs.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 이름으로 저장\n입력 칸의 내용을 다른 파일로 저장합니다.'**
+  String get helpSenderSaveAs;
+
+  /// No description provided for @helpSenderLineEnding.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 끝 문자\n한 줄을 보낸 뒤 덧붙일 문자(CR, LF, CRLF, 없음)를 고릅니다. SSH에서는 보통 CR입니다.'**
+  String get helpSenderLineEnding;
+
+  /// No description provided for @helpSenderSend.
+  ///
+  /// In ko, this message translates to:
+  /// **'보내기\n커서가 있는 줄을 터미널로 보내고 다음 줄로 넘어갑니다. 연결되어 있어야 합니다.'**
+  String get helpSenderSend;
 }
 
 class _AppLocalizationsDelegate
