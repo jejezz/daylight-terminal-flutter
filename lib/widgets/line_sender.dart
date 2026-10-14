@@ -14,6 +14,7 @@ import '../models/line_ending.dart';
 import '../services/sender_file.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
+import 'file_pane_parts.dart' show PaneDragData;
 import 'pass_through_cursor.dart';
 
 /// 여러 줄을 미리 써두고 한 줄씩 순서대로 전송하는 스크립트 러너.
@@ -190,6 +191,21 @@ class _LineSenderState extends State<LineSender> {
   /// 끌어넣은 파일 중 텍스트로 열 수 있는 첫 파일을 불러온다. 형식이 맞지 않으면 알리기만 한다.
   Future<void> _onDrop(List<String> paths) async {
     if (FlutterDragOut.inProgress || paths.isEmpty) return;
+    await _openDropped(paths);
+  }
+
+  /// 앱 안의 탐색기에서 끌어온 행. 텍스트로 열 수 있는 파일만 이 PC로 가져온다.
+  Future<void> _onPaneDrop(PaneDragData data) async {
+    final paths = await data.resolve((i) => !i.isDirectory && SenderFile.isSupportedText(i.name));
+    if (!mounted) return;
+    if (paths.isEmpty) {
+      _toast(AppLocalizations.of(context).senderDropUnsupported);
+      return;
+    }
+    await _openDropped(paths);
+  }
+
+  Future<void> _openDropped(List<String> paths) async {
     final path = paths.firstWhere(SenderFile.isSupportedText, orElse: () => '');
     if (path.isEmpty) {
       _toast(AppLocalizations.of(context).senderDropUnsupported);
@@ -505,9 +521,11 @@ class _LineSenderState extends State<LineSender> {
                 setState(() => _dragging = false);
                 _onDrop([for (final f in details.files) f.path]);
               },
-              child: Container(
+              child: DragTarget<PaneDragData>(
+                onAcceptWithDetails: (d) => _onPaneDrop(d.data),
+                builder: (context, candidates, _) => Container(
                 key: const ValueKey('line-sender-box'),
-                foregroundDecoration: _dragging
+                foregroundDecoration: _dragging || candidates.isNotEmpty
                     ? BoxDecoration(
                         border: Border.all(color: scheme.primary, width: 2),
                         borderRadius: BorderRadius.circular(AppRadius.button),
@@ -554,6 +572,7 @@ class _LineSenderState extends State<LineSender> {
                       ),
                     ),
                   ],
+                ),
                 ),
               ),
             ),
