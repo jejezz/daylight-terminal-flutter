@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/demo.gif" width="720" alt="Daylight Terminal demo: connect, run a command, and drag a file between the explorer and your desktop">
+  <img src="docs/screenshots/demo.gif" width="720" alt="Daylight Terminal demo: pick a server from the address book, run commands, and upload a file to the explorer">
 </p>
 
 ## Features
@@ -37,8 +37,8 @@
 - **Light & dark, English & 한국어** — follows the system, or pick one in the toolbar
 
 <p align="center">
-  <img src="docs/screenshots/home.png" width="360" alt="{{TODO: screen 1}}">
-  <img src="docs/screenshots/detail.png" width="360" alt="{{TODO: screen 2}}">
+  <img src="docs/screenshots/home.png" width="360" alt="Daylight Terminal: SFTP explorer, terminal and LineSender in one window, light and dark">
+  <img src="docs/screenshots/detail.png" width="360" alt="Daylight Terminal address book with saved connections grouped by name">
 </p>
 
 ## Install
@@ -53,18 +53,12 @@ Download from [**Releases**](https://github.com/jejezz/daylight-terminal-flutter
 
 **Windows:** the installer isn't code-signed yet, so SmartScreen says "Windows protected your PC" — choose **More info → Run anyway**.
 
-## How it works
-
-{{TODO: 2–4 sentences for the curious — the one interesting technical choice (e.g. "Dart drives the UI; a 100-line Swift bridge covers Trash and Full Disk Access"). Delete this section if there is nothing interesting to say.}}
-
 ## Development
 
 ```bash
 flutter pub get
 flutter run -d macos
 ```
-
-{{TODO: Anything else needed to build (native tools, env vars). Link docs/ for architecture: [ARCHITECTURE.md](ARCHITECTURE.md), [UI_UX.md](UI_UX.md).}}
 
 Releasing: `scripts/bump-version.sh patch`, merge, then tag `vX.Y.Z` — CI builds and publishes every platform. Rules: [application-release-templates/conventions](https://github.com/jejezz/application-release-templates/tree/main/conventions).
 
