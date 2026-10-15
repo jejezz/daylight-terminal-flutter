@@ -19,7 +19,7 @@ class SessionsController extends ChangeNotifier {
   /// [shellFinder]와 [ptyFactory]는 테스트에서 가짜로 바꿔 끼운다.
   SessionsController(this.store, {this.scrollback, this.refreshPrefs, this.shellFinder, this.ptyFactory, this.serialFactory}) {
     refreshPrefs?.addListener(_syncActive);
-    add();
+    add(showAllOptions: true);
   }
 
   final ProfileStore store;
@@ -53,8 +53,9 @@ class SessionsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// SSH 탭을 연다 (접속 폼이 보인다).
-  void add() => _addSession(SshSessionProvider(store, scrollback: scrollback?.call() ?? 10000));
+  /// SSH 탭을 연다 (접속 폼이 보인다). [showAllOptions]이면 시리얼·로컬 셸 선택도 함께 보인다 (처음 여는 탭).
+  void add({bool showAllOptions = false}) =>
+      _addSession(SshSessionProvider(store, scrollback: scrollback?.call() ?? 10000, showAllOptions: showAllOptions));
 
   /// 로컬 셸 탭을 열고 셸을 띄운다. [shell]을 안 주면 기본 셸. 쓸 수 있는 셸이 없으면 null.
   LocalShellSession? addLocal([LocalShell? shell]) {

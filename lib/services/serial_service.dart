@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_libserialport/flutter_libserialport.dart';
 
 import '../models/serial_settings.dart';
+import 'ansi_codepage.dart';
 
 /// [flutter_libserialport]에 대한 얇은 래퍼.
 /// 포트 열기/닫기/읽기/쓰기만 담당하고 연결 상태·버퍼 관리는 하지 않는다 (그건 `SerialSession`의 책임).
@@ -30,7 +31,8 @@ class SerialService {
 
     final port = SerialPort(settings.portName);
     if (!port.openReadWrite()) {
-      final detail = SerialPort.lastError?.message;
+      final raw = SerialPort.lastError?.message;
+      final detail = raw == null ? null : fixWindowsAnsiMessage(raw);
       port.dispose();
       throw SerialServiceException(SerialErrorKind.openFailed, detail);
     }
@@ -68,7 +70,7 @@ class SerialService {
       return port.write(bytes);
     } on SerialPortError catch (e) {
       // 기기가 도중에 뽑히면 여기서 네이티브 에러가 난다 — 상위가 일관되게 처리할 수 있는 타입으로 감싼다.
-      throw SerialServiceException(SerialErrorKind.io, e.message);
+      throw SerialServiceException(SerialErrorKind.io, fixWindowsAnsiMessage(e.message));
     }
   }
 

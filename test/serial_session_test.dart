@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:daylight_terminal/models/line_ending.dart';
 import 'package:daylight_terminal/models/serial_settings.dart';
+import 'package:daylight_terminal/services/ansi_codepage.dart';
 import 'package:daylight_terminal/services/hex_dump.dart';
 import 'package:daylight_terminal/services/serial_service.dart';
 import 'package:daylight_terminal/state/serial_session.dart';
@@ -155,5 +156,22 @@ void main() {
     });
 
     test('빈 목록은 빈 문자열', () => expect(hexDump(const []), ''));
+  });
+
+  group('fixWindowsAnsiMessage', () {
+    test('ASCII와 올바른 한글은 그대로 둔다', () {
+      expect(fixWindowsAnsiMessage('Access is denied.'), 'Access is denied.');
+      expect(fixWindowsAnsiMessage('액세스가 거부되었습니다.'), '액세스가 거부되었습니다.');
+    });
+
+    test('Latin-1로 잘못 읽힌 CP949 바이트는 시스템 코드 페이지로 다시 읽는다 (한국어 Windows)', () {
+      // CP949 바이트 C1 A2 B1 D9 ("접근")가 Latin-1로 읽힌 모양.
+      final fixed = fixWindowsAnsiMessage('Á¢±Ù');
+      if (Platform.isWindows) {
+        expect(fixed, isNot('Á¢±Ù')); // 코드 페이지와 무관하게 무언가로 다시 읽힌다
+      } else {
+        expect(fixed, 'Á¢±Ù');
+      }
+    });
   });
 }
