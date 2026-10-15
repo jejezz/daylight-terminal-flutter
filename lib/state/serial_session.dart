@@ -119,6 +119,16 @@ class SerialSession extends LocalFolderSession {
     notify();
   }
 
+  /// 연결하지 않고 폼 값만 채워 둔다 (지난번 탭을 다시 열 때). 장치를 자동으로 열지는 않는다.
+  void prefill(SerialSettings s) {
+    _pendingPort = s.portName;
+    _pendingBaud = s.baudRate;
+    _pendingDataBits = s.dataBits;
+    _pendingParity = s.parity;
+    _pendingStopBits = s.stopBits;
+    _pendingFlow = s.flow;
+  }
+
   void setLocalEcho(bool value) {
     _localEcho = value;
     notify();

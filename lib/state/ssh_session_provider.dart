@@ -46,6 +46,9 @@ class SshSessionProvider extends TerminalSession {
   String? _sftpError;
   final List<Transfer> _transfers = [];
 
+  /// 연결하지 않고 접속 정보만 채워 둔다 (지난번 탭을 다시 열 때). 접속 화면이 이 값으로 채워진다.
+  void prefill(SshProfile profile) => _profile = profile;
+
   SessionError? get error => _error;
   String? get errorDetail => _errorDetail;
   SshProfile? get profile => _profile;
