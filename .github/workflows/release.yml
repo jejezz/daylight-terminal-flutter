@@ -169,8 +169,9 @@ jobs:
       # brew install any native build tools your plugins need here (e.g. if
       # a plugin's macOS podspec builds a C/C++ library from source, it may
       # need autoconf/automake/libtool/pkg-config). create-dmg is required.
+      # automake/libtool: flutter_libserialport's podspec builds libserialport with autogen.sh/configure.
       - name: Install native build tools
-        run: brew install create-dmg
+        run: brew install create-dmg automake libtool
 
       - run: flutter pub get
 
@@ -334,7 +335,7 @@ jobs:
       - name: Install native build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libudev-dev
 
       - run: flutter pub get
 

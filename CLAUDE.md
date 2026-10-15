@@ -86,7 +86,8 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 도구 줄(`_SerialBar`): 터미널/Hex 보기, 로컬 에코(기본 켜짐: LineSender로 보낸 줄을 화면에도 씀 — 터미널에 직접 친 키는 에코하지 않는다), 받은 바이트 수.
   Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트(`rawBytes`, 최대 2MB)다. 줄 끝 기본값은 LF(portside와 같음, SSH/셸은 CR). 연결하면 깨우는 CRLF를 한 번 보낸다.
 - 장치가 뽑히면(스트림 오류 또는 오류 없이 끝남, 쓰기 오류) 포트를 닫고 오류 상태가 되어 연결 폼으로 돌아간다. 기록(Recording)은 받은 바이트를 그대로 쓴다.
-- 네이티브 `libserialport`는 플러그인이 빌드한다. Linux는 `libudev-dev`가 필요하다.
+- 네이티브 `libserialport`는 플러그인이 빌드한다. macOS는 podspec이 `autogen.sh`/`configure`를 돌려서 `brew install automake libtool`이,
+  Linux는 `libudev-dev`가 필요하다 (`release.yml`에 설치 단계가 있다). 앱 샌드박스와는 무관하다.
 
 ## LineSender를 편집기처럼 (불러오기/저장)
 
