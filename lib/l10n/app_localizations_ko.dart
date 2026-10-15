@@ -328,6 +328,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sftpOverwrite => '덮어쓰기';
 
   @override
+  String terminalDropFallback(String dir) {
+    return '터미널의 현재 폴더를 알 수 없어 탐색기의 폴더에 올렸습니다: $dir';
+  }
+
+  @override
   String get commonCancel => '취소';
 
   @override
@@ -662,8 +667,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '텍스트 파일(txt, md, cfg, ini 등)만 끌어넣어 열 수 있습니다';
 
   @override
-  String get senderRemoteNotSaved =>
-      '서버 파일의 사본입니다. 고친 내용은 서버에 저장되지 않습니다.';
+  String get senderRemoteNotSaved => '서버 파일의 사본입니다. 고친 내용은 서버에 저장되지 않습니다.';
 
   @override
   String get senderRemoteNotSavedShort => '서버 파일의 사본 — 고쳐도 서버에는 저장되지 않음';

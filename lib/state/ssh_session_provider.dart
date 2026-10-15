@@ -282,12 +282,13 @@ class SshSessionProvider extends TerminalSession {
     ];
   }
 
-  /// [localPaths](파일/폴더)를 현재 원격 폴더로 올린다. 같은 이름은 덮어쓴다 —
-  /// 호출하는 쪽이 [uploadConflicts]로 먼저 확인받는다.
-  Future<void> upload(List<String> localPaths) async {
+  /// [localPaths](파일/폴더)를 원격 폴더 [to](기본: 지금 폴더)로 올린다. 같은 이름은 덮어쓴다 —
+  /// 호출하는 쪽이 [uploadConflicts]로 먼저 확인받는다. 올리는 데 성공한 최상위 이름을 돌려준다.
+  Future<List<String>> upload(List<String> localPaths, {String? to}) async {
     final sftp = _sftp;
-    if (sftp == null) return;
-    final target = _remotePath;
+    if (sftp == null) return const [];
+    final target = to ?? _remotePath;
+    final done = <String>[];
     for (final path in localPaths) {
       final t = Transfer(p.basename(path), TransferDirection.upload);
       _transfers.insert(0, t);
@@ -295,11 +296,46 @@ class SshSessionProvider extends TerminalSession {
       try {
         await _uploadPath(sftp, path, _join(target, p.basename(path)), t);
         t.finish();
+        done.add(p.basename(path));
       } catch (e) {
         t.finish(e);
       }
     }
     if (_remotePath == target) await refresh();
+    return done;
+  }
+
+  /// [dir]에 이미 있는 이름 중 [localPaths]와 겹치는 것. 지금 보는 폴더가 아니면 서버에 물어본다.
+  Future<List<String>> uploadConflictsIn(String dir, List<String> localPaths) async {
+    if (dir == _remotePath) return uploadConflicts(localPaths);
+    final sftp = _sftp;
+    if (sftp == null) return const [];
+    try {
+      final existing = {for (final n in await sftp.listdir(dir)) n.filename};
+      return [
+        for (final path in localPaths)
+          if (existing.contains(p.basename(path))) p.basename(path),
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// 터미널에 끌어놓은 파일: 터미널의 현재 폴더(셸이 알려 준 값)에 올리고, 올라간 파일의 서버 경로를 프롬프트에 입력한다.
+  /// 현재 폴더를 모르면 탐색기가 보는 폴더에 올린다 (셸에 명령을 몰래 입력해서 알아내지 않는다 — 편집기 같은
+  /// 프로그램이 떠 있을 수 있다).
+  @override
+  Future<TerminalDropResult> dropFiles(
+    List<String> localPaths,
+    Future<bool> Function(List<String> names) confirmOverwrite,
+  ) async {
+    if (!connected || localPaths.isEmpty) return const TerminalDropResult();
+    final cwd = autoReportedCwd;
+    final dir = cwd ?? _remotePath;
+    if (!await confirmOverwrite(await uploadConflictsIn(dir, localPaths))) return const TerminalDropResult();
+    final names = await upload(localPaths, to: dir);
+    typePaths([for (final n in names) _join(dir, n)]);
+    return TerminalDropResult(fallbackDir: cwd == null ? dir : null);
   }
 
   Future<void> _uploadPath(SftpClient sftp, String local, String remote, Transfer t) async {

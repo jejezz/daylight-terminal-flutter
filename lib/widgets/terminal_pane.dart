@@ -1,15 +1,18 @@
 // portside-flutter의 terminal_view.dart에서 가져와 고침.
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:provider/provider.dart';
 import 'package:xterm2/ui.dart' as xterm_ui;
 import 'package:xterm2/xterm.dart';
 
+import '../l10n/app_localizations.dart';
 import '../settings/terminal_prefs.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
-import 'file_pane_parts.dart' show PaneDragData;
+import 'file_pane_parts.dart' show PaneDragData, confirmOverwriteDialog;
 import 'pass_through_cursor.dart';
 
 /// 렌더링과 키보드(IME 포함) 입력은 xterm2의 [xterm_ui.TerminalView]가 전담한다.
@@ -25,6 +28,7 @@ class _TerminalPaneState extends State<TerminalPane> {
   final _scroll = ScrollController();
   final _focusNode = FocusNode();
   bool _scrollable = false;
+  bool _osDragging = false;
 
   /// 스크롤바가 있을 때 오른쪽 가장자리의 폭(바깥 여백 + 호버 때 두꺼워진 스크롤바 12px + 여유).
   static const _scrollbarWidth = AppSpacing.sm + 16.0;
@@ -35,6 +39,22 @@ class _TerminalPaneState extends State<TerminalPane> {
     _scroll.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  /// 이 PC의 파일을 놓았을 때: SSH 탭은 터미널의 현재 폴더로 올리고, 로컬 셸 탭은 경로만 입력한다.
+  Future<void> _onOsDrop(TerminalSession session, List<String> paths) async {
+    // 이 앱에서 끌어낸 것이 다시 들어온 경우는 무시한다.
+    if (FlutterDragOut.inProgress || paths.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await session.dropFiles(paths, (names) => confirmOverwriteDialog(context, names));
+    _focusTerminal();
+    final dir = result.fallbackDir;
+    if (dir != null && mounted) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.terminalDropFallback(dir)), duration: const Duration(seconds: 6)));
+    }
   }
 
   /// 끌어놓은 뒤 바로 이어서 칠 수 있게 터미널에 포커스를 돌려준다.
@@ -91,40 +111,50 @@ class _TerminalPaneState extends State<TerminalPane> {
         // 오른쪽 가장자리에 화살표 커서 영역을 겹친다(마우스 이벤트는 통과해서 스크롤바를 끌 수 있다).
         final scheme = Theme.of(context).colorScheme;
         // 탐색기 행을 끌어다 놓으면 인용한 경로를 프롬프트에 입력한다 (Enter는 누르지 않는다).
-        return DragTarget<PaneDragData>(
-          onWillAcceptWithDetails: (d) => d.data.terminalPaths != null,
-          onAcceptWithDetails: (d) {
-            session.typePaths(d.data.terminalPaths!());
-            _focusTerminal();
+        return DropTarget(
+          onDragEntered: (_) {
+            if (!FlutterDragOut.inProgress) setState(() => _osDragging = true);
           },
-          builder: (context, candidates, _) => NotificationListener<ScrollMetricsNotification>(
-            onNotification: (_) {
-              _checkScrollable();
-              return false;
+          onDragExited: (_) => setState(() => _osDragging = false),
+          onDragDone: (details) {
+            setState(() => _osDragging = false);
+            _onOsDrop(session, [for (final f in details.files) f.path]);
+          },
+          child: DragTarget<PaneDragData>(
+            onWillAcceptWithDetails: (d) => d.data.terminalPaths != null,
+            onAcceptWithDetails: (d) {
+              session.typePaths(d.data.terminalPaths!());
+              _focusTerminal();
             },
-            child: Stack(
-              children: [
-                Positioned.fill(child: view),
-                if (_scrollable)
-                  const Positioned(
-                    top: 0,
-                    bottom: 0,
-                    right: 0,
-                    width: _scrollbarWidth,
-                    child: PassThroughCursorRegion(cursor: SystemMouseCursors.basic),
-                  ),
-                if (candidates.isNotEmpty)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: scheme.primary, width: 2),
-                          color: scheme.primary.withValues(alpha: 0.08),
+            builder: (context, candidates, _) => NotificationListener<ScrollMetricsNotification>(
+              onNotification: (_) {
+                _checkScrollable();
+                return false;
+              },
+              child: Stack(
+                children: [
+                  Positioned.fill(child: view),
+                  if (_scrollable)
+                    const Positioned(
+                      top: 0,
+                      bottom: 0,
+                      right: 0,
+                      width: _scrollbarWidth,
+                      child: PassThroughCursorRegion(cursor: SystemMouseCursors.basic),
+                    ),
+                  if (candidates.isNotEmpty || _osDragging)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: scheme.primary, width: 2),
+                            color: scheme.primary.withValues(alpha: 0.08),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         );

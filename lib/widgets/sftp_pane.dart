@@ -79,26 +79,7 @@ class _SftpPaneState extends State<SftpPane> {
 
   // ───────────────────────── 대화상자 ─────────────────────────
 
-  Future<bool> _confirmOverwrite(List<String> names) async {
-    if (names.isEmpty) return true;
-    final l10n = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.sftpOverwriteTitle),
-        content: Text(l10n.sftpOverwriteBody(names.join(', '))),
-        actions: [
-          TextButton(autofocus: true, onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonCancel)),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.sftpOverwrite),
-          ),
-        ],
-      ),
-    );
-    return ok ?? false;
-  }
+  Future<bool> _confirmOverwrite(List<String> names) => confirmOverwriteDialog(context, names);
 
   Future<String?> _askText(String title, String label, {String initial = ''}) {
     final l10n = AppLocalizations.of(context);

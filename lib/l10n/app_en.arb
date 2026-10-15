@@ -201,6 +201,14 @@
     }
   },
   "sftpOverwrite": "Overwrite",
+  "terminalDropFallback": "The terminal's current folder is unknown, so the files were uploaded to the explorer folder: {dir}",
+  "@terminalDropFallback": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
   "commonCancel": "Cancel",
   "commonOk": "OK",
   "pathMenuTooltip": "Go to path",
