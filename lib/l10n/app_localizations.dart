@@ -1016,6 +1016,24 @@ abstract class AppLocalizations {
   /// **'터미널 글꼴'**
   String get settingsSectionTerminalFont;
 
+  /// No description provided for @settingsSectionStartup.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작'**
+  String get settingsSectionStartup;
+
+  /// No description provided for @restoreTabs.
+  ///
+  /// In ko, this message translates to:
+  /// **'마지막에 열어 둔 탭 다시 열기'**
+  String get restoreTabs;
+
+  /// No description provided for @restoreTabsHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'로컬 셸은 같은 폴더에서 바로 열고, SSH와 시리얼은 접속 정보만 채워 둡니다. 비밀번호는 저장하지 않으며 자동으로 연결하지 않습니다.'**
+  String get restoreTabsHelp;
+
   /// No description provided for @refreshLocal.
   ///
   /// In ko, this message translates to:

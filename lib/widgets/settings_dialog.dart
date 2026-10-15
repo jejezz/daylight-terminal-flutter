@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../settings/refresh_prefs.dart';
+import '../settings/restore_prefs.dart';
 import '../settings/terminal_prefs.dart';
 import '../theme/app_theme.dart';
 
-/// 설정 창: 새로 고침 옵션, 터미널 글꼴·크기·스크롤백. 바꾸는 즉시 적용되고 저장된다.
+/// 설정 창: 새로 고침 옵션, 시작할 때 탭 복원, 터미널 글꼴·크기·스크롤백. 바꾸는 즉시 적용되고 저장된다.
 Future<void> showSettingsDialog(BuildContext context) =>
     showDialog<void>(context: context, builder: (_) => const _SettingsDialog());
 
@@ -47,6 +48,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     final l10n = AppLocalizations.of(context);
     final prefs = context.watch<TerminalPrefs>();
     final refresh = context.watch<RefreshPrefs>();
+    final restore = context.watch<RestorePrefs>();
     final preview = prefs.style;
 
     return AlertDialog(
@@ -71,6 +73,15 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               subtitle: Text(l10n.refreshSshHelp),
               value: refresh.ssh,
               onChanged: refresh.setSsh,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _SectionHeader(l10n.settingsSectionStartup),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.restoreTabs),
+              subtitle: Text(l10n.restoreTabsHelp),
+              value: restore.enabled,
+              onChanged: restore.setEnabled,
             ),
             const SizedBox(height: AppSpacing.lg),
             _SectionHeader(l10n.settingsSectionTerminalFont),
@@ -167,6 +178,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
           onPressed: () async {
             await prefs.reset();
             await refresh.reset();
+            await restore.reset();
             setState(() {
               _customMode = false;
               _custom.clear();

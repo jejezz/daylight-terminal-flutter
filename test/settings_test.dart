@@ -1,6 +1,7 @@
 import 'package:daylight_terminal/l10n/app_localizations.dart';
 import 'package:daylight_terminal/services/profile_store.dart';
 import 'package:daylight_terminal/settings/refresh_prefs.dart';
+import 'package:daylight_terminal/settings/restore_prefs.dart';
 import 'package:daylight_terminal/settings/terminal_prefs.dart';
 import 'package:daylight_terminal/state/sessions_controller.dart';
 import 'package:daylight_terminal/theme/app_theme.dart';
@@ -82,11 +83,13 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await TerminalPrefs.load();
     final refresh = await RefreshPrefs.load();
+    final restore = await RestorePrefs.load();
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           ChangeNotifierProvider<TerminalPrefs>.value(value: prefs),
           ChangeNotifierProvider<RefreshPrefs>.value(value: refresh),
+          ChangeNotifierProvider<RestorePrefs>.value(value: restore),
         ],
         child: MaterialApp(
           theme: AppTheme.dark(),

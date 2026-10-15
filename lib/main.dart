@@ -25,6 +25,8 @@ import 'screens/home_screen.dart';
 import 'services/diag_log.dart';
 import 'services/profile_store.dart';
 import 'settings/refresh_prefs.dart';
+import 'settings/restore_prefs.dart';
+import 'services/tab_store.dart';
 import 'settings/terminal_prefs.dart';
 import 'state/sessions_controller.dart';
 import 'window/window_placement.dart';
@@ -71,12 +73,16 @@ Future<void> main() async {
   final settings = await AppSettings.load();
   final terminalPrefs = await TerminalPrefs.load();
   final refreshPrefs = await RefreshPrefs.load();
+  final restorePrefs = await RestorePrefs.load();
   final sessions = SessionsController(
     await ProfileStore.load(),
     scrollback: () => terminalPrefs.scrollback,
     refreshPrefs: refreshPrefs,
+    tabStore: await TabStore.load(),
+    restorePrefs: restorePrefs,
   );
-  unawaited(sessions.loadShells()); // 새 탭 메뉴에 보일 로컬 셸 목록 (Windows는 WSL 배포판을 묻느라 잠깐 걸린다)
+  // 새 탭 메뉴에 보일 로컬 셸 목록 (Windows는 WSL 배포판을 묻느라 잠깐 걸린다). 셸 목록이 있어야 지난번 탭을 다시 열 수 있다.
+  unawaited(sessions.loadShells().then((_) => sessions.restoreTabs()));
   DiagLog.log('startup ready');
   // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
   final updates = await UpdateService.create();
@@ -89,6 +95,7 @@ Future<void> main() async {
         sessions: sessions,
         terminalPrefs: terminalPrefs,
         refreshPrefs: refreshPrefs,
+        restorePrefs: restorePrefs,
         placement: placement,
         updates: updates,
       ),
@@ -103,6 +110,7 @@ class App extends StatefulWidget {
     required this.sessions,
     required this.terminalPrefs,
     required this.refreshPrefs,
+    required this.restorePrefs,
     this.placement,
     this.updates,
   });
@@ -111,6 +119,7 @@ class App extends StatefulWidget {
   final SessionsController sessions;
   final TerminalPrefs terminalPrefs;
   final RefreshPrefs refreshPrefs;
+  final RestorePrefs restorePrefs;
   final WindowPlacement? placement;
   final UpdateService? updates;
 
@@ -184,6 +193,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         ChangeNotifierProvider<SessionsController>.value(value: widget.sessions),
         ChangeNotifierProvider<TerminalPrefs>.value(value: widget.terminalPrefs),
         ChangeNotifierProvider<RefreshPrefs>.value(value: widget.refreshPrefs),
+        ChangeNotifierProvider<RestorePrefs>.value(value: widget.restorePrefs),
       ],
       child: AppSettingsScope(
         settings: widget.settings,

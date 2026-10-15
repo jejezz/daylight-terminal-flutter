@@ -89,6 +89,16 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 네이티브 `libserialport`는 플러그인이 빌드한다. macOS는 podspec이 `autogen.sh`/`configure`를 돌려서 `brew install automake libtool`이,
   Linux는 `libudev-dev`가 필요하다 (`release.yml`에 설치 단계가 있다). 앱 샌드박스와는 무관하다.
 
+## 열어 둔 탭 기억·복원
+
+- 앱을 켤 때 지난번에 열어 둔 탭을 다시 연다 (설정 창 "시작" 섹션, 키 `restore_tabs`, 기본 켜짐). 저장은 `SessionsController`가
+  탭을 열고 닫거나 바꿀 때, 탭 안의 상태가 바뀔 때(1초 모아서), 앱을 끝낼 때 한다 (`tab_store.dart`, 키 `open_tabs`, 같으면 쓰지 않는다).
+- **로컬 셸**: 같은 셸을 마지막 폴더에서 바로 연다 (셸이 지금 없으면 건너뛰고, 폴더가 없으면 홈). **SSH**: 접속 정보(호스트·포트·사용자·키 경로·이름)만
+  채운 접속 화면으로 연다 — 비밀번호·키 암호는 저장하지 않으니 자동 접속하지 않는다 (`SshSessionProvider.prefill`). **시리얼**: 포트·속도 등만 채우고
+  장치를 자동으로 열지 않는다 (`SerialSession.prefill`). 접속하지 않은 빈 SSH 탭은 저장하지 않는다.
+- 복원은 `loadShells()` 뒤에 한 번(`restoreTabs`), 사용자가 처음 탭을 건드리기 전일 때만 한다. 복원이 끝나기 전에는 저장하지 않는다 (처음의 빈 탭이
+  지난번 기록을 덮어쓰지 않게). 설정을 끄면 저장해 둔 것을 지운다. 컨트롤러에 `tabStore`·`restorePrefs`를 주지 않으면(테스트) 기억하지 않는다.
+
 ## LineSender를 편집기처럼 (불러오기/저장)
 
 - **제목 줄은 없다.** 편집 중인 파일 이름과 변경 여부는 입력 칸 안 맨 위(높이 36의 이름 줄)에 **둥근 윤곽선 칩**(새 연결 화면의 셸

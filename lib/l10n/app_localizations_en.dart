@@ -545,6 +545,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionTerminalFont => 'Terminal font';
 
   @override
+  String get settingsSectionStartup => 'Startup';
+
+  @override
+  String get restoreTabs => 'Reopen the tabs you had open last time';
+
+  @override
+  String get restoreTabsHelp =>
+      'Local shells open in the same folder. SSH and serial tabs only get their connection details filled in — passwords are never saved and nothing connects by itself.';
+
+  @override
   String get refreshLocal => 'Refresh local folders automatically';
 
   @override

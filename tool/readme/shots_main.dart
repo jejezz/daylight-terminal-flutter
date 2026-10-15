@@ -16,6 +16,7 @@ import 'package:daylight_terminal/screens/home_screen.dart';
 import 'package:daylight_terminal/services/profile_store.dart';
 import 'package:daylight_terminal/settings/app_settings.dart';
 import 'package:daylight_terminal/settings/refresh_prefs.dart';
+import 'package:daylight_terminal/settings/restore_prefs.dart';
 import 'package:daylight_terminal/settings/terminal_prefs.dart';
 import 'package:daylight_terminal/state/sessions_controller.dart';
 import 'package:daylight_terminal/state/ssh_session_provider.dart';
@@ -55,7 +56,15 @@ Future<void> main() async {
     scrollback: () => terminalPrefs.scrollback,
     refreshPrefs: refreshPrefs,
   );
-  runApp(App(settings: settings, sessions: sessions, terminalPrefs: terminalPrefs, refreshPrefs: refreshPrefs));
+  runApp(
+    App(
+      settings: settings,
+      sessions: sessions,
+      terminalPrefs: terminalPrefs,
+      refreshPrefs: refreshPrefs,
+      restorePrefs: await RestorePrefs.load(),
+    ),
+  );
   unawaited((_gif ? _gifScript(sessions, settings) : _script(sessions, settings)).whenComplete(() => exit(0)));
 }
 

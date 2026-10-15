@@ -536,6 +536,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSectionTerminalFont => '터미널 글꼴';
 
   @override
+  String get settingsSectionStartup => '시작';
+
+  @override
+  String get restoreTabs => '마지막에 열어 둔 탭 다시 열기';
+
+  @override
+  String get restoreTabsHelp =>
+      '로컬 셸은 같은 폴더에서 바로 열고, SSH와 시리얼은 접속 정보만 채워 둡니다. 비밀번호는 저장하지 않으며 자동으로 연결하지 않습니다.';
+
+  @override
   String get refreshLocal => '로컬 폴더 자동 새로 고침';
 
   @override
