@@ -21,6 +21,15 @@ abstract final class LocalPaths {
     }
   }
 
+  /// [path](이 PC의 경로)를 [shell]의 명령줄에 그대로 넣을 수 있게 인용한다 (파일을 터미널에 끌어놓을 때).
+  static String quotePath(LocalShell shell, String path) => switch (shell.kind) {
+    ShellKind.posix => ShellCommands.posixQuote(path),
+    ShellKind.gitBash => ShellCommands.posixQuote(path.replaceAll(r'\', '/')),
+    ShellKind.powershell => ShellCommands.powershellQuote(path),
+    ShellKind.cmd => '"$path"',
+    ShellKind.wsl => '"\$(wslpath -u ${ShellCommands.posixQuote(path)})"',
+  };
+
   /// 셸에 "현재 경로를 OSC 7로 출력해"라고 시키는 명령. 알려 줄 방법이 없는 셸(cmd)은 null.
   static String? cwdProbe(LocalShell shell) => switch (shell.kind) {
     ShellKind.posix || ShellKind.wsl => ShellCommands.posixCwdProbe,

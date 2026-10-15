@@ -243,6 +243,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                               for (final i in _targetsFor(session, e))
                                 if (accept(i)) session.pathOf(i),
                             ],
+                            terminalPaths: () => [for (final i in _targetsFor(session, e)) session.pathOf(i)],
                           ),
                         );
                       },

@@ -364,19 +364,23 @@ class _SftpPaneState extends State<SftpPane> {
                             onDragStarted: () => _onDragStarted(session, e),
                             onDragUpdate: (d) => _onDragUpdate(session, d),
                             onDragEnd: () => _drag = null,
-                            dragData: PaneDragData((accept) async {
-                              final items = [
-                                for (final i in _targetsFor(session, e))
-                                  if (accept(i)) i,
-                              ];
-                              if (items.isEmpty) return const [];
-                              try {
-                                return await session.stageForDrag(items);
-                              } catch (err) {
-                                _toast('$err');
-                                return const [];
-                              }
-                            }, remote: true),
+                            dragData: PaneDragData(
+                              (accept) async {
+                                final items = [
+                                  for (final i in _targetsFor(session, e))
+                                    if (accept(i)) i,
+                                ];
+                                if (items.isEmpty) return const [];
+                                try {
+                                  return await session.stageForDrag(items);
+                                } catch (err) {
+                                  _toast('$err');
+                                  return const [];
+                                }
+                              },
+                              remote: true,
+                              terminalPaths: () => [for (final i in _targetsFor(session, e)) session.pathOf(i)],
+                            ),
                           );
                         },
                       ),

@@ -22,6 +22,9 @@ class LocalShellSession extends TerminalSession {
   final LocalShell shell;
   final PtyFactory _ptyFactory;
 
+  @override
+  String quotePath(String path) => LocalPaths.quotePath(shell, path);
+
   PtyProcess? _pty;
   StreamSubscription<Uint8List>? _outputSub;
   int? _exitCode;
