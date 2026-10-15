@@ -210,7 +210,10 @@ class FileRow extends StatelessWidget {
 /// [resolve]는 놓은 뒤에 이 PC의 파일 경로로 바꿔 준다 (SFTP는 임시 폴더에 받는다).
 /// 받는 쪽이 열 수 있는 파일만 받도록 [accept]로 거른다.
 class PaneDragData {
-  const PaneDragData(this.resolve);
+  const PaneDragData(this.resolve, {this.remote = false});
+
+  /// true면 [resolve]가 돌려주는 경로는 서버 파일의 임시 사본이다 (고쳐도 서버에는 반영되지 않는다).
+  final bool remote;
 
   final Future<List<String>> Function(bool Function(FileItem item) accept) resolve;
 }

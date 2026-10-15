@@ -456,7 +456,9 @@
   },
   "senderFileNotUtf8": "Only UTF-8 text files can be opened",
   "senderDropUnsupported": "Only text files (txt, md, cfg, ini, ...) can be dropped here",
-  "senderFileError": "Could not handle the file: {detail}",
+  "senderRemoteNotSaved": "This is a copy of a server file. Edits are not saved to the server.",
+  "senderRemoteNotSavedShort": "Server file copy — edits won't be saved to the server",
+  "senderFileError":"Could not handle the file: {detail}",
   "@senderFileError": {
     "placeholders": {
       "detail": {
