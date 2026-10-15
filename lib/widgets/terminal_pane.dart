@@ -87,6 +87,7 @@ class _TerminalPaneState extends State<TerminalPane> {
   Widget build(BuildContext context) {
     final session = context.read<TerminalSession>();
     final terminal = session.terminal;
+    final active = context.select<TerminalSession, bool>((s) => s.isActive);
     final prefs = context.watch<TerminalPrefs>();
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -113,6 +114,7 @@ class _TerminalPaneState extends State<TerminalPane> {
         final l10n = AppLocalizations.of(context);
         // 탐색기 행을 끌어다 놓으면 인용한 경로를 프롬프트에 입력한다 (Enter는 누르지 않는다).
         return DropTarget(
+          enable: active,
           onDragEntered: (_) {
             if (!FlutterDragOut.inProgress) setState(() => _osDragging = true);
           },

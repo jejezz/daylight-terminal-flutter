@@ -540,6 +540,7 @@ class _LineSenderState extends State<LineSender> {
         children: [
           Expanded(
             child: DropTarget(
+              enable: session.isActive,
               onDragEntered: (_) {
                 if (!FlutterDragOut.inProgress) setState(() => _dragging = true);
               },

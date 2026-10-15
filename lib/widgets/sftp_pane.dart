@@ -280,6 +280,7 @@ class _SftpPaneState extends State<SftpPane> {
     final scheme = Theme.of(context).colorScheme;
 
     return DropTarget(
+      enable: session.isActive,
       onDragEntered: (_) {
         if (!FlutterDragOut.inProgress) setState(() => _dragging = true);
       },

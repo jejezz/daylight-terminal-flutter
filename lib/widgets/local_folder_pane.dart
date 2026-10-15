@@ -193,6 +193,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     final scheme = Theme.of(context).colorScheme;
 
     return DropTarget(
+      enable: session.isActive,
       onDragEntered: (_) {
         if (!FlutterDragOut.inProgress) setState(() => _dropping = true);
       },
