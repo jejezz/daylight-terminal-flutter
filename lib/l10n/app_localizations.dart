@@ -1675,6 +1675,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'시리얼 도구 줄\n터미널 보기와 Hex 보기를 바꾸고, 로컬 에코를 켜고 끕니다. Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트를 보여 줍니다.'**
   String get helpSerialBar;
+
+  /// No description provided for @tabNewSsh.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 SSH 연결'**
+  String get tabNewSsh;
+
+  /// No description provided for @tabNewSerial.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 시리얼 연결'**
+  String get tabNewSerial;
 }
 
 class _AppLocalizationsDelegate

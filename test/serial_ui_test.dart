@@ -73,6 +73,7 @@ void main() {
     expect(find.byType(SerialConnectPanel), findsOneWidget);
     expect(find.byType(TerminalPane), findsNothing);
     expect(find.byIcon(Icons.usb_rounded), findsWidgets); // 탭 아이콘
+    expect(find.text('새 시리얼 연결'), findsOneWidget); // 이름 없는 탭은 종류를 알려 준다
   });
 
   testWidgets('the connect form on an empty SSH tab can turn it into a serial tab', (tester) async {
@@ -169,5 +170,7 @@ void main() {
     // 새 탭(SSH)에는 시리얼 버튼이 없다.
     expect(find.text('서버에 연결'), findsOneWidget);
     expect(find.text('시리얼 연결'), findsNothing);
+    expect(find.text('새 SSH 연결'), findsOneWidget); // 탭 이름
+    expect(find.text('새 연결'), findsOneWidget); // 처음 탭
   });
 }

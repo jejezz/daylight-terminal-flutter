@@ -548,5 +548,7 @@
   "serialBytes": "{count} bytes received",
   "@serialBytes": {"placeholders": {"count": {"type": "int"}}},
   "serialHexEmpty": "No data received yet.",
-  "helpSerialBar": "Serial toolbar\nSwitch between the terminal view and the hex view, and turn local echo on or off. The hex view shows the bytes actually received, not the terminal screen."
+  "helpSerialBar": "Serial toolbar\nSwitch between the terminal view and the hex view, and turn local echo on or off. The hex view shows the bytes actually received, not the terminal screen.",
+  "tabNewSsh": "New SSH connection",
+  "tabNewSerial": "New serial connection"
 }

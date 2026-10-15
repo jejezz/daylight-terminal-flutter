@@ -914,4 +914,10 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get helpSerialBar =>
       '시리얼 도구 줄\n터미널 보기와 Hex 보기를 바꾸고, 로컬 에코를 켜고 끕니다. Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트를 보여 줍니다.';
+
+  @override
+  String get tabNewSsh => '새 SSH 연결';
+
+  @override
+  String get tabNewSerial => '새 시리얼 연결';
 }

@@ -945,4 +945,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get helpSerialBar =>
       'Serial toolbar\nSwitch between the terminal view and the hex view, and turn local echo on or off. The hex view shows the bytes actually received, not the terminal screen.';
+
+  @override
+  String get tabNewSsh => 'New SSH connection';
+
+  @override
+  String get tabNewSerial => 'New serial connection';
 }
