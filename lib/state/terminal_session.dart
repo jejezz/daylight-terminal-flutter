@@ -131,6 +131,9 @@ abstract class TerminalSession extends ChangeNotifier {
     terminal.paste('${paths.map(quotePath).join(' ')} ');
   }
 
+  /// 파일을 터미널에 놓으면 서버로 올라가는 탭인가 (안내 문구용). 로컬 셸은 경로만 입력한다.
+  bool get dropUploads => false;
+
   /// 이 PC의 파일을 터미널에 끌어놓았을 때. 기본(로컬 셸)은 이 PC의 경로를 인용해 입력만 한다.
   /// [confirmOverwrite]는 덮어쓸 이름이 있을 때 사용자에게 물어 true/false를 돌려주는 함수다.
   Future<TerminalDropResult> dropFiles(

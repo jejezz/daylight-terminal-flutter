@@ -110,6 +110,7 @@ class _TerminalPaneState extends State<TerminalPane> {
         // xterm2는 칸 전체를 I자 커서로 덮어서 스크롤바 위에서도 커서가 안 바뀐다. 스크롤바가 있을 때만
         // 오른쪽 가장자리에 화살표 커서 영역을 겹친다(마우스 이벤트는 통과해서 스크롤바를 끌 수 있다).
         final scheme = Theme.of(context).colorScheme;
+        final l10n = AppLocalizations.of(context);
         // 탐색기 행을 끌어다 놓으면 인용한 경로를 프롬프트에 입력한다 (Enter는 누르지 않는다).
         return DropTarget(
           onDragEntered: (_) {
@@ -149,6 +150,14 @@ class _TerminalPaneState extends State<TerminalPane> {
                           decoration: BoxDecoration(
                             border: Border.all(color: scheme.primary, width: 2),
                             color: scheme.primary.withValues(alpha: 0.08),
+                          ),
+                          child: Center(
+                            child: Text(
+                              candidates.isEmpty && session.dropUploads
+                                  ? l10n.terminalDropUpload
+                                  : l10n.terminalDropPath,
+                              style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600),
+                            ),
                           ),
                         ),
                       ),

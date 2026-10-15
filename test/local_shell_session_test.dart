@@ -33,6 +33,29 @@ void main() {
   LocalShellSession make([LocalShell shell = _bash]) =>
       LocalShellSession(shell, ptyFactory: ptys.call, startDirectory: tmp.path);
 
+  group('files dropped on the folder view', () {
+    test('copies files and folders into the current folder, skipping ones already there', () async {
+      final src = await Directory.systemTemp.createTemp('dt_src_');
+      addTearDown(() => src.delete(recursive: true));
+      await File(p.join(src.path, 'a.txt')).writeAsString('A');
+      await Directory(p.join(src.path, 'dir', 'inner')).create(recursive: true);
+      await File(p.join(src.path, 'dir', 'inner', 'b.txt')).writeAsString('B');
+      await File(p.join(tmp.path, 'here.txt')).writeAsString('H');
+      final s = make();
+      await s.loadFolder(tmp.path);
+
+      final sources = [p.join(src.path, 'a.txt'), p.join(src.path, 'dir'), p.join(tmp.path, 'here.txt')];
+      expect(s.copyConflicts(sources), isEmpty);
+      expect(await s.copyIn(sources), ['a.txt', 'dir']);
+      expect(File(p.join(tmp.path, 'a.txt')).readAsStringSync(), 'A');
+      expect(File(p.join(tmp.path, 'dir', 'inner', 'b.txt')).readAsStringSync(), 'B');
+      expect(s.entries.map((e) => e.name), containsAll(['a.txt', 'dir', 'here.txt']));
+      // 이제 같은 이름이 있으니 충돌로 잡힌다.
+      expect(s.copyConflicts(sources), ['a.txt', 'dir']);
+      s.dispose();
+    });
+  });
+
   group('files dropped on the terminal', () {
     test('local shell: types the quoted local paths, without Enter', () async {
       final s = make();

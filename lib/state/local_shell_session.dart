@@ -265,6 +265,43 @@ class LocalShellSession extends TerminalSession {
     await refreshFolder();
   }
 
+  /// [sources](이 PC의 파일/폴더)를 지금 폴더로 복사한다. 같은 폴더에 있는 것은 건너뛰고, 같은 이름은 덮어쓴다 —
+  /// 호출하는 쪽이 [copyConflicts]로 먼저 확인받는다. 복사한 최상위 이름을 돌려준다.
+  Future<List<String>> copyIn(List<String> sources) async {
+    final done = <String>[];
+    for (final src in _copyable(sources)) {
+      await _copyEntity(src, p.join(_folderPath, p.basename(src)));
+      done.add(p.basename(src));
+    }
+    await refreshFolder();
+    return done;
+  }
+
+  /// [sources] 중 지금 폴더에 같은 이름이 이미 있는 것.
+  List<String> copyConflicts(List<String> sources) => [
+    for (final src in _copyable(sources))
+      if (FileSystemEntity.typeSync(p.join(_folderPath, p.basename(src)), followLinks: false) !=
+          FileSystemEntityType.notFound)
+        p.basename(src),
+  ];
+
+  // 이미 이 폴더 안에 있는 것은 복사할 필요가 없다.
+  List<String> _copyable(List<String> sources) => [
+    for (final s in sources)
+      if (!p.equals(p.dirname(s), _folderPath)) s,
+  ];
+
+  Future<void> _copyEntity(String from, String to) async {
+    if (await FileSystemEntity.isDirectory(from)) {
+      await Directory(to).create(recursive: true);
+      await for (final child in Directory(from).list(followLinks: false)) {
+        await _copyEntity(child.path, p.join(to, p.basename(child.path)));
+      }
+    } else {
+      await File(from).copy(to);
+    }
+  }
+
   /// 영구 삭제다 (휴지통을 거치지 않는다). 링크는 가리키는 대상이 아니라 링크만 지운다.
   Future<void> delete(FileItem e) async {
     final path = pathOf(e);

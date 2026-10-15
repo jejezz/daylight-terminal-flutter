@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_drag_out/flutter_drag_out.dart';
@@ -28,6 +29,7 @@ class LocalFolderPane extends StatefulWidget {
 class _LocalFolderPaneState extends State<LocalFolderPane> {
   final _selection = ListSelection();
   List<String>? _dragPaths;
+  bool _dropping = false;
 
   void _toast(String message) {
     if (!mounted) return;
@@ -48,6 +50,15 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     final targets = _selection.targetsFor(e, session.entries);
     setState(() {});
     return targets;
+  }
+
+  /// 이 PC의 파일을 놓았을 때: 지금 폴더로 복사한다.
+  Future<void> _onDrop(List<String> paths) async {
+    // 이 앱에서 끌어낸 것이 다시 들어온 경우는 무시한다.
+    if (FlutterDragOut.inProgress || paths.isEmpty) return;
+    final session = context.read<LocalShellSession>();
+    if (!await confirmOverwriteDialog(context, session.copyConflicts(paths))) return;
+    await _guard(() => session.copyIn(paths));
   }
 
   Future<String?> _askText(String title, String label, {String initial = ''}) {
@@ -181,79 +192,106 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     final session = context.watch<LocalShellSession>();
     final scheme = Theme.of(context).colorScheme;
 
-    return Stack(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PaneHeader(
-              path: session.folderPath,
-              canGoUp: session.canGoUp,
-              onUp: session.goUp,
-              onRefresh: session.refreshFolder,
-              onNewFolder: () => _newFolder(session),
-              onTerminalToHere: () => session.moveTerminalTo(session.folderPath),
-              // 현재 경로를 알려 줄 수 없는 셸(cmd)은 이 항목을 숨긴다.
-              onExplorerToTerminal: session.canSyncExplorer ? () => _syncExplorer(session) : null,
-              extraActions: [
-                Builder(
-                  builder: (buttonContext) => IconButton(
-                    iconSize: 18,
-                    visualDensity: VisualDensity.compact,
-                    tooltip: l10n.localPlaces,
-                    icon: const Icon(Icons.home_outlined),
-                    onPressed: () => _showPlaces(session, buttonContext),
-                  ).help(HelpId.panePlaces),
-                ),
-              ],
-            ),
-            Expanded(
-              child: session.folderError != null
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: SelectableText(
-                          l10n.localFolderError(session.folderError!),
-                          style: TextStyle(color: scheme.error),
+    return DropTarget(
+      onDragEntered: (_) {
+        if (!FlutterDragOut.inProgress) setState(() => _dropping = true);
+      },
+      onDragExited: (_) => setState(() => _dropping = false),
+      onDragDone: (details) {
+        setState(() => _dropping = false);
+        _onDrop([for (final f in details.files) f.path]);
+      },
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PaneHeader(
+                path: session.folderPath,
+                canGoUp: session.canGoUp,
+                onUp: session.goUp,
+                onRefresh: session.refreshFolder,
+                onNewFolder: () => _newFolder(session),
+                onTerminalToHere: () => session.moveTerminalTo(session.folderPath),
+                // 현재 경로를 알려 줄 수 없는 셸(cmd)은 이 항목을 숨긴다.
+                onExplorerToTerminal: session.canSyncExplorer ? () => _syncExplorer(session) : null,
+                extraActions: [
+                  Builder(
+                    builder: (buttonContext) => IconButton(
+                      iconSize: 18,
+                      visualDensity: VisualDensity.compact,
+                      tooltip: l10n.localPlaces,
+                      icon: const Icon(Icons.home_outlined),
+                      onPressed: () => _showPlaces(session, buttonContext),
+                    ).help(HelpId.panePlaces),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: session.folderError != null
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: SelectableText(
+                            l10n.localFolderError(session.folderError!),
+                            style: TextStyle(color: scheme.error),
+                          ),
                         ),
+                      )
+                    : session.entries.isEmpty && !session.folderLoading
+                    ? Center(
+                        child: Text(l10n.sftpEmpty, style: TextStyle(color: scheme.onSurfaceVariant)),
+                      )
+                    : ListView.builder(
+                        itemCount: session.entries.length,
+                        itemBuilder: (context, i) {
+                          final e = session.entries[i];
+                          return FileRow(
+                            entry: e,
+                            selected: _selection.contains(e.name),
+                            onTap: () =>
+                                setState(() => _selection.click(i, session.entries, HardwareKeyboard.instance)),
+                            onOpen: () => _guard(
+                              () => e.isDirectory ? session.openEntry(e) : FileRevealService.open(session.pathOf(e)),
+                            ),
+                            onMenu: (pos) => _rowMenu(session, e, pos),
+                            dragCount: () => _selection.contains(e.name) ? _selection.length : 1,
+                            onDragStarted: () => _onDragStarted(session, e),
+                            onDragUpdate: _onDragUpdate,
+                            onDragEnd: () => _dragPaths = null,
+                            dragData: PaneDragData(
+                              (accept) async => [
+                                for (final i in _targetsFor(session, e))
+                                  if (accept(i)) session.pathOf(i),
+                              ],
+                              terminalPaths: () => [for (final i in _targetsFor(session, e)) session.pathOf(i)],
+                            ),
+                          );
+                        },
                       ),
-                    )
-                  : session.entries.isEmpty && !session.folderLoading
-                  ? Center(
-                      child: Text(l10n.sftpEmpty, style: TextStyle(color: scheme.onSurfaceVariant)),
-                    )
-                  : ListView.builder(
-                      itemCount: session.entries.length,
-                      itemBuilder: (context, i) {
-                        final e = session.entries[i];
-                        return FileRow(
-                          entry: e,
-                          selected: _selection.contains(e.name),
-                          onTap: () => setState(() => _selection.click(i, session.entries, HardwareKeyboard.instance)),
-                          onOpen: () => _guard(
-                            () => e.isDirectory ? session.openEntry(e) : FileRevealService.open(session.pathOf(e)),
-                          ),
-                          onMenu: (pos) => _rowMenu(session, e, pos),
-                          dragCount: () => _selection.contains(e.name) ? _selection.length : 1,
-                          onDragStarted: () => _onDragStarted(session, e),
-                          onDragUpdate: _onDragUpdate,
-                          onDragEnd: () => _dragPaths = null,
-                          dragData: PaneDragData(
-                            (accept) async => [
-                              for (final i in _targetsFor(session, e))
-                                if (accept(i)) session.pathOf(i),
-                            ],
-                            terminalPaths: () => [for (final i in _targetsFor(session, e)) session.pathOf(i)],
-                          ),
-                        );
-                      },
-                    ),
+              ),
+            ],
+          ),
+          if (session.folderLoading)
+            const Positioned(top: 0, left: 0, right: 0, child: LinearProgressIndicator(minHeight: 2)),
+          if (_dropping)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: scheme.primary.withValues(alpha: 0.10),
+                    border: Border.all(color: scheme.primary, width: 2),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    l10n.localDropActive,
+                    style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
-        if (session.folderLoading)
-          const Positioned(top: 0, left: 0, right: 0, child: LinearProgressIndicator(minHeight: 2)),
-      ],
+        ],
+      ),
     );
   }
 }

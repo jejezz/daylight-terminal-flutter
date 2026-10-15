@@ -321,6 +321,9 @@ class SshSessionProvider extends TerminalSession {
     }
   }
 
+  @override
+  bool get dropUploads => true;
+
   /// 터미널에 끌어놓은 파일: 터미널의 현재 폴더(셸이 알려 준 값)에 올리고, 올라간 파일의 서버 경로를 프롬프트에 입력한다.
   /// 현재 폴더를 모르면 탐색기가 보는 폴더에 올린다 (셸에 명령을 몰래 입력해서 알아내지 않는다 — 편집기 같은
   /// 프로그램이 떠 있을 수 있다).

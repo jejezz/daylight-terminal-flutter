@@ -662,6 +662,24 @@ abstract class AppLocalizations {
   /// **'덮어쓰기'**
   String get sftpOverwrite;
 
+  /// No description provided for @localDropActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'놓으면 이 폴더로 복사합니다'**
+  String get localDropActive;
+
+  /// No description provided for @terminalDropPath.
+  ///
+  /// In ko, this message translates to:
+  /// **'놓으면 경로를 입력합니다'**
+  String get terminalDropPath;
+
+  /// No description provided for @terminalDropUpload.
+  ///
+  /// In ko, this message translates to:
+  /// **'놓으면 올리고 경로를 입력합니다'**
+  String get terminalDropUpload;
+
   /// No description provided for @terminalDropFallback.
   ///
   /// In ko, this message translates to:
