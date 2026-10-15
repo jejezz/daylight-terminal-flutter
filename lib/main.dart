@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -21,6 +22,7 @@ import 'app_identity.dart';
 import 'l10n/app_localizations.dart';
 import 'settings/app_settings.dart';
 import 'screens/home_screen.dart';
+import 'services/diag_log.dart';
 import 'services/profile_store.dart';
 import 'settings/refresh_prefs.dart';
 import 'settings/terminal_prefs.dart';
@@ -35,6 +37,12 @@ final bool _isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLin
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   registerExtraLicenses();
+  if (_isDesktop) {
+    // 가끔만 나타나는 문제(버튼이 안 눌림 등)를 나중에 가려내기 위한 기록 (services/diag_log.dart).
+    final info = await PackageInfo.fromPlatform();
+    await DiagLog.init(version: '${info.version}+${info.buildNumber}');
+    DiagLog.watch();
+  }
 
   WindowPlacement? placement;
   if (_isDesktop) {
@@ -69,6 +77,7 @@ Future<void> main() async {
     refreshPrefs: refreshPrefs,
   );
   unawaited(sessions.loadShells()); // 새 탭 메뉴에 보일 로컬 셸 목록 (Windows는 WSL 배포판을 묻느라 잠깐 걸린다)
+  DiagLog.log('startup ready');
   // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
   final updates = await UpdateService.create();
   // UpdateScope 는 MaterialApp 위에 둔다 — 정보 창이 이것을 읽어 "업데이트 확인" 단추를 붙인다.

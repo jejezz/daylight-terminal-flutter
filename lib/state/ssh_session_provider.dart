@@ -5,6 +5,7 @@ import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
+import '../services/diag_log.dart';
 import '../models/file_item.dart';
 import '../models/ssh_profile.dart';
 import '../models/transfer.dart';
@@ -193,6 +194,7 @@ class SshSessionProvider extends TerminalSession {
   Future<void> loadDir(String path) async {
     final sftp = _sftp;
     if (sftp == null) return;
+    final done = DiagLog.begin('sftp.loadDir');
     _sftpLoading = true;
     notify();
     try {
@@ -205,6 +207,7 @@ class SshSessionProvider extends TerminalSession {
     } finally {
       _sftpLoading = false;
       notify();
+      done();
     }
   }
 

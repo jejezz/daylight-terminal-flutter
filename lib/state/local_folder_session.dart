@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
+import '../services/diag_log.dart';
 import '../models/file_item.dart';
 import 'terminal_session.dart';
 
@@ -79,6 +80,7 @@ abstract class LocalFolderSession extends TerminalSession {
   }
 
   Future<void> loadFolder(String path) async {
+    final done = DiagLog.begin('local.loadFolder');
     _folderLoading = true;
     notify();
     try {
@@ -91,6 +93,7 @@ abstract class LocalFolderSession extends TerminalSession {
     } finally {
       _folderLoading = false;
       notify();
+      done();
     }
   }
 
