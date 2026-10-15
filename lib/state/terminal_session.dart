@@ -278,11 +278,16 @@ abstract class TerminalSession extends ChangeNotifier {
   @protected
   bool get autoRefreshReady => false;
 
+  /// 이 탭이 지금 보이는 탭인가. 가려진 탭의 위젯도 같은 자리에 그려져 있으므로, 창에 파일을 놓는 동작은
+  /// 보이는 탭만 받아야 한다 (안 그러면 뒤쪽 탭도 같이 받는다).
+  bool get isActive => _active;
+
   /// 이 탭이 지금 보이는 탭인지 알린다. 활성화되면 바로 한 번 새로 고치고 [autoRefreshInterval]마다 되풀이하며,
   /// 비활성화되면 멈춘다.
   void setActive(bool value) {
     if (_active == value || _disposed) return;
     _active = value;
+    notifyListeners();
     _updateAutoRefresh();
     if (value && _autoRefreshTimer != null) unawaited(autoRefresh());
   }
