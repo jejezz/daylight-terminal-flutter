@@ -332,6 +332,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sftpOverwrite => 'Overwrite';
 
   @override
+  String get localDropActive => 'Drop to copy into this folder';
+
+  @override
+  String get terminalDropPath => 'Drop to type the path';
+
+  @override
+  String get terminalDropUpload => 'Drop to upload and type the path';
+
+  @override
   String terminalDropFallback(String dir) {
     return 'The terminal\'s current folder is unknown, so the files were uploaded to the explorer folder: $dir';
   }

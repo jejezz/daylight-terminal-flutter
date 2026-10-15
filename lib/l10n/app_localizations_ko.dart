@@ -328,6 +328,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sftpOverwrite => '덮어쓰기';
 
   @override
+  String get localDropActive => '놓으면 이 폴더로 복사합니다';
+
+  @override
+  String get terminalDropPath => '놓으면 경로를 입력합니다';
+
+  @override
+  String get terminalDropUpload => '놓으면 올리고 경로를 입력합니다';
+
+  @override
   String terminalDropFallback(String dir) {
     return '터미널의 현재 폴더를 알 수 없어 탐색기의 폴더에 올렸습니다: $dir';
   }

@@ -201,6 +201,9 @@
     }
   },
   "sftpOverwrite": "Overwrite",
+  "localDropActive": "Drop to copy into this folder",
+  "terminalDropPath": "Drop to type the path",
+  "terminalDropUpload": "Drop to upload and type the path",
   "terminalDropFallback": "The terminal's current folder is unknown, so the files were uploaded to the explorer folder: {dir}",
   "@terminalDropFallback": {
     "placeholders": {
