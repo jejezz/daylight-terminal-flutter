@@ -10,6 +10,7 @@ import '../models/line_ending.dart';
 import '../services/ansi_stripper.dart';
 import '../services/drag_staging.dart';
 import '../services/log_file_service.dart';
+import '../services/shell_commands.dart';
 
 enum SessionStatus { idle, connecting, connected, error }
 
@@ -111,6 +112,16 @@ abstract class TerminalSession extends ChangeNotifier {
 
   /// 셸에 문자열을 그대로 입력한다 (메뉴 동작이 `cd` 같은 명령을 넣을 때 쓴다).
   void typeCommand(String command) => writeInput(utf8.encode(command));
+
+  /// [path]를 이 터미널의 셸 명령줄에 넣을 수 있게 인용한다. 기본은 POSIX 셸(SSH 서버).
+  String quotePath(String path) => ShellCommands.posixQuote(path);
+
+  /// 탐색기에서 끌어온 [paths]를 인용해 프롬프트에 입력한다. Enter는 누르지 않는다.
+  /// 붙여넣기로 보내므로 이름에 줄바꿈이 있어도 실행되지 않는다.
+  void typePaths(List<String> paths) {
+    if (!connected || paths.isEmpty) return;
+    terminal.paste('${paths.map(quotePath).join(' ')} ');
+  }
 
   void clearTerminal() => terminal.clear();
 

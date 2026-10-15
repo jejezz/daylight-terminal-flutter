@@ -19,6 +19,16 @@ const _wsl = LocalShell(
 );
 
 void main() {
+  group('LocalPaths.quotePath (파일을 터미널에 끌어놓을 때)', () {
+    test('posix: 작은따옴표 인용', () => expect(LocalPaths.quotePath(_bash, "/a b/it's"), "'/a b/it'\\''s'"));
+    test('powershell: 작은따옴표를 두 번', () => expect(LocalPaths.quotePath(_pwsh, r"C:\a b\it's"), "'C:\\a b\\it''s'"));
+    test('cmd: 큰따옴표', () => expect(LocalPaths.quotePath(_cmd, r'D:\work dir\x'), '"D:\\work dir\\x"'));
+    test('git bash: 슬래시로', () => expect(LocalPaths.quotePath(_gitBash, r'C:\Users\me'), "'C:/Users/me'"));
+    test('wsl: wslpath로 변환', () {
+      expect(LocalPaths.quotePath(_wsl, r'C:\Users\me'), '"\$(wslpath -u \'C:\\Users\\me\')"');
+    });
+  });
+
   group('LocalPaths.cdCommand', () {
     test('posix: quoted, leading space keeps it out of history, survives quotes', () {
       expect(LocalPaths.cdCommand(_bash, '/home/me/it\'s here'), " cd -- '/home/me/it'\\''s here'\r");
