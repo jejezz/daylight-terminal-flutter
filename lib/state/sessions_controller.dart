@@ -7,7 +7,9 @@ import '../services/local_shell_finder.dart';
 import '../services/profile_store.dart';
 import '../services/pty_backend.dart';
 import '../settings/refresh_prefs.dart';
+import '../services/serial_service.dart';
 import 'local_shell_session.dart';
+import 'serial_session.dart';
 import 'ssh_session_provider.dart';
 import 'terminal_session.dart';
 
@@ -15,7 +17,7 @@ import 'terminal_session.dart';
 class SessionsController extends ChangeNotifier {
   /// [scrollback]은 새 탭을 만들 때마다 불러 스크롤백 줄 수를 얻는다 (설정이 바뀌어도 새 탭부터 적용).
   /// [shellFinder]와 [ptyFactory]는 테스트에서 가짜로 바꿔 끼운다.
-  SessionsController(this.store, {this.scrollback, this.refreshPrefs, this.shellFinder, this.ptyFactory}) {
+  SessionsController(this.store, {this.scrollback, this.refreshPrefs, this.shellFinder, this.ptyFactory, this.serialFactory}) {
     refreshPrefs?.addListener(_syncActive);
     add();
   }
@@ -27,6 +29,9 @@ class SessionsController extends ChangeNotifier {
   final RefreshPrefs? refreshPrefs;
   final LocalShellFinder? shellFinder;
   final PtyFactory? ptyFactory;
+
+  /// 테스트에서 가짜 시리얼 서비스를 끼운다.
+  final SerialService Function()? serialFactory;
   final List<TerminalSession> sessions = [];
   int _selected = 0;
   List<LocalShell> _shells = const [];
@@ -73,6 +78,30 @@ class SessionsController extends ChangeNotifier {
     notifyListeners();
     unawaited(session.start());
     // 위젯 트리가 옛 탭을 내려놓은 다음에 정리한다.
+    Future<void>.microtask(old.dispose);
+    return session;
+  }
+
+  SerialSession _newSerial() => SerialSession(scrollback: scrollback?.call() ?? 10000, service: serialFactory?.call());
+
+  /// 시리얼 탭을 연다 (포트를 고르는 폼이 보인다).
+  SerialSession addSerial() {
+    final session = _newSerial();
+    _addSession(session);
+    unawaited(session.loadFolder(session.folderPath));
+    return session;
+  }
+
+  /// 지금 탭이 아직 연결하지 않은 빈 SSH 탭이면 그 자리에서 시리얼 탭으로 바꾼다 ([openLocalHere]와 같다).
+  SerialSession openSerialHere() {
+    final old = current;
+    final reusable = old is SshSessionProvider && !old.connected && old.status != SessionStatus.connecting;
+    if (!reusable) return addSerial();
+    final session = _newSerial();
+    sessions[_selected] = session;
+    _syncActive();
+    notifyListeners();
+    unawaited(session.loadFolder(session.folderPath));
     Future<void>.microtask(old.dispose);
     return session;
   }

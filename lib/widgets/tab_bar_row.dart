@@ -5,6 +5,7 @@ import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../models/local_shell.dart';
 import '../state/local_shell_session.dart';
+import '../state/serial_session.dart';
 import '../state/sessions_controller.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
@@ -48,9 +49,11 @@ class TabBarRow extends StatelessWidget {
               iconSize: 18,
               tooltip: l10n.tabNew,
               icon: const Icon(Icons.add_rounded),
-              onSelected: (choice) => choice is LocalShell
-                  ? controller.addLocal(choice)
-                  : controller.add(),
+              onSelected: (choice) => switch (choice) {
+                LocalShell() => controller.addLocal(choice),
+                'serial' => controller.addSerial(),
+                _ => controller.add(),
+              },
               itemBuilder: (context) => [
                 PopupMenuItem<Object>(
                   value: 'ssh',
@@ -59,6 +62,10 @@ class TabBarRow extends StatelessWidget {
                     l10n.newTabSsh,
                     AppShortcut.newTab.label,
                   ),
+                ),
+                PopupMenuItem<Object>(
+                  value: 'serial',
+                  child: _MenuRow(Icons.usb_rounded, l10n.newTabSerial, null),
                 ),
                 const PopupMenuDivider(),
                 if (controller.shells.isEmpty)
@@ -196,9 +203,11 @@ class _Tab extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              session is LocalShellSession
-                  ? Icons.terminal_rounded
-                  : Icons.dns_outlined,
+              switch (session) {
+                LocalShellSession() => Icons.terminal_rounded,
+                SerialSession() => Icons.usb_rounded,
+                _ => Icons.dns_outlined,
+              },
               size: 13,
             ),
             const SizedBox(width: AppSpacing.xs),

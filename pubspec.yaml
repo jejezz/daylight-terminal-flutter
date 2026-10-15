@@ -51,6 +51,7 @@ dependencies:
   xterm2:
     path: packages/xterm2
   dartssh2: ^4.1.0
+  flutter_libserialport: ^0.6.0
   desktop_drop: ^0.8.4
   file_selector: ^1.1.0
   path: ^1.9.1

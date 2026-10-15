@@ -2,22 +2,20 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as p;
 
-import '../models/file_item.dart';
 import '../models/local_shell.dart';
 import '../services/local_paths.dart';
 import '../services/pty_backend.dart';
+import 'local_folder_session.dart';
 import 'terminal_session.dart';
 
 /// 탭 하나 = 이 PC에서 도는 셸 하나. 왼쪽에는 이 PC의 폴더를 보여 준다.
 ///
 /// SSH 탭과 같게, 터미널의 현재 경로와 폴더 뷰의 경로는 **자동으로 맞추지 않는다.** 사용자가 메뉴로
 /// 요청할 때만 [moveTerminalTo] / [syncExplorerToTerminal]이 한쪽을 다른 쪽에 맞춘다.
-class LocalShellSession extends TerminalSession {
-  LocalShellSession(this.shell, {super.scrollback, PtyFactory? ptyFactory, String? startDirectory})
-    : _ptyFactory = ptyFactory ?? startFlutterPty,
-      _folderPath = startDirectory ?? homeDirectory();
+class LocalShellSession extends LocalFolderSession {
+  LocalShellSession(this.shell, {super.scrollback, PtyFactory? ptyFactory, super.startDirectory})
+    : _ptyFactory = ptyFactory ?? startFlutterPty;
 
   final LocalShell shell;
   final PtyFactory _ptyFactory;
@@ -30,26 +28,13 @@ class LocalShellSession extends TerminalSession {
   int? _exitCode;
   String? _startError;
 
-  // 폴더 뷰 상태
-  String _folderPath;
-  List<FileItem> _entries = const [];
-  bool _folderLoading = false;
-  bool _autoRefreshing = false;
-  String? _folderError;
-
   /// 셸이 끝났을 때의 종료 코드. 아직 돌고 있으면 null.
   int? get exitCode => _exitCode;
 
   /// 셸을 띄우지 못했을 때의 오류 문구.
   String? get startError => _startError;
 
-  String get folderPath => _folderPath;
-  List<FileItem> get entries => _entries;
-  bool get folderLoading => _folderLoading;
-  String? get folderError => _folderError;
-
-  /// 위로 갈 수 있는 폴더인가 (드라이브나 `/` 같은 뿌리는 못 간다).
-  bool get canGoUp => p.dirname(_folderPath) != _folderPath;
+  static String homeDirectory() => LocalFolderSession.homeDirectory();
 
   @override
   String get tabTitle => shell.name;
@@ -59,9 +44,6 @@ class LocalShellSession extends TerminalSession {
 
   @override
   String get logName => shell.id.replaceAll(':', '_');
-
-  static String homeDirectory() =>
-      Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'] ?? Directory.current.path;
 
   // ───────────────────────── 셸 프로세스 ─────────────────────────
 
@@ -73,7 +55,7 @@ class LocalShellSession extends TerminalSession {
     try {
       final pty = _ptyFactory(
         shell,
-        workingDirectory: _folderPath,
+        workingDirectory: folderPath,
         environment: {...Platform.environment, 'TERM': 'xterm-256color', 'COLORTERM': 'truecolor'},
         rows: terminal.viewHeight,
         columns: terminal.viewWidth,
@@ -88,7 +70,7 @@ class LocalShellSession extends TerminalSession {
       setStatus(SessionStatus.error);
     }
     notify();
-    await loadFolder(_folderPath);
+    await loadFolder(folderPath);
   }
 
   void _onExit(PtyProcess pty, int code) {
@@ -145,14 +127,20 @@ class LocalShellSession extends TerminalSession {
 
   // ───────────────────────── 경로 이동 (메뉴로만) ─────────────────────────
 
+  @override
+  bool get canMoveTerminal => true;
+
   /// "터미널을 이 폴더로 이동": 셸 종류에 맞는 이동 명령을 입력한다.
+  @override
   void moveTerminalTo(String path) => typeCommand(LocalPaths.cdCommand(shell, path));
 
   /// 이 셸이 현재 경로를 알려 줄 수 있는가 (cmd는 못 한다 — 메뉴에서 숨긴다).
+  @override
   bool get canSyncExplorer => shell.canReportCwd;
 
   /// "탐색기를 터미널 경로로 이동": 셸에 현재 경로를 출력하는 명령을 입력하고, 돌아온 경로로 폴더 뷰를
   /// 옮긴다. 성공하면 true.
+  @override
   Future<bool> syncExplorerToTerminal() async {
     final probe = LocalPaths.cwdProbe(shell);
     if (probe == null) return false;
@@ -161,190 +149,7 @@ class LocalShellSession extends TerminalSession {
     final path = LocalPaths.explorerPathFromTerminal(shell, reported);
     if (path == null) return false;
     await loadFolder(path);
-    return _folderError == null;
-  }
-
-  // ───────────────────────── 폴더 뷰 ─────────────────────────
-
-  Future<List<FileItem>> _list(Directory dir) async {
-    final raw = <FileSystemEntity>[];
-    await for (final e in dir.list(followLinks: false)) {
-      raw.add(e);
-    }
-    final items = await Future.wait(raw.map(_toItem));
-    items.sort((a, b) {
-      if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
-      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-    });
-    return items;
-  }
-
-  /// 자동 새로 고침: 로딩 표시와 오류 없이 현재 폴더를 다시 읽고, 바뀐 것이 있을 때만 화면을 갱신한다.
-  /// 읽는 동안 사용자가 다른 폴더로 옮겼으면 결과를 버린다.
-  @override
-  bool get autoRefreshReady => true;
-
-  @override
-  Future<void> autoRefresh() async {
-    if (_folderLoading || _autoRefreshing) return;
-    final path = _folderPath;
-    _autoRefreshing = true;
-    try {
-      final items = await _list(Directory(path));
-      if (disposed || _folderLoading || _folderPath != path || listEquals(items, _entries)) return;
-      _entries = items;
-      notify();
-    } catch (_) {
-      // 일시적인 오류는 다음 주기에 다시 시도한다.
-    } finally {
-      _autoRefreshing = false;
-    }
-  }
-
-  Future<void> loadFolder(String path) async {
-    _folderLoading = true;
-    notify();
-    try {
-      final dir = Directory(path);
-      _entries = await _list(dir);
-      _folderPath = dir.absolute.path;
-      _folderError = null;
-    } catch (e) {
-      _folderError = e.toString();
-    } finally {
-      _folderLoading = false;
-      notify();
-    }
-  }
-
-  Future<FileItem> _toItem(FileSystemEntity e) async {
-    final name = p.basename(e.path);
-    final isLink = e is Link;
-    var isDir = e is Directory;
-    if (isLink) {
-      try {
-        isDir = await FileSystemEntity.isDirectory(e.path); // 링크가 가리키는 쪽
-      } catch (_) {}
-    }
-    int? size;
-    DateTime? modified;
-    try {
-      final stat = await e.stat();
-      modified = stat.modified;
-      if (!isDir) size = stat.size;
-    } catch (_) {
-      // 권한이 없는 항목은 이름만 보여 준다.
-    }
-    return FileItem(name: name, isDirectory: isDir, isLink: isLink, size: size, modified: modified);
-  }
-
-  Future<void> refreshFolder() {
-    restartAutoRefreshTimer();
-    return loadFolder(_folderPath);
-  }
-
-  Future<void> goUp() => loadFolder(p.dirname(_folderPath));
-  Future<void> openEntry(FileItem e) => loadFolder(pathOf(e));
-  String pathOf(FileItem e) => p.join(_folderPath, e.name);
-
-  Future<void> makeDirectory(String name) async {
-    await Directory(p.join(_folderPath, name)).create();
-    await refreshFolder();
-  }
-
-  Future<void> rename(FileItem e, String newName) async {
-    final from = pathOf(e);
-    final to = p.join(_folderPath, newName);
-    if (e.isDirectory && !e.isLink) {
-      await Directory(from).rename(to);
-    } else if (e.isLink) {
-      await Link(from).rename(to);
-    } else {
-      await File(from).rename(to);
-    }
-    await refreshFolder();
-  }
-
-  /// [sources](이 PC의 파일/폴더)를 지금 폴더로 복사한다. 같은 폴더에 있는 것은 건너뛰고, 같은 이름은 덮어쓴다 —
-  /// 호출하는 쪽이 [copyConflicts]로 먼저 확인받는다. 복사한 최상위 이름을 돌려준다.
-  Future<List<String>> copyIn(List<String> sources) async {
-    final done = <String>[];
-    for (final src in _copyable(sources)) {
-      await _copyEntity(src, p.join(_folderPath, p.basename(src)));
-      done.add(p.basename(src));
-    }
-    await refreshFolder();
-    return done;
-  }
-
-  /// [sources] 중 지금 폴더에 같은 이름이 이미 있는 것.
-  List<String> copyConflicts(List<String> sources) => [
-    for (final src in _copyable(sources))
-      if (FileSystemEntity.typeSync(p.join(_folderPath, p.basename(src)), followLinks: false) !=
-          FileSystemEntityType.notFound)
-        p.basename(src),
-  ];
-
-  // 이미 이 폴더 안에 있는 것은 복사할 필요가 없다.
-  List<String> _copyable(List<String> sources) => [
-    for (final s in sources)
-      if (!p.equals(p.dirname(s), _folderPath)) s,
-  ];
-
-  Future<void> _copyEntity(String from, String to) async {
-    if (await FileSystemEntity.isDirectory(from)) {
-      await Directory(to).create(recursive: true);
-      await for (final child in Directory(from).list(followLinks: false)) {
-        await _copyEntity(child.path, p.join(to, p.basename(child.path)));
-      }
-    } else {
-      await File(from).copy(to);
-    }
-  }
-
-  /// 영구 삭제다 (휴지통을 거치지 않는다). 링크는 가리키는 대상이 아니라 링크만 지운다.
-  Future<void> delete(FileItem e) async {
-    final path = pathOf(e);
-    final type = await FileSystemEntity.type(path, followLinks: false);
-    switch (type) {
-      case FileSystemEntityType.link:
-        await Link(path).delete();
-      case FileSystemEntityType.directory:
-        await Directory(path).delete(recursive: true);
-      default:
-        await File(path).delete();
-    }
-    await refreshFolder();
-  }
-
-  /// 자주 가는 곳: 홈, 바탕화면, 다운로드, 문서(있는 것만), Windows는 연결된 드라이브.
-  Future<List<(String label, String path)>> places() async {
-    final home = homeDirectory();
-    final candidates = <(String, String)>[
-      ('~', home),
-      ('Desktop', p.join(home, 'Desktop')),
-      ('Downloads', p.join(home, 'Downloads')),
-      ('Documents', p.join(home, 'Documents')),
-    ];
-    final result = <(String, String)>[];
-    for (final (label, path) in candidates) {
-      if (await Directory(path).exists()) result.add((label, path));
-    }
-    if (Platform.isWindows) {
-      final checks = await Future.wait([
-        for (var c = 'A'.codeUnitAt(0); c <= 'Z'.codeUnitAt(0); c++)
-          Directory('${String.fromCharCode(c)}:\\')
-              .exists()
-              .timeout(const Duration(milliseconds: 400), onTimeout: () => false),
-      ]);
-      for (var i = 0; i < checks.length; i++) {
-        if (checks[i]) {
-          final d = '${String.fromCharCode('A'.codeUnitAt(0) + i)}:\\';
-          result.add((d, d));
-        }
-      }
-    }
-    return result;
+    return folderError == null;
   }
 
   // ───────────────────────── 종료 ─────────────────────────

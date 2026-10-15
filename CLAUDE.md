@@ -15,7 +15,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   ("터미널을 이 폴더로 이동" / "탐색기를 터미널 경로로 이동").
 - 파일 업로드·다운로드는 드래그 앤 드롭으로 한다.
 - 사용 패키지: dartssh2 (SSH/SFTP), xterm2 (터미널, portside와 동일), desktop_drop (끌어넣기),
-  flutter_drag_out (끌어내기), provider (상태), file_selector (저장 대화상자).
+  flutter_drag_out (끌어내기), provider (상태), file_selector (저장 대화상자), flutter_libserialport (시리얼).
 - portside-flutter에서 가져온 기능: LineSender(`lib/widgets/line_sender.dart`)와 기록(Recording,
   `lib/services/log_file_service.dart`, `toggleLogging`). SSH에 맞게 줄 끝 기본값은 CR, 로컬 에코는 없음.
   기록 파일은 원본 바이트 또는 이스케이프 제거 텍스트.
@@ -74,6 +74,19 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   UTF-8을 한 글자씩 UTF-16에 넣어 한글 경로가 깨짐, 인용 없음, 셸을 띄울 때마다 `Sleep(1000)`)을 고쳤다.
   자세한 내용은 `packages/flutter_pty/PATCHES.md`. 원본이 고치면 되돌린다.
 - macOS 샌드박스는 꺼 둔다(`app-sandbox = false`, 규약). 켜져 있으면 로컬 셸도 SSH 연결도 막힌다.
+
+## 탭 종류: 시리얼 (portside-flutter에서 가져옴)
+
+- 새 탭 메뉴(+) 또는 새 연결 화면의 "시리얼" 구역 버튼에서 연다(빈 SSH 탭은 `openSerialHere`로 그 자리에서 바뀐다). 연결 전에는 `SerialConnectPanel`
+  (포트, 보드레이트, 데이터 비트, 패리티, 정지 비트, 흐름 제어; 포트 목록은 2초마다 다시 읽어 핫플러그 반영)이 보이고, 연결하면 **왼쪽 이 PC의 폴더 뷰 +
+  오른쪽 시리얼 터미널**이 된다. 주소록에는 저장하지 않는다. 설정은 탭이 살아 있는 동안만 기억한다(`SerialSession.pending*`).
+- 구조: `LocalFolderSession`(폴더 뷰 상태·동작, `LocalShellSession`에서 뽑아냄)을 `LocalShellSession`과 `SerialSession`이 상속한다.
+  `LocalFolderPane`은 `LocalFolderSession`을 찾는다. 시리얼에는 셸이 없어서 `canMoveTerminal`/`canSyncExplorer`가 false — "경로 이동" 메뉴가 숨는다.
+- `SerialService`(`flutter_libserialport` 래퍼)는 portside와 같되 `open(SerialSettings)`로 통신 설정을 모두 받는다. 테스트는 `test/helpers/fake_serial.dart`.
+- 도구 줄(`_SerialBar`): 터미널/Hex 보기, 로컬 에코(기본 켜짐: LineSender로 보낸 줄을 화면에도 씀 — 터미널에 직접 친 키는 에코하지 않는다), 받은 바이트 수.
+  Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트(`rawBytes`, 최대 2MB)다. 줄 끝 기본값은 LF(portside와 같음, SSH/셸은 CR). 연결하면 깨우는 CRLF를 한 번 보낸다.
+- 장치가 뽑히면(스트림 오류 또는 오류 없이 끝남, 쓰기 오류) 포트를 닫고 오류 상태가 되어 연결 폼으로 돌아간다. 기록(Recording)은 받은 바이트를 그대로 쓴다.
+- 네이티브 `libserialport`는 플러그인이 빌드한다. Linux는 `libudev-dev`가 필요하다.
 
 ## LineSender를 편집기처럼 (불러오기/저장)
 

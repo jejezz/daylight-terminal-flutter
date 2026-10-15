@@ -6,7 +6,9 @@ import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/settings_menus.dart';
 import '../state/sessions_controller.dart';
+import '../state/local_folder_session.dart';
 import '../state/local_shell_session.dart';
+import '../state/serial_session.dart';
 import '../state/ssh_session_provider.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
@@ -14,7 +16,9 @@ import '../utils/app_shortcuts.dart';
 import '../widgets/address_book_dialog.dart';
 import '../widgets/connect_panel.dart';
 import '../widgets/line_sender.dart';
+import '../widgets/hex_view.dart';
 import '../widgets/local_folder_pane.dart';
+import '../widgets/serial_connect_panel.dart';
 import '../widgets/sftp_pane.dart';
 import '../widgets/status_bar.dart';
 import '../widgets/tab_bar_row.dart';
@@ -140,7 +144,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             providers: [
                               ChangeNotifierProvider<TerminalSession>.value(value: s),
                               if (s is SshSessionProvider) ChangeNotifierProvider<SshSessionProvider>.value(value: s),
+                              if (s is LocalFolderSession) ChangeNotifierProvider<LocalFolderSession>.value(value: s),
                               if (s is LocalShellSession) ChangeNotifierProvider<LocalShellSession>.value(value: s),
+                              if (s is SerialSession) ChangeNotifierProvider<SerialSession>.value(value: s),
                             ],
                             child: _SessionView(session: s),
                           ),
@@ -203,6 +209,10 @@ class _SessionViewState extends State<_SessionView> {
     if (!session.connected && widget.session is SshSessionProvider) {
       return const ConnectPanel();
     }
+    // 시리얼 탭은 연결하기 전에 포트와 통신 설정을 고르는 폼을 보여 준다.
+    if (!session.connected && widget.session is SerialSession) {
+      return const SerialConnectPanel();
+    }
 
     final scheme = Theme.of(context).colorScheme;
     return Column(
@@ -219,7 +229,7 @@ class _SessionViewState extends State<_SessionView> {
                   // 왼쪽: SSH 탭은 서버의 폴더(SFTP), 로컬 셸 탭은 이 PC의 폴더.
                   SizedBox(
                     width: explorer,
-                    child: widget.session is LocalShellSession
+                    child: widget.session is LocalFolderSession
                         ? const LocalFolderPane().help(HelpId.explorerLocal)
                         : const SftpPane().help(HelpId.explorerSftp),
                   ),
@@ -232,7 +242,12 @@ class _SessionViewState extends State<_SessionView> {
                     child: Column(
                       children: [
                         if (widget.session case final LocalShellSession local) _ShellBanner(session: local),
-                        Expanded(child: const TerminalPane().help(HelpId.terminal)),
+                        if (widget.session case final SerialSession serial) _SerialBar(session: serial),
+                        Expanded(
+                          child: widget.session is SerialSession
+                              ? _SerialBody(session: widget.session as SerialSession)
+                              : const TerminalPane().help(HelpId.terminal),
+                        ),
                         _Divider(
                           axis: Axis.horizontal,
                           color: scheme.outlineVariant,
@@ -312,6 +327,90 @@ class _ShellBanner extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// 시리얼 탭의 터미널 위 도구 줄: 터미널/Hex 보기 바꾸기, 로컬 에코, 받은 바이트 수.
+class _SerialBar extends StatelessWidget {
+  const _SerialBar({required this.session});
+
+  final SerialSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: session,
+      builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
+        final scheme = Theme.of(context).colorScheme;
+        final small = Theme.of(context).textTheme.bodySmall;
+        return Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerLow,
+            border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+          ),
+          child: Row(
+            children: [
+              SegmentedButton<SerialViewMode>(
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: SerialViewMode.terminal,
+                    tooltip: l10n.serialViewTerminal,
+                    icon: const Icon(Icons.terminal_rounded, size: 18),
+                  ),
+                  ButtonSegment(
+                    value: SerialViewMode.hex,
+                    tooltip: l10n.serialViewHex,
+                    icon: const Icon(Icons.grid_view_rounded, size: 18),
+                  ),
+                ],
+                selected: {session.viewMode},
+                onSelectionChanged: (selection) => session.setViewMode(selection.first),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Tooltip(
+                message: l10n.serialEchoTooltip,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.serialEcho, style: small),
+                    const SizedBox(width: AppSpacing.xs),
+                    Transform.scale(
+                      scale: 0.7,
+                      child: Switch(value: session.localEcho, onChanged: session.setLocalEcho),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              Text(l10n.serialBytes(session.byteCount), style: small?.copyWith(color: scheme.onSurfaceVariant)),
+            ],
+          ),
+        ).help(HelpId.serialBar);
+      },
+    );
+  }
+}
+
+/// 터미널 보기와 Hex 보기. 보기를 바꿔도 터미널 화면이 사라지지 않도록 둘 다 살려 둔다.
+class _SerialBody extends StatelessWidget {
+  const _SerialBody({required this.session});
+
+  final SerialSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: session,
+      builder: (context, _) => IndexedStack(
+        index: session.viewMode == SerialViewMode.terminal ? 0 : 1,
+        children: [const TerminalPane().help(HelpId.terminal), const HexView()],
+      ),
     );
   }
 }
