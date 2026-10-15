@@ -1220,6 +1220,18 @@ abstract class AppLocalizations {
   /// **'텍스트 파일(txt, md, cfg, ini 등)만 끌어넣어 열 수 있습니다'**
   String get senderDropUnsupported;
 
+  /// No description provided for @senderRemoteNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a copy of a server file. Edits are not saved to the server.'**
+  String get senderRemoteNotSaved;
+
+  /// No description provided for @senderRemoteNotSavedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Server file copy — edits won\'t be saved to the server'**
+  String get senderRemoteNotSavedShort;
+
   /// No description provided for @senderFileError.
   ///
   /// In ko, this message translates to:

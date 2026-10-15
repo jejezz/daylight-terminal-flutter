@@ -672,6 +672,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only text files (txt, md, cfg, ini, ...) can be dropped here';
 
   @override
+  String get senderRemoteNotSaved =>
+      'This is a copy of a server file. Edits are not saved to the server.';
+
+  @override
+  String get senderRemoteNotSavedShort =>
+      'Server file copy — edits won\'t be saved to the server';
+
+  @override
   String senderFileError(String detail) {
     return 'Could not handle the file: $detail';
   }

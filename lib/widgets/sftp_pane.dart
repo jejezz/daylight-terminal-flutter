@@ -376,7 +376,7 @@ class _SftpPaneState extends State<SftpPane> {
                                 _toast('$err');
                                 return const [];
                               }
-                            }),
+                            }, remote: true),
                           );
                         },
                       ),

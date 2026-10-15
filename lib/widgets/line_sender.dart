@@ -45,6 +45,9 @@ class _LineSenderState extends State<LineSender> {
   String _eol = '\n';
   bool _modified = false;
 
+  /// 서버 파일을 끌어와서 연 경우 — 열린 것은 임시 사본이라 저장해도 서버에 반영되지 않는다.
+  bool _remoteCopy = false;
+
   /// 내용이 칸보다 길어서 스크롤바가 생겼는가.
   bool _scrollable = false;
 
@@ -168,6 +171,7 @@ class _LineSenderState extends State<LineSender> {
     }
     if (!mounted) return true;
     setState(() {
+      if (path != _path) _remoteCopy = false; // 다른 이름으로 저장하면 진짜 이 PC의 파일이 된다
       _path = path;
       _savedText = text;
       _modified = false;
@@ -176,8 +180,9 @@ class _LineSenderState extends State<LineSender> {
   }
 
   /// 칸의 내용을 문서로 바꾼다. 커서는 맨 앞에 두어서 Enter를 누르면 첫 줄부터 보내진다.
-  void _setDocument(String? path, String text, String eol) {
+  void _setDocument(String? path, String text, String eol, {bool remoteCopy = false}) {
     _path = path;
+    _remoteCopy = remoteCopy;
     _savedText = text;
     _eol = eol;
     _modified = false;
@@ -203,10 +208,11 @@ class _LineSenderState extends State<LineSender> {
       _toast(AppLocalizations.of(context).senderDropUnsupported);
       return;
     }
-    await _openDropped(paths);
+    await _openDropped(paths, remote: data.remote);
   }
 
-  Future<void> _openDropped(List<String> paths) async {
+  /// [remote]면 [paths]는 서버 파일의 임시 사본이다. 저장해도 서버 파일은 바뀌지 않으므로 경고를 띄운다.
+  Future<void> _openDropped(List<String> paths, {bool remote = false}) async {
     final path = paths.firstWhere(SenderFile.isSupportedText, orElse: () => '');
     if (path.isEmpty) {
       _toast(AppLocalizations.of(context).senderDropUnsupported);
@@ -215,8 +221,9 @@ class _LineSenderState extends State<LineSender> {
     if (!await _confirmDiscard()) return;
     try {
       final doc = await SenderFile.read(path);
-      _setDocument(path, doc.text, doc.eol);
+      _setDocument(path, doc.text, doc.eol, remoteCopy: remote);
       _focusNode.requestFocus();
+      if (remote && mounted) _toast(AppLocalizations.of(context).senderRemoteNotSaved);
     } catch (e) {
       _toast(_errorText(e));
     }
@@ -364,7 +371,8 @@ class _LineSenderState extends State<LineSender> {
         ? (_modified ? '● $_displayName (${l10n.senderModified})' : _displayName)
         : (_modified ? '● ${l10n.senderUntitled}' : l10n.senderUntitled);
     final dark = scheme.brightness == Brightness.dark;
-    final color = _modified ? (dark ? AppColors.warning : AppColors.warningTextLight) : scheme.primary;
+    final warn = dark ? AppColors.warning : AppColors.warningTextLight;
+    final color = _modified ? warn : scheme.primary;
     final chip = Container(
       key: const ValueKey('line-sender-name-chip'),
       height: _nameChipHeight,
@@ -397,9 +405,23 @@ class _LineSenderState extends State<LineSender> {
         height: _nameRowHeight,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: _path == null ? chip : Tooltip(message: _path!, child: chip),
+          child: Row(
+            children: [
+              Flexible(child: _path == null ? chip : Tooltip(message: _path!, child: chip)),
+              if (_remoteCopy) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Icon(Icons.warning_amber_rounded, size: 16, color: warn),
+                const SizedBox(width: AppSpacing.xs),
+                Flexible(
+                  child: Text(
+                    l10n.senderRemoteNotSavedShort,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: warn),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
