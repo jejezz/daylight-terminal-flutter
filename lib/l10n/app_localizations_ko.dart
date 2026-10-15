@@ -810,4 +810,108 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get helpSenderSend =>
       '보내기\n커서가 있는 줄을 터미널로 보내고 다음 줄로 넘어갑니다. 연결되어 있어야 합니다.';
+
+  @override
+  String get newTabSerial => '시리얼 포트';
+
+  @override
+  String get serialTitle => '시리얼 연결';
+
+  @override
+  String get serialPort => '포트';
+
+  @override
+  String get serialPortHint => '포트 선택';
+
+  @override
+  String get serialPortRefresh => '포트 목록 새로 고침';
+
+  @override
+  String get serialNoPorts => '연결된 시리얼 포트가 없습니다. USB 장치를 꽂으면 자동으로 나타납니다.';
+
+  @override
+  String get serialBaud => '보드레이트';
+
+  @override
+  String get serialBaudInvalid => '1 이상의 숫자를 입력하세요';
+
+  @override
+  String get serialDataBits => '데이터 비트';
+
+  @override
+  String get serialParity => '패리티';
+
+  @override
+  String get serialStopBits => '정지 비트';
+
+  @override
+  String get serialFlow => '흐름 제어';
+
+  @override
+  String get serialParityNone => '없음 (N)';
+
+  @override
+  String get serialParityOdd => '홀수 (O)';
+
+  @override
+  String get serialParityEven => '짝수 (E)';
+
+  @override
+  String get serialParityMark => '마크 (M)';
+
+  @override
+  String get serialParitySpace => '스페이스 (S)';
+
+  @override
+  String get serialFlowNone => '없음';
+
+  @override
+  String get serialFlowRtsCts => 'RTS/CTS (하드웨어)';
+
+  @override
+  String get serialFlowXonXoff => 'XON/XOFF (소프트웨어)';
+
+  @override
+  String get serialFlowDtrDsr => 'DTR/DSR (하드웨어)';
+
+  @override
+  String serialErrorOpen(String detail) {
+    return '포트를 열지 못했습니다: $detail';
+  }
+
+  @override
+  String serialErrorIo(String detail) {
+    return '포트 읽기/쓰기 오류: $detail';
+  }
+
+  @override
+  String get serialErrorNotOpen => '열린 포트가 없습니다.';
+
+  @override
+  String get serialErrorDisconnected => '장치가 분리되었습니다.';
+
+  @override
+  String get serialViewTerminal => '터미널 보기';
+
+  @override
+  String get serialViewHex => 'Hex 보기';
+
+  @override
+  String get serialEcho => '로컬 에코';
+
+  @override
+  String get serialEchoTooltip =>
+      'LineSender로 보낸 내용을 터미널 화면에도 그대로 보여 줍니다. 장치가 입력을 되돌려 주지 않을 때 켭니다.';
+
+  @override
+  String serialBytes(int count) {
+    return '수신 $count 바이트';
+  }
+
+  @override
+  String get serialHexEmpty => '아직 받은 데이터가 없습니다.';
+
+  @override
+  String get helpSerialBar =>
+      '시리얼 도구 줄\n터미널 보기와 Hex 보기를 바꾸고, 로컬 에코를 켜고 끕니다. Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트를 보여 줍니다.';
 }

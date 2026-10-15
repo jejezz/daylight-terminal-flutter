@@ -1483,6 +1483,198 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'보내기\n커서가 있는 줄을 터미널로 보내고 다음 줄로 넘어갑니다. 연결되어 있어야 합니다.'**
   String get helpSenderSend;
+
+  /// No description provided for @newTabSerial.
+  ///
+  /// In ko, this message translates to:
+  /// **'시리얼 포트'**
+  String get newTabSerial;
+
+  /// No description provided for @serialTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'시리얼 연결'**
+  String get serialTitle;
+
+  /// No description provided for @serialPort.
+  ///
+  /// In ko, this message translates to:
+  /// **'포트'**
+  String get serialPort;
+
+  /// No description provided for @serialPortHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'포트 선택'**
+  String get serialPortHint;
+
+  /// No description provided for @serialPortRefresh.
+  ///
+  /// In ko, this message translates to:
+  /// **'포트 목록 새로 고침'**
+  String get serialPortRefresh;
+
+  /// No description provided for @serialNoPorts.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결된 시리얼 포트가 없습니다. USB 장치를 꽂으면 자동으로 나타납니다.'**
+  String get serialNoPorts;
+
+  /// No description provided for @serialBaud.
+  ///
+  /// In ko, this message translates to:
+  /// **'보드레이트'**
+  String get serialBaud;
+
+  /// No description provided for @serialBaudInvalid.
+  ///
+  /// In ko, this message translates to:
+  /// **'1 이상의 숫자를 입력하세요'**
+  String get serialBaudInvalid;
+
+  /// No description provided for @serialDataBits.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터 비트'**
+  String get serialDataBits;
+
+  /// No description provided for @serialParity.
+  ///
+  /// In ko, this message translates to:
+  /// **'패리티'**
+  String get serialParity;
+
+  /// No description provided for @serialStopBits.
+  ///
+  /// In ko, this message translates to:
+  /// **'정지 비트'**
+  String get serialStopBits;
+
+  /// No description provided for @serialFlow.
+  ///
+  /// In ko, this message translates to:
+  /// **'흐름 제어'**
+  String get serialFlow;
+
+  /// No description provided for @serialParityNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음 (N)'**
+  String get serialParityNone;
+
+  /// No description provided for @serialParityOdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'홀수 (O)'**
+  String get serialParityOdd;
+
+  /// No description provided for @serialParityEven.
+  ///
+  /// In ko, this message translates to:
+  /// **'짝수 (E)'**
+  String get serialParityEven;
+
+  /// No description provided for @serialParityMark.
+  ///
+  /// In ko, this message translates to:
+  /// **'마크 (M)'**
+  String get serialParityMark;
+
+  /// No description provided for @serialParitySpace.
+  ///
+  /// In ko, this message translates to:
+  /// **'스페이스 (S)'**
+  String get serialParitySpace;
+
+  /// No description provided for @serialFlowNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음'**
+  String get serialFlowNone;
+
+  /// No description provided for @serialFlowRtsCts.
+  ///
+  /// In ko, this message translates to:
+  /// **'RTS/CTS (하드웨어)'**
+  String get serialFlowRtsCts;
+
+  /// No description provided for @serialFlowXonXoff.
+  ///
+  /// In ko, this message translates to:
+  /// **'XON/XOFF (소프트웨어)'**
+  String get serialFlowXonXoff;
+
+  /// No description provided for @serialFlowDtrDsr.
+  ///
+  /// In ko, this message translates to:
+  /// **'DTR/DSR (하드웨어)'**
+  String get serialFlowDtrDsr;
+
+  /// No description provided for @serialErrorOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'포트를 열지 못했습니다: {detail}'**
+  String serialErrorOpen(String detail);
+
+  /// No description provided for @serialErrorIo.
+  ///
+  /// In ko, this message translates to:
+  /// **'포트 읽기/쓰기 오류: {detail}'**
+  String serialErrorIo(String detail);
+
+  /// No description provided for @serialErrorNotOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'열린 포트가 없습니다.'**
+  String get serialErrorNotOpen;
+
+  /// No description provided for @serialErrorDisconnected.
+  ///
+  /// In ko, this message translates to:
+  /// **'장치가 분리되었습니다.'**
+  String get serialErrorDisconnected;
+
+  /// No description provided for @serialViewTerminal.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널 보기'**
+  String get serialViewTerminal;
+
+  /// No description provided for @serialViewHex.
+  ///
+  /// In ko, this message translates to:
+  /// **'Hex 보기'**
+  String get serialViewHex;
+
+  /// No description provided for @serialEcho.
+  ///
+  /// In ko, this message translates to:
+  /// **'로컬 에코'**
+  String get serialEcho;
+
+  /// No description provided for @serialEchoTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'LineSender로 보낸 내용을 터미널 화면에도 그대로 보여 줍니다. 장치가 입력을 되돌려 주지 않을 때 켭니다.'**
+  String get serialEchoTooltip;
+
+  /// No description provided for @serialBytes.
+  ///
+  /// In ko, this message translates to:
+  /// **'수신 {count} 바이트'**
+  String serialBytes(int count);
+
+  /// No description provided for @serialHexEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 받은 데이터가 없습니다.'**
+  String get serialHexEmpty;
+
+  /// No description provided for @helpSerialBar.
+  ///
+  /// In ko, this message translates to:
+  /// **'시리얼 도구 줄\n터미널 보기와 Hex 보기를 바꾸고, 로컬 에코를 켜고 끕니다. Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트를 보여 줍니다.'**
+  String get helpSerialBar;
 }
 
 class _AppLocalizationsDelegate

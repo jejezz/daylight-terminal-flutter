@@ -282,6 +282,30 @@ class _ConnectPanelState extends State<ConnectPanel> {
                       )
                     : Text(session.status == SessionStatus.error ? l10n.connectReconnect : l10n.connectAction),
               ),
+              // 서버 없이 시리얼 포트를 바로 연다. 이 빈 탭이 그 시리얼 탭으로 바뀐다.
+              const SizedBox(height: AppSpacing.xl),
+              Row(
+                children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: Text(
+                      l10n.newTabSerial,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ),
+                  const Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Center(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, _buttonHeight)),
+                  onPressed: connecting ? null : controller.openSerialHere,
+                  icon: const Icon(Icons.usb_rounded, size: 18),
+                  label: Text(l10n.serialTitle),
+                ),
+              ),
               // 서버 없이 이 PC의 셸을 바로 연다. 이 빈 탭이 그 셸 탭으로 바뀐다.
               if (shells.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.xl),

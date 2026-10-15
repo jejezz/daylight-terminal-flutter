@@ -9,6 +9,7 @@
 #include <desktop_drop/desktop_drop_plugin.h>
 #include <file_selector_linux/file_selector_plugin.h>
 #include <flutter_drag_out/flutter_drag_out_plugin.h>
+#include <flutter_libserialport/flutter_libserialport_plugin.h>
 #include <screen_retriever_linux/screen_retriever_linux_plugin.h>
 #include <url_launcher_linux/url_launcher_plugin.h>
 #include <window_manager/window_manager_plugin.h>
@@ -23,6 +24,9 @@ void fl_register_plugins(FlPluginRegistry* registry) {
   g_autoptr(FlPluginRegistrar) flutter_drag_out_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "FlutterDragOutPlugin");
   flutter_drag_out_plugin_register_with_registrar(flutter_drag_out_registrar);
+  g_autoptr(FlPluginRegistrar) flutter_libserialport_registrar =
+      fl_plugin_registry_get_registrar_for_plugin(registry, "FlutterLibserialportPlugin");
+  flutter_libserialport_plugin_register_with_registrar(flutter_libserialport_registrar);
   g_autoptr(FlPluginRegistrar) screen_retriever_linux_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "ScreenRetrieverLinuxPlugin");
   screen_retriever_linux_plugin_register_with_registrar(screen_retriever_linux_registrar);

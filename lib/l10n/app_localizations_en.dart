@@ -840,4 +840,109 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get helpSenderSend =>
       'Send\nSend the line at the cursor to the terminal and move to the next. Requires a connection.';
+
+  @override
+  String get newTabSerial => 'Serial port';
+
+  @override
+  String get serialTitle => 'Serial connection';
+
+  @override
+  String get serialPort => 'Port';
+
+  @override
+  String get serialPortHint => 'Select a port';
+
+  @override
+  String get serialPortRefresh => 'Refresh port list';
+
+  @override
+  String get serialNoPorts =>
+      'No serial ports found. Plug in a USB device and it will appear automatically.';
+
+  @override
+  String get serialBaud => 'Baud rate';
+
+  @override
+  String get serialBaudInvalid => 'Enter a number of 1 or more';
+
+  @override
+  String get serialDataBits => 'Data bits';
+
+  @override
+  String get serialParity => 'Parity';
+
+  @override
+  String get serialStopBits => 'Stop bits';
+
+  @override
+  String get serialFlow => 'Flow control';
+
+  @override
+  String get serialParityNone => 'None (N)';
+
+  @override
+  String get serialParityOdd => 'Odd (O)';
+
+  @override
+  String get serialParityEven => 'Even (E)';
+
+  @override
+  String get serialParityMark => 'Mark (M)';
+
+  @override
+  String get serialParitySpace => 'Space (S)';
+
+  @override
+  String get serialFlowNone => 'None';
+
+  @override
+  String get serialFlowRtsCts => 'RTS/CTS (hardware)';
+
+  @override
+  String get serialFlowXonXoff => 'XON/XOFF (software)';
+
+  @override
+  String get serialFlowDtrDsr => 'DTR/DSR (hardware)';
+
+  @override
+  String serialErrorOpen(String detail) {
+    return 'Could not open the port: $detail';
+  }
+
+  @override
+  String serialErrorIo(String detail) {
+    return 'Port read/write error: $detail';
+  }
+
+  @override
+  String get serialErrorNotOpen => 'No port is open.';
+
+  @override
+  String get serialErrorDisconnected => 'The device was disconnected.';
+
+  @override
+  String get serialViewTerminal => 'Terminal view';
+
+  @override
+  String get serialViewHex => 'Hex view';
+
+  @override
+  String get serialEcho => 'Local echo';
+
+  @override
+  String get serialEchoTooltip =>
+      'Also show what you send from the line sender on the terminal screen. Turn on when the device does not echo input back.';
+
+  @override
+  String serialBytes(int count) {
+    return '$count bytes received';
+  }
+
+  @override
+  String get serialHexEmpty => 'No data received yet.';
+
+  @override
+  String get helpSerialBar =>
+      'Serial toolbar\nSwitch between the terminal view and the hex view, and turn local echo on or off. The hex view shows the bytes actually received, not the terminal screen.';
 }

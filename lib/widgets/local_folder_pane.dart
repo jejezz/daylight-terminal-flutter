@@ -10,7 +10,7 @@ import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../services/file_reveal_service.dart';
-import '../state/local_shell_session.dart';
+import '../state/local_folder_session.dart';
 import '../theme/app_theme.dart';
 import 'file_pane_parts.dart';
 import 'list_selection.dart';
@@ -46,7 +46,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     }
   }
 
-  List<FileItem> _targetsFor(LocalShellSession session, FileItem e) {
+  List<FileItem> _targetsFor(LocalFolderSession session, FileItem e) {
     final targets = _selection.targetsFor(e, session.entries);
     setState(() {});
     return targets;
@@ -56,7 +56,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
   Future<void> _onDrop(List<String> paths) async {
     // 이 앱에서 끌어낸 것이 다시 들어온 경우는 무시한다.
     if (FlutterDragOut.inProgress || paths.isEmpty) return;
-    final session = context.read<LocalShellSession>();
+    final session = context.read<LocalFolderSession>();
     if (!await confirmOverwriteDialog(context, session.copyConflicts(paths))) return;
     await _guard(() => session.copyIn(paths));
   }
@@ -82,14 +82,14 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     );
   }
 
-  Future<void> _newFolder(LocalShellSession session) async {
+  Future<void> _newFolder(LocalFolderSession session) async {
     final l10n = AppLocalizations.of(context);
     final name = await _askText(l10n.sftpNewFolder, l10n.sftpFolderName);
     if (name == null || name.isEmpty) return;
     await _guard(() => session.makeDirectory(name));
   }
 
-  Future<void> _rename(LocalShellSession session, FileItem e) async {
+  Future<void> _rename(LocalFolderSession session, FileItem e) async {
     final l10n = AppLocalizations.of(context);
     final name = await _askText(l10n.sftpRename, l10n.sftpNewName, initial: e.name);
     if (name == null || name.isEmpty || name == e.name) return;
@@ -97,7 +97,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     if (mounted) setState(() => _selection.setOnly(name));
   }
 
-  Future<void> _delete(LocalShellSession session, List<FileItem> items) async {
+  Future<void> _delete(LocalFolderSession session, List<FileItem> items) async {
     final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
@@ -125,12 +125,12 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     if (mounted) setState(_selection.clear);
   }
 
-  Future<void> _syncExplorer(LocalShellSession session) async {
+  Future<void> _syncExplorer(LocalFolderSession session) async {
     final l10n = AppLocalizations.of(context);
     if (!await session.syncExplorerToTerminal()) _toast(l10n.pathCwdFailed);
   }
 
-  Future<void> _rowMenu(LocalShellSession session, FileItem e, Offset position) async {
+  Future<void> _rowMenu(LocalFolderSession session, FileItem e, Offset position) async {
     final l10n = AppLocalizations.of(context);
     final targets = _targetsFor(session, e);
     final single = targets.length == 1;
@@ -140,7 +140,8 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
       items: [
         if (single) PopupMenuItem(value: 'open', child: Text(l10n.localOpen)),
         if (single) PopupMenuItem(value: 'reveal', child: Text(l10n.localReveal)),
-        if (single && e.isDirectory) PopupMenuItem(value: 'terminal', child: Text(l10n.pathMenuTerminalToHere)),
+        if (single && e.isDirectory && session.canMoveTerminal)
+          PopupMenuItem(value: 'terminal', child: Text(l10n.pathMenuTerminalToHere)),
         if (single) PopupMenuItem(value: 'rename', child: Text(l10n.sftpRename)),
         PopupMenuItem(value: 'delete', child: Text(l10n.sftpDelete)),
       ],
@@ -159,7 +160,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     }
   }
 
-  Future<void> _showPlaces(LocalShellSession session, BuildContext buttonContext) async {
+  Future<void> _showPlaces(LocalFolderSession session, BuildContext buttonContext) async {
     final places = await session.places();
     if (!mounted || !buttonContext.mounted) return;
     final box = buttonContext.findRenderObject()! as RenderBox;
@@ -174,7 +175,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
 
   // ───────────────────────── 끌어내기 (flutter_drag_out) ─────────────────────────
 
-  void _onDragStarted(LocalShellSession session, FileItem e) {
+  void _onDragStarted(LocalFolderSession session, FileItem e) {
     final items = _targetsFor(session, e);
     _dragPaths = [for (final i in items) session.pathOf(i)];
   }
@@ -189,7 +190,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final session = context.watch<LocalShellSession>();
+    final session = context.watch<LocalFolderSession>();
     final scheme = Theme.of(context).colorScheme;
 
     return DropTarget(
@@ -213,7 +214,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                 onUp: session.goUp,
                 onRefresh: session.refreshFolder,
                 onNewFolder: () => _newFolder(session),
-                onTerminalToHere: () => session.moveTerminalTo(session.folderPath),
+                onTerminalToHere: session.canMoveTerminal ? () => session.moveTerminalTo(session.folderPath) : null,
                 // 현재 경로를 알려 줄 수 없는 셸(cmd)은 이 항목을 숨긴다.
                 onExplorerToTerminal: session.canSyncExplorer ? () => _syncExplorer(session) : null,
                 extraActions: [
