@@ -32,10 +32,13 @@ class TabBarRow extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemCount: controller.sessions.length,
               itemBuilder: (context, i) => _Tab(
+                key: ObjectKey(controller.sessions[i]),
+                index: i,
                 session: controller.sessions[i],
                 selected: i == controller.selected,
                 onSelect: () => controller.select(i),
                 onClose: () => controller.closeAt(i),
+                onMove: controller.move,
               ),
             ),
           ),
@@ -45,21 +48,34 @@ class TabBarRow extends StatelessWidget {
               iconSize: 18,
               tooltip: l10n.tabNew,
               icon: const Icon(Icons.add_rounded),
-              onSelected: (choice) => choice is LocalShell ? controller.addLocal(choice) : controller.add(),
+              onSelected: (choice) => choice is LocalShell
+                  ? controller.addLocal(choice)
+                  : controller.add(),
               itemBuilder: (context) => [
                 PopupMenuItem<Object>(
                   value: 'ssh',
-                  child: _MenuRow(Icons.dns_outlined, l10n.newTabSsh, AppShortcut.newTab.label),
+                  child: _MenuRow(
+                    Icons.dns_outlined,
+                    l10n.newTabSsh,
+                    AppShortcut.newTab.label,
+                  ),
                 ),
                 const PopupMenuDivider(),
                 if (controller.shells.isEmpty)
-                  PopupMenuItem<Object>(enabled: false, child: Text(l10n.newTabNoShells))
+                  PopupMenuItem<Object>(
+                    enabled: false,
+                    child: Text(l10n.newTabNoShells),
+                  )
                 else
                   for (final (i, shell) in controller.shells.indexed)
                     PopupMenuItem<Object>(
                       value: shell,
                       // 첫 번째가 기본 셸이고, 단축키는 그 셸을 연다.
-                    child: _MenuRow(Icons.terminal_rounded, shell.name, i == 0 ? AppShortcut.newLocalTab.label : null),
+                      child: _MenuRow(
+                        Icons.terminal_rounded,
+                        shell.name,
+                        i == 0 ? AppShortcut.newLocalTab.label : null,
+                      ),
                     ),
               ],
             ),
@@ -71,12 +87,24 @@ class TabBarRow extends StatelessWidget {
 }
 
 class _Tab extends StatelessWidget {
-  const _Tab({required this.session, required this.selected, required this.onSelect, required this.onClose});
+  const _Tab({
+    super.key,
+    required this.index,
+    required this.session,
+    required this.selected,
+    required this.onSelect,
+    required this.onClose,
+    required this.onMove,
+  });
 
+  final int index;
   final TerminalSession session;
   final bool selected;
   final VoidCallback onSelect;
   final VoidCallback onClose;
+
+  /// (옮기는 탭의 자리, 놓은 자리)
+  final void Function(int from, int to) onMove;
 
   @override
   Widget build(BuildContext context) {
@@ -86,61 +114,126 @@ class _Tab extends StatelessWidget {
       listenable: session,
       builder: (context, _) {
         final title = session.tabTitle.isEmpty ? l10n.tabNew : session.tabTitle;
+        final body = _body(context, title, scheme, l10n);
         return HelpTarget(
           id: HelpId.tabItem,
-          child: InkWell(
-            splashFactory: NoSplash.splashFactory,
-            onTap: onSelect,
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
-              padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.xs),
-              decoration: BoxDecoration(
-                color: selected ? scheme.surface : null,
-                border: Border(
-                  bottom: BorderSide(color: selected ? scheme.primary : Colors.transparent, width: 2),
-                  right: BorderSide(color: scheme.outlineVariant),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          child: DragTarget<int>(
+            onWillAcceptWithDetails: (d) => d.data != index,
+            onAcceptWithDetails: (d) => onMove(d.data, index),
+            builder: (context, candidates, _) {
+              final from = candidates.isEmpty ? null : candidates.first;
+              // 놓을 자리 표시: 오른쪽으로 끌면 이 탭의 오른쪽, 왼쪽으로 끌면 왼쪽에 들어간다.
+              final bar = Container(width: 3, color: scheme.primary);
+              return Stack(
                 children: [
-                  Icon(session is LocalShellSession ? Icons.terminal_rounded : Icons.dns_outlined, size: 13),
-                  const SizedBox(width: AppSpacing.xs),
-                  Icon(
-                    Icons.circle,
-                    size: 8,
-                    color: switch (session.status) {
-                      SessionStatus.connected => AppColors.success,
-                      SessionStatus.connecting => AppColors.warning,
-                      SessionStatus.error => AppColors.danger,
-                      SessionStatus.idle => scheme.outline,
-                    },
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Flexible(
-                    child: Text(
-                      title,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                        color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                  Draggable<int>(
+                    data: index,
+                    axis: Axis.horizontal,
+                    feedback: Material(
+                      color: Colors.transparent,
+                      child: Opacity(
+                        opacity: 0.85,
+                        child: ListenableBuilder(
+                          listenable: session,
+                          builder: (context, _) => _body(
+                            context,
+                            title,
+                            scheme,
+                            l10n,
+                            dragging: true,
+                          ),
+                        ),
                       ),
                     ),
+                    childWhenDragging: Opacity(opacity: 0.35, child: body),
+                    child: body,
                   ),
-                  IconButton(
-                    iconSize: 14,
-                    visualDensity: VisualDensity.compact,
-                    tooltip: '${l10n.tabClose} (${AppShortcut.closeTab.label})',
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: onClose,
-                  ).help(HelpId.tabClose),
+                  if (from != null)
+                    Positioned(
+                      top: 0,
+                      bottom: 0,
+                      left: from > index ? 0 : null,
+                      right: from > index ? null : 0,
+                      child: IgnorePointer(child: bar),
+                    ),
                 ],
-              ),
-            ),
+              );
+            },
           ),
         );
       },
+    );
+  }
+
+  Widget _body(
+    BuildContext context,
+    String title,
+    ColorScheme scheme,
+    AppLocalizations l10n, {
+    bool dragging = false,
+  }) {
+    return InkWell(
+      splashFactory: NoSplash.splashFactory,
+      onTap: onSelect,
+      child: Container(
+        height: 36,
+        constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
+        padding: const EdgeInsets.only(
+          left: AppSpacing.md,
+          right: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: selected || dragging ? scheme.surface : null,
+          border: Border(
+            bottom: BorderSide(
+              color: selected ? scheme.primary : Colors.transparent,
+              width: 2,
+            ),
+            right: BorderSide(color: scheme.outlineVariant),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              session is LocalShellSession
+                  ? Icons.terminal_rounded
+                  : Icons.dns_outlined,
+              size: 13,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Icon(
+              Icons.circle,
+              size: 8,
+              color: switch (session.status) {
+                SessionStatus.connected => AppColors.success,
+                SessionStatus.connecting => AppColors.warning,
+                SessionStatus.error => AppColors.danger,
+                SessionStatus.idle => scheme.outline,
+              },
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                  color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            IconButton(
+              iconSize: 14,
+              visualDensity: VisualDensity.compact,
+              tooltip: '${l10n.tabClose} (${AppShortcut.closeTab.label})',
+              icon: const Icon(Icons.close_rounded),
+              onPressed: onClose,
+            ).help(HelpId.tabClose),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -100,6 +100,15 @@ class SessionsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// [from] 자리의 탭을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 위치). 선택된 탭은 그대로 유지된다.
+  void move(int from, int to) {
+    if (from < 0 || from >= sessions.length || to < 0 || to >= sessions.length || from == to) return;
+    final keep = sessions[_selected];
+    sessions.insert(to, sessions.removeAt(from));
+    _selected = sessions.indexOf(keep);
+    notifyListeners();
+  }
+
   void closeAt(int index) {
     if (index < 0 || index >= sessions.length) return;
     final removed = sessions.removeAt(index);
