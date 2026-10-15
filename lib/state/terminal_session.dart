@@ -14,6 +14,14 @@ import '../services/shell_commands.dart';
 
 enum SessionStatus { idle, connecting, connected, error }
 
+/// [TerminalSession.dropFiles]의 결과. [fallbackDir]가 있으면 터미널의 현재 폴더를 몰라서 그 폴더(탐색기가 보던
+/// 곳)에 올렸다는 뜻이다.
+class TerminalDropResult {
+  const TerminalDropResult({this.fallbackDir});
+
+  final String? fallbackDir;
+}
+
 /// 탭 하나의 터미널 세션. SSH 세션과 로컬 셸 세션이 공통으로 갖는 것 — 터미널 화면, 입력 보내기,
 /// LineSender, 기록(Recording), 터미널 현재 경로 확인 — 을 모았다.
 ///
@@ -123,6 +131,16 @@ abstract class TerminalSession extends ChangeNotifier {
     terminal.paste('${paths.map(quotePath).join(' ')} ');
   }
 
+  /// 이 PC의 파일을 터미널에 끌어놓았을 때. 기본(로컬 셸)은 이 PC의 경로를 인용해 입력만 한다.
+  /// [confirmOverwrite]는 덮어쓸 이름이 있을 때 사용자에게 물어 true/false를 돌려주는 함수다.
+  Future<TerminalDropResult> dropFiles(
+    List<String> localPaths,
+    Future<bool> Function(List<String> names) confirmOverwrite,
+  ) async {
+    typePaths(localPaths);
+    return const TerminalDropResult();
+  }
+
   void clearTerminal() => terminal.clear();
 
   // ───────────────────────── 기록(Recording) ─────────────────────────
@@ -205,8 +223,6 @@ abstract class TerminalSession extends ChangeNotifier {
   }
 
   void _onTerminalCwd(String uri) {
-    final waiter = _cwdWaiter;
-    if (waiter == null || waiter.isCompleted) return;
     var rest = uri.startsWith('file://') ? uri.substring(7) : uri;
     final slash = rest.indexOf('/');
     if (slash == -1) return;
@@ -218,8 +234,19 @@ abstract class TerminalSession extends ChangeNotifier {
         // 디코딩할 수 없으면 원문 그대로 쓴다.
       }
     }
-    waiter.complete(rest);
+    final waiter = _cwdWaiter;
+    if (waiter == null) {
+      // 메뉴가 요청한 것이 아니라 셸이 알아서 보낸 것(프롬프트마다 OSC 7을 내는 셸)이다.
+      _autoReportedCwd = rest;
+    } else if (!waiter.isCompleted) {
+      waiter.complete(rest);
+    }
   }
+
+  /// 셸이 요청 없이 스스로 알려 준 가장 최근 현재 경로. 그런 셸이 아니면 null.
+  /// 프롬프트마다 갱신되는 값이라 믿을 수 있지만, 메뉴 요청으로 얻은 경로는 곧 낡으므로 담지 않는다.
+  String? get autoReportedCwd => _autoReportedCwd;
+  String? _autoReportedCwd;
 
   /// 연결이 끊길 때 기다리던 경로 요청을 끝낸다.
   @protected

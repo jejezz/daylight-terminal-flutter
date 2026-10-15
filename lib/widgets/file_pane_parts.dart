@@ -232,3 +232,25 @@ String formatFileSize(int bytes) {
   }
   return i == 0 ? '$bytes B' : '${value.toStringAsFixed(value < 10 ? 1 : 0)} ${units[i]}';
 }
+
+/// 같은 이름을 덮어써도 되는지 묻는다. 겹치는 이름이 없으면 묻지 않고 true.
+Future<bool> confirmOverwriteDialog(BuildContext context, List<String> names) async {
+  if (names.isEmpty) return true;
+  final l10n = AppLocalizations.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.sftpOverwriteTitle),
+      content: Text(l10n.sftpOverwriteBody(names.join(', '))),
+      actions: [
+        TextButton(autofocus: true, onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonCancel)),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(l10n.sftpOverwrite),
+        ),
+      ],
+    ),
+  );
+  return ok ?? false;
+}

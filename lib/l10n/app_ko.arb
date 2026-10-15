@@ -218,6 +218,14 @@
     }
   },
   "sftpOverwrite": "덮어쓰기",
+  "terminalDropFallback": "터미널의 현재 폴더를 알 수 없어 탐색기의 폴더에 올렸습니다: {dir}",
+  "@terminalDropFallback": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
   "commonCancel": "취소",
   "commonOk": "확인",
   "pathMenuTooltip": "경로 이동",

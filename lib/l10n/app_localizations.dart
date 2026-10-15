@@ -662,6 +662,12 @@ abstract class AppLocalizations {
   /// **'덮어쓰기'**
   String get sftpOverwrite;
 
+  /// No description provided for @terminalDropFallback.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널의 현재 폴더를 알 수 없어 탐색기의 폴더에 올렸습니다: {dir}'**
+  String terminalDropFallback(String dir);
+
   /// No description provided for @commonCancel.
   ///
   /// In ko, this message translates to:
@@ -1222,14 +1228,14 @@ abstract class AppLocalizations {
 
   /// No description provided for @senderRemoteNotSaved.
   ///
-  /// In en, this message translates to:
-  /// **'This is a copy of a server file. Edits are not saved to the server.'**
+  /// In ko, this message translates to:
+  /// **'서버 파일의 사본입니다. 고친 내용은 서버에 저장되지 않습니다.'**
   String get senderRemoteNotSaved;
 
   /// No description provided for @senderRemoteNotSavedShort.
   ///
-  /// In en, this message translates to:
-  /// **'Server file copy — edits won\'t be saved to the server'**
+  /// In ko, this message translates to:
+  /// **'서버 파일의 사본 — 고쳐도 서버에는 저장되지 않음'**
   String get senderRemoteNotSavedShort;
 
   /// No description provided for @senderFileError.

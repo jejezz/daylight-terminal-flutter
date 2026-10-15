@@ -33,6 +33,27 @@ void main() {
   LocalShellSession make([LocalShell shell = _bash]) =>
       LocalShellSession(shell, ptyFactory: ptys.call, startDirectory: tmp.path);
 
+  group('files dropped on the terminal', () {
+    test('local shell: types the quoted local paths, without Enter', () async {
+      final s = make();
+      await s.start();
+      final result = await s.dropFiles(['/a b/x', "/it's"], (_) async => true);
+      expect(result.fallbackDir, isNull);
+      expect(ptys.last.writtenText, r"'/a b/x' '/it'\''s' ");
+      s.dispose();
+    });
+
+    test('remembers the cwd the shell reports on its own, not the one a menu probe asked for', () async {
+      final s = make();
+      await s.start();
+      expect(s.autoReportedCwd, isNull);
+      ptys.last.emit('\x1b]7;file://host/home/me/work%20dir\x1b\\');
+      await pump();
+      expect(s.autoReportedCwd, '/home/me/work dir');
+      s.dispose();
+    });
+  });
+
   group('shell process', () {
     test('start spawns the shell in the start folder with a full environment', () async {
       final s = make();
