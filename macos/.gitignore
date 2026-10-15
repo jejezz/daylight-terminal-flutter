@@ -1,6 +1,9 @@
 # Flutter-related
 **/Flutter/ephemeral/
 **/Pods/
+# 빌드할 때 CocoaPods가 만든다 (커밋하지 않는다)
+Podfile
+Podfile.lock
 
 # Xcode-related
 **/dgph
