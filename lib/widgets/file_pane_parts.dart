@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
+import '../services/diag_log.dart';
 import '../theme/app_theme.dart';
 
 /// 폴더 뷰 위쪽 줄: 위로, 현재 경로, 새로 고침, 새 폴더, (있으면) 경로 이동 메뉴와 추가 버튼.
@@ -30,6 +31,11 @@ class PaneHeader extends StatelessWidget {
   final VoidCallback? onTerminalToHere;
   final VoidCallback? onExplorerToTerminal;
   final List<Widget> extraActions;
+
+  static void _tap(String name, VoidCallback action) {
+    DiagLog.log('ui.pane $name');
+    action();
+  }
 
   Future<void> _copyPath(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
@@ -57,7 +63,7 @@ class PaneHeader extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             tooltip: l10n.sftpUp,
             icon: const Icon(Icons.arrow_upward_rounded),
-            onPressed: canGoUp ? onUp : null,
+            onPressed: canGoUp ? () => _tap('up', onUp) : null,
           ).help(HelpId.paneUp),
           ...extraActions,
           Expanded(
@@ -87,14 +93,14 @@ class PaneHeader extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             tooltip: l10n.sftpRefresh,
             icon: const Icon(Icons.refresh_rounded),
-            onPressed: onRefresh,
+            onPressed: () => _tap('refresh', onRefresh),
           ).help(HelpId.paneRefresh),
           IconButton(
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: l10n.sftpNewFolder,
             icon: const Icon(Icons.create_new_folder_outlined),
-            onPressed: onNewFolder,
+            onPressed: () => _tap('newFolder', onNewFolder),
           ).help(HelpId.paneNewFolder),
           if (onTerminalToHere != null || onExplorerToTerminal != null)
             HelpTarget(
@@ -104,6 +110,7 @@ class PaneHeader extends StatelessWidget {
                 iconSize: 18,
                 icon: const Icon(Icons.sync_alt_rounded),
                 onSelected: (v) {
+                  DiagLog.log('ui.pane menu $v');
                   if (v == 'terminal') onTerminalToHere?.call();
                   if (v == 'explorer') onExplorerToTerminal?.call();
                 },
@@ -204,9 +211,19 @@ class FileRow extends StatelessWidget {
           // 선택은 누르는 순간 하고(Listener), 더블클릭 열기만 InkWell에 맡긴다.
           child: Listener(
             onPointerDown: (e) {
-              if (e.buttons == kPrimaryButton) onTap();
+              if (e.buttons == kPrimaryButton) {
+                DiagLog.log('ui.row select');
+                onTap();
+              }
             },
-            child: InkWell(splashFactory: NoSplash.splashFactory, onDoubleTap: onOpen, child: content),
+            child: InkWell(
+              splashFactory: NoSplash.splashFactory,
+              onDoubleTap: () {
+                DiagLog.log('ui.row open');
+                onOpen();
+              },
+              child: content,
+            ),
           ),
         ),
       ),
