@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show kPrimaryButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -199,7 +200,14 @@ class FileRow extends StatelessWidget {
           onDragStarted: onDragStarted,
           onDragUpdate: onDragUpdate,
           onDragEnd: (_) => onDragEnd(),
-          child: InkWell(splashFactory: NoSplash.splashFactory, onTap: onTap, onDoubleTap: onOpen, child: content),
+          // InkWell에 onTap과 onDoubleTap을 같이 걸면 Flutter가 더블클릭인지 기다리느라 onTap을 ~300ms 미룬다.
+          // 선택은 누르는 순간 하고(Listener), 더블클릭 열기만 InkWell에 맡긴다.
+          child: Listener(
+            onPointerDown: (e) {
+              if (e.buttons == kPrimaryButton) onTap();
+            },
+            child: InkWell(splashFactory: NoSplash.splashFactory, onDoubleTap: onOpen, child: content),
+          ),
         ),
       ),
     );

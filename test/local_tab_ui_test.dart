@@ -10,6 +10,7 @@ import 'package:daylight_terminal/settings/terminal_prefs.dart';
 import 'package:daylight_terminal/state/local_shell_session.dart';
 import 'package:daylight_terminal/state/sessions_controller.dart';
 import 'package:daylight_terminal/theme/app_theme.dart';
+import 'package:daylight_terminal/widgets/file_pane_parts.dart';
 import 'package:daylight_terminal/widgets/line_sender.dart';
 import 'package:daylight_terminal/widgets/local_folder_pane.dart';
 import 'package:daylight_terminal/widgets/sftp_pane.dart';
@@ -359,5 +360,30 @@ void main() {
     expect(empty.addLocal(), isNull);
     expect(empty.sessions, hasLength(1));
     empty.dispose();
+  });
+
+  testWidgets('a click selects the row at once, not after the double-click wait; double-click still opens it', (tester) async {
+    final sessions = await pumpApp(tester);
+    await openFromPlusMenu(tester, 'bash');
+    final local = await pointAtTmp(tester, sessions);
+    bool selected(String name) =>
+        tester.widget<FileRow>(find.widgetWithText(FileRow, name)).selected;
+
+    await tester.tap(find.text('projects'));
+    await tester.pump(); // 시간을 흘리지 않는다 — 더블클릭 대기 없이 바로 선택돼야 한다
+    expect(selected('projects'), isTrue);
+    await tester.tap(find.text('notes.txt'));
+    await tester.pump();
+    expect(selected('notes.txt'), isTrue);
+    expect(selected('projects'), isFalse);
+
+    await tester.tap(find.text('projects'));
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.tap(find.text('projects'));
+    for (var k = 0; k < 5; k++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(local.folderPath, endsWith('projects'));
   });
 }
