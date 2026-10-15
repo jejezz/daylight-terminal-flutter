@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../models/local_shell.dart';
 import '../state/local_shell_session.dart';
 import '../state/serial_session.dart';
+import '../state/ssh_session_provider.dart';
 import '../state/sessions_controller.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
@@ -120,7 +121,14 @@ class _Tab extends StatelessWidget {
     return ListenableBuilder(
       listenable: session,
       builder: (context, _) {
-        final title = session.tabTitle.isEmpty ? l10n.tabNew : session.tabTitle;
+        // 아직 이름이 없는 탭은 종류를 알려 준다. 처음 여는 탭(SSH·시리얼·셸 중 고르는 화면)은 그냥 "새 연결".
+        final title = session.tabTitle.isNotEmpty
+            ? session.tabTitle
+            : switch (session) {
+                SerialSession() => l10n.tabNewSerial,
+                SshSessionProvider(showAllOptions: false) => l10n.tabNewSsh,
+                _ => l10n.tabNew,
+              };
         final body = _body(context, title, scheme, l10n);
         return HelpTarget(
           id: HelpId.tabItem,

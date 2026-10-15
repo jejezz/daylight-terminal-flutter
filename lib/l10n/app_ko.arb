@@ -565,5 +565,7 @@
   "serialBytes": "수신 {count} 바이트",
   "@serialBytes": {"placeholders": {"count": {"type": "int"}}},
   "serialHexEmpty": "아직 받은 데이터가 없습니다.",
-  "helpSerialBar": "시리얼 도구 줄\n터미널 보기와 Hex 보기를 바꾸고, 로컬 에코를 켜고 끕니다. Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트를 보여 줍니다."
+  "helpSerialBar": "시리얼 도구 줄\n터미널 보기와 Hex 보기를 바꾸고, 로컬 에코를 켜고 끕니다. Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트를 보여 줍니다.",
+  "tabNewSsh": "새 SSH 연결",
+  "tabNewSerial": "새 시리얼 연결"
 }
