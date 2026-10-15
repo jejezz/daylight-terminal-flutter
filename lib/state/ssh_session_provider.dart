@@ -23,7 +23,10 @@ enum SessionError { hostKeyMismatch, closed, other }
 /// 터미널의 현재 경로와 탐색기 경로는 **자동으로 맞추지 않는다.** 사용자가 메뉴로
 /// 요청할 때만 [moveTerminalTo] / [syncExplorerToTerminal]이 한쪽을 다른 쪽에 맞춘다.
 class SshSessionProvider extends TerminalSession {
-  SshSessionProvider(this.store, {super.scrollback});
+  SshSessionProvider(this.store, {super.scrollback, this.showAllOptions = false});
+
+  /// 연결 화면에 시리얼·로컬 셸 선택도 함께 보일지. 처음 여는 탭만 true이고, 새 탭 메뉴에서 SSH를 고른 탭은 SSH 폼만 보인다.
+  final bool showAllOptions;
 
   final ProfileStore store;
 

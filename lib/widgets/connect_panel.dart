@@ -282,32 +282,9 @@ class _ConnectPanelState extends State<ConnectPanel> {
                       )
                     : Text(session.status == SessionStatus.error ? l10n.connectReconnect : l10n.connectAction),
               ),
-              // 서버 없이 시리얼 포트를 바로 연다. 이 빈 탭이 그 시리얼 탭으로 바뀐다.
-              const SizedBox(height: AppSpacing.xl),
-              Row(
-                children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                    child: Text(
-                      l10n.newTabSerial,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
-                  ),
-                  const Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Center(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, _buttonHeight)),
-                  onPressed: connecting ? null : controller.openSerialHere,
-                  icon: const Icon(Icons.usb_rounded, size: 18),
-                  label: Text(l10n.serialTitle),
-                ),
-              ),
-              // 서버 없이 이 PC의 셸을 바로 연다. 이 빈 탭이 그 셸 탭으로 바뀐다.
-              if (shells.isNotEmpty) ...[
+              // 처음 여는 탭에서만 시리얼·로컬 셸도 함께 보인다 (메뉴에서 SSH를 고른 탭은 SSH 폼만).
+              if (session.showAllOptions) ...[
+                // 서버 없이 시리얼 포트를 바로 연다. 이 빈 탭이 그 시리얼 탭으로 바뀐다.
                 const SizedBox(height: AppSpacing.xl),
                 Row(
                   children: [
@@ -315,7 +292,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                       child: Text(
-                        l10n.newTabLocalShell,
+                        l10n.newTabSerial,
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
                       ),
                     ),
@@ -323,20 +300,46 @@ class _ConnectPanelState extends State<ConnectPanel> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    for (final shell in shells)
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(minimumSize: const Size(0, _buttonHeight)),
-                        onPressed: connecting ? null : () => controller.openLocalHere(shell),
-                        icon: const Icon(Icons.terminal_rounded, size: 18),
-                        label: Text(shell.name),
-                      ),
-                  ],
+                Center(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, _buttonHeight)),
+                    onPressed: connecting ? null : controller.openSerialHere,
+                    icon: const Icon(Icons.usb_rounded, size: 18),
+                    label: Text(l10n.serialTitle),
+                  ),
                 ),
+                // 서버 없이 이 PC의 셸을 바로 연다. 이 빈 탭이 그 셸 탭으로 바뀐다.
+                if (shells.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xl),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                        child: Text(
+                          l10n.newTabLocalShell,
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      for (final shell in shells)
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(minimumSize: const Size(0, _buttonHeight)),
+                          onPressed: connecting ? null : () => controller.openLocalHere(shell),
+                          icon: const Icon(Icons.terminal_rounded, size: 18),
+                          label: Text(shell.name),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ],
           ),

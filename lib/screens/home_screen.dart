@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         body: current == null
-            ? _EmptyState(onConnect: controller.add)
+            ? _EmptyState(onConnect: () => controller.add(showAllOptions: true))
             : Column(
                 children: [
                   const TabBarRow().help(HelpId.tabs),

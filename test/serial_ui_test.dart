@@ -153,4 +153,21 @@ void main() {
     expect(find.textContaining('41 42'), findsOneWidget);
     expect(session.status, SessionStatus.connected);
   });
+
+  testWidgets('the first tab offers everything; a tab opened from the + menu as SSH shows only the SSH form', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    // 처음 탭: SSH 폼 + 시리얼 + (셸이 있으면) 로컬 셸 구역.
+    expect(find.text('서버에 연결'), findsOneWidget);
+    expect(find.text('시리얼 연결'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('새 연결'));
+    await settle(tester);
+    await tester.tap(find.ancestor(of: find.text('SSH 연결'), matching: find.byType(PopupMenuItem<Object>)));
+    await settle(tester);
+    // 새 탭(SSH)에는 시리얼 버튼이 없다.
+    expect(find.text('서버에 연결'), findsOneWidget);
+    expect(find.text('시리얼 연결'), findsNothing);
+  });
 }
