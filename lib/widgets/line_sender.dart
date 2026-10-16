@@ -29,10 +29,10 @@ class LineSender extends StatefulWidget {
   const LineSender({super.key});
 
   @override
-  State<LineSender> createState() => _LineSenderState();
+  State<LineSender> createState() => LineSenderState();
 }
 
-class _LineSenderState extends State<LineSender> {
+class LineSenderState extends State<LineSender> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   final _scroll = ScrollController();
@@ -104,6 +104,9 @@ class _LineSenderState extends State<LineSender> {
     }
     return l10n.senderFileError('$e');
   }
+
+  /// 이 칸이 사라지기 전에(예: 연결이 끊겨 접속 화면으로 돌아갈 때) 밖에서 부른다. 뜻은 [_confirmDiscard]와 같다.
+  Future<bool> confirmDiscard() => _confirmDiscard();
 
   /// 저장하지 않은 변경이 있으면 물어본다. 계속해도 되면 true. ("저장"을 골랐는데 저장을 취소하면 false)
   Future<bool> _confirmDiscard() async {

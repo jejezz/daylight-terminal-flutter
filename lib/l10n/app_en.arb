@@ -158,6 +158,8 @@
   },
   "connectClosed": "The server closed the connection.",
   "connectReconnect": "Reconnect",
+  "connectLostTitle": "Connection lost",
+  "connectLostBody": "Reconnect, or close this tab? If the script box has unsaved changes, you will be asked whether to save or discard them next.",
   "connectDisconnect": "Disconnect",
   "sftpTitle": "Files",
   "sftpUp": "Parent folder",
