@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -56,8 +55,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aboutTagline => 'SSH 터미널과 SFTP 파일 탐색기를 한 창에서';
 
   @override
-  String get aboutDescription =>
-      '하나의 SSH 연결로 터미널과 SFTP 파일 탐색기를 나란히 보여 줍니다. 파일을 끌어다 놓아 올리고 내려받고, 원할 때만 터미널과 탐색기의 경로를 맞춥니다.';
+  String get aboutDescription => '하나의 SSH 연결로 터미널과 SFTP 파일 탐색기를 나란히 보여 줍니다. 파일을 끌어다 놓아 올리고 내려받고, 원할 때만 터미널과 탐색기의 경로를 맞춥니다.';
 
   @override
   String get homeEmptyTitle => '서버에 연결해 시작하세요';
@@ -112,19 +110,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get updateCheckFailedTitle => '업데이트를 확인하지 못했습니다';
 
   @override
-  String get updateErrorNetwork =>
-      '업데이트 서버에 연결하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
+  String get updateErrorNetwork => '업데이트 서버에 연결하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
 
   @override
-  String get updateErrorChecksum =>
-      '내려받은 파일이 올바르지 않아 설치하지 않았습니다. 잠시 뒤에 다시 시도해 주세요.';
+  String get updateErrorChecksum => '내려받은 파일이 올바르지 않아 설치하지 않았습니다. 잠시 뒤에 다시 시도해 주세요.';
 
   @override
   String get updateErrorInstall => '설치를 시작하지 못했습니다.';
 
   @override
-  String get updateErrorGeneric =>
-      '업데이트 서버에서 예상하지 못한 응답을 받았습니다. 잠시 뒤에 다시 시도해 주세요.';
+  String get updateErrorGeneric => '업데이트 서버에서 예상하지 못한 응답을 받았습니다. 잠시 뒤에 다시 시도해 주세요.';
 
   @override
   String get updateUpToDateTitle => '최신 버전입니다';
@@ -256,6 +251,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get connectReconnect => '다시 연결';
 
   @override
+  String get connectLostTitle => '연결이 끊겼습니다';
+
+  @override
+  String get connectLostBody => '다시 연결할까요, 아니면 이 탭을 닫을까요? 스크립트 입력 칸에 저장하지 않은 내용이 있으면 이어서 저장할지 버릴지 묻습니다.';
+
+  @override
   String get connectDisconnect => '연결 끊기';
 
   @override
@@ -357,8 +358,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pathMenuExplorerToTerminal => '탐색기를 터미널 경로로 이동';
 
   @override
-  String get pathCwdFailed =>
-      '터미널의 현재 경로를 가져오지 못했습니다. 셸이 명령을 받을 수 있는 상태인지 확인하세요.';
+  String get pathCwdFailed => '터미널의 현재 경로를 가져오지 못했습니다. 셸이 명령을 받을 수 있는 상태인지 확인하세요.';
 
   @override
   String transferUploading(String name) {
@@ -542,8 +542,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get restoreTabs => '마지막에 열어 둔 탭 다시 열기';
 
   @override
-  String get restoreTabsHelp =>
-      '로컬 셸은 같은 폴더에서 바로 열고, SSH와 시리얼은 접속 정보만 채워 둡니다. 비밀번호는 저장하지 않으며 자동으로 연결하지 않습니다.';
+  String get restoreTabsHelp => '로컬 셸은 같은 폴더에서 바로 열고, SSH와 시리얼은 접속 정보만 채워 둡니다. 비밀번호는 저장하지 않으며 자동으로 연결하지 않습니다.';
 
   @override
   String get refreshLocal => '로컬 폴더 자동 새로 고침';
@@ -555,8 +554,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get refreshSsh => 'SFTP 폴더 자동 새로 고침';
 
   @override
-  String get refreshSshHelp =>
-      '보이는 탭의 서버 폴더를 5초마다 다시 읽습니다. 네트워크를 쓰므로 기본은 꺼짐입니다.';
+  String get refreshSshHelp => '보이는 탭의 서버 폴더를 5초마다 다시 읽습니다. 네트워크를 쓰므로 기본은 꺼짐입니다.';
 
   @override
   String get terminalFontFamily => '글꼴';
@@ -573,8 +571,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get terminalFontCustomName => '설치된 글꼴 이름';
 
   @override
-  String get terminalFontCustomHelp =>
-      'OS에 설치된 글꼴의 이름을 그대로 적으세요. 없는 이름이면 내장 글꼴로 대신 표시됩니다.';
+  String get terminalFontCustomHelp => 'OS에 설치된 글꼴의 이름을 그대로 적으세요. 없는 이름이면 내장 글꼴로 대신 표시됩니다.';
 
   @override
   String get terminalFontSize => '크기';
@@ -586,13 +583,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get terminalScrollback => '스크롤백 줄 수';
 
   @override
-  String get terminalScrollbackHelp =>
-      '위로 스크롤해 다시 볼 수 있는 지난 출력의 최대 줄 수입니다. 새로 여는 탭부터 적용되고, 열려 있는 탭은 그대로입니다.';
+  String get terminalScrollbackHelp => '위로 스크롤해 다시 볼 수 있는 지난 출력의 최대 줄 수입니다. 새로 여는 탭부터 적용되고, 열려 있는 탭은 그대로입니다.';
 
   @override
   String terminalScrollbackLines(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     return '$countString줄';
@@ -682,8 +677,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get senderFileNotUtf8 => 'UTF-8 텍스트 파일만 열 수 있습니다';
 
   @override
-  String get senderDropUnsupported =>
-      '텍스트 파일(txt, md, cfg, ini 등)만 끌어넣어 열 수 있습니다';
+  String get senderDropUnsupported => '텍스트 파일(txt, md, cfg, ini 등)만 끌어넣어 열 수 있습니다';
 
   @override
   String get senderRemoteNotSaved => '서버 파일의 사본입니다. 고친 내용은 서버에 저장되지 않습니다.';
@@ -700,16 +694,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get helpModeTooltip => '도움말 모드';
 
   @override
-  String get helpButton =>
-      '도움말 모드\n마우스를 올린 컨트롤의 설명을 봅니다. 아무 곳이나 클릭하거나 Esc를 누르면 끝납니다.';
+  String get helpButton => '도움말 모드\n마우스를 올린 컨트롤의 설명을 봅니다. 아무 곳이나 클릭하거나 Esc를 누르면 끝납니다.';
 
   @override
-  String get helpDisconnect =>
-      '연결 끊기 / 셸 종료\nSSH 연결을 끊거나 로컬 셸을 종료합니다. 탭은 남습니다.';
+  String get helpDisconnect => '연결 끊기 / 셸 종료\nSSH 연결을 끊거나 로컬 셸을 종료합니다. 탭은 남습니다.';
 
   @override
-  String get helpAddressBook =>
-      '주소록\n저장해 둔 SSH 접속 정보를 검색·편집하고 연결합니다. 비밀번호는 저장하지 않습니다.';
+  String get helpAddressBook => '주소록\n저장해 둔 SSH 접속 정보를 검색·편집하고 연결합니다. 비밀번호는 저장하지 않습니다.';
 
   @override
   String get helpSettings => '설정\n탐색기 자동 새로 고침과 터미널 글꼴·크기·스크롤백을 바꿉니다.';
@@ -727,19 +718,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get helpTabs => '탭\nSSH 연결과 로컬 셸을 탭으로 나눠 엽니다. 탭마다 터미널과 탐색기가 따로 있습니다.';
 
   @override
-  String get helpExplorerSftp =>
-      '서버 탐색기 (SFTP)\n서버의 폴더와 파일입니다. 파일을 끌어넣으면 업로드, 밖으로 끌어내면 다운로드됩니다.';
+  String get helpExplorerSftp => '서버 탐색기 (SFTP)\n서버의 폴더와 파일입니다. 파일을 끌어넣으면 업로드, 밖으로 끌어내면 다운로드됩니다.';
 
   @override
-  String get helpExplorerLocal =>
-      '폴더 보기\n이 PC의 폴더와 파일입니다. 삭제는 휴지통 없이 영구 삭제됩니다.';
+  String get helpExplorerLocal => '폴더 보기\n이 PC의 폴더와 파일입니다. 삭제는 휴지통 없이 영구 삭제됩니다.';
 
   @override
   String get helpTerminal => '터미널\n셸 화면입니다. 글을 드래그해 복사하고, 키보드로 바로 입력합니다.';
 
   @override
-  String get helpSender =>
-      '줄 전송 입력 칸\n여러 줄 스크립트를 쓰거나 파일에서 불러와 한 줄씩 터미널로 보냅니다. 열기·저장도 여기서 합니다.';
+  String get helpSender => '줄 전송 입력 칸\n여러 줄 스크립트를 쓰거나 파일에서 불러와 한 줄씩 터미널로 보냅니다. 열기·저장도 여기서 합니다.';
 
   @override
   String get helpStatusBar => '상태 표시줄\n연결 상태와 현재 경로 등 이 탭의 상태를 보여 줍니다.';
@@ -769,22 +757,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get helpPaneNewFolder => '새 폴더\n현재 폴더 안에 새 폴더를 만듭니다.';
 
   @override
-  String get helpPanePathSync =>
-      '경로 동기화\n터미널을 이 폴더로 옮기거나, 탐색기를 터미널의 현재 경로로 옮깁니다. 자동으로는 옮겨지지 않습니다.';
+  String get helpPanePathSync => '경로 동기화\n터미널을 이 폴더로 옮기거나, 탐색기를 터미널의 현재 경로로 옮깁니다. 자동으로는 옮겨지지 않습니다.';
 
   @override
   String get helpPanePlaces => '자주 가는 곳\n홈, 바탕 화면 등 자주 쓰는 폴더로 바로 이동합니다.';
 
   @override
-  String get helpFileRow =>
-      '파일 / 폴더\n두 번 누르면 열고, Ctrl/⌘·Shift로 여러 개를 고릅니다. 오른쪽 버튼으로 메뉴를 열고, 끌어서 옮기거나 업로드·다운로드합니다.';
+  String get helpFileRow => '파일 / 폴더\n두 번 누르면 열고, Ctrl/⌘·Shift로 여러 개를 고릅니다. 오른쪽 버튼으로 메뉴를 열고, 끌어서 옮기거나 업로드·다운로드합니다.';
 
   @override
   String get helpTransferClear => '완료 항목 지우기\n끝난 전송 기록을 목록에서 지웁니다.';
 
   @override
-  String get helpStatusStripAnsi =>
-      '이스케이프 제거\n켜면 기록·복사·저장 때 색상 등 제어 문자를 뺀 글만 남깁니다.';
+  String get helpStatusStripAnsi => '이스케이프 제거\n켜면 기록·복사·저장 때 색상 등 제어 문자를 뺀 글만 남깁니다.';
 
   @override
   String get helpStatusCopyBuffer => '터미널 내용 복사\n터미널에 쌓인 내용 전체를 클립보드로 복사합니다.';
@@ -793,33 +778,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get helpStatusSaveBuffer => '터미널 내용 저장\n터미널에 쌓인 내용 전체를 파일로 저장합니다.';
 
   @override
-  String get helpStatusRecord =>
-      '기록 시작 / 중지\n터미널 출력을 파일에 기록합니다. 연결되어 있을 때 시작할 수 있습니다.';
+  String get helpStatusRecord => '기록 시작 / 중지\n터미널 출력을 파일에 기록합니다. 연결되어 있을 때 시작할 수 있습니다.';
 
   @override
   String get helpStatusRevealLog => '기록 파일 보기\n기록한 파일이 있는 폴더를 파일 관리자에서 엽니다.';
 
   @override
-  String get helpSenderNew =>
-      '새로 만들기\n입력 칸을 비우고 파일과의 연결을 끊습니다. 변경이 있으면 먼저 묻습니다.';
+  String get helpSenderNew => '새로 만들기\n입력 칸을 비우고 파일과의 연결을 끊습니다. 변경이 있으면 먼저 묻습니다.';
 
   @override
   String get helpSenderOpen => '열기\n텍스트 파일(UTF-8)을 입력 칸으로 불러옵니다.';
 
   @override
-  String get helpSenderSave =>
-      '저장\n입력 칸의 내용을 연결된 파일에 저장합니다. 연결된 파일이 없으면 새 이름을 묻습니다.';
+  String get helpSenderSave => '저장\n입력 칸의 내용을 연결된 파일에 저장합니다. 연결된 파일이 없으면 새 이름을 묻습니다.';
 
   @override
   String get helpSenderSaveAs => '다른 이름으로 저장\n입력 칸의 내용을 다른 파일로 저장합니다.';
 
   @override
-  String get helpSenderLineEnding =>
-      '줄 끝 문자\n한 줄을 보낸 뒤 덧붙일 문자(CR, LF, CRLF, 없음)를 고릅니다. SSH에서는 보통 CR입니다.';
+  String get helpSenderLineEnding => '줄 끝 문자\n한 줄을 보낸 뒤 덧붙일 문자(CR, LF, CRLF, 없음)를 고릅니다. SSH에서는 보통 CR입니다.';
 
   @override
-  String get helpSenderSend =>
-      '보내기\n커서가 있는 줄을 터미널로 보내고 다음 줄로 넘어갑니다. 연결되어 있어야 합니다.';
+  String get helpSenderSend => '보내기\n커서가 있는 줄을 터미널로 보내고 다음 줄로 넘어갑니다. 연결되어 있어야 합니다.';
 
   @override
   String get newTabSerial => '시리얼 포트';
@@ -910,8 +890,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get serialEcho => '로컬 에코';
 
   @override
-  String get serialEchoTooltip =>
-      'LineSender로 보낸 내용을 터미널 화면에도 그대로 보여 줍니다. 장치가 입력을 되돌려 주지 않을 때 켭니다.';
+  String get serialEchoTooltip => 'LineSender로 보낸 내용을 터미널 화면에도 그대로 보여 줍니다. 장치가 입력을 되돌려 주지 않을 때 켭니다.';
 
   @override
   String serialBytes(int count) {
@@ -922,8 +901,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get serialHexEmpty => '아직 받은 데이터가 없습니다.';
 
   @override
-  String get helpSerialBar =>
-      '시리얼 도구 줄\n터미널 보기와 Hex 보기를 바꾸고, 로컬 에코를 켜고 끕니다. Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트를 보여 줍니다.';
+  String get helpSerialBar => '시리얼 도구 줄\n터미널 보기와 Hex 보기를 바꾸고, 로컬 에코를 켜고 끕니다. Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트를 보여 줍니다.';
 
   @override
   String get tabNewSsh => '새 SSH 연결';

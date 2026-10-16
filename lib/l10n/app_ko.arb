@@ -175,6 +175,8 @@
   },
   "connectClosed": "서버가 연결을 닫았습니다.",
   "connectReconnect": "다시 연결",
+  "connectLostTitle": "연결이 끊겼습니다",
+  "connectLostBody": "다시 연결할까요, 아니면 이 탭을 닫을까요? 스크립트 입력 칸에 저장하지 않은 내용이 있으면 이어서 저장할지 버릴지 묻습니다.",
   "connectDisconnect": "연결 끊기",
   "sftpTitle": "파일",
   "sftpUp": "상위 폴더",

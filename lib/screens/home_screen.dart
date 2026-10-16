@@ -202,11 +202,63 @@ class _SessionViewState extends State<_SessionView> {
   // 입력 칸(이름 줄 36 + 글 영역이 최소한 보일 높이) + 하단 줄(44) + 여백. LineSender의 버튼 줄이 가려지지 않게 그 아래로는 못 줄인다.
   static const _minSender = 144.0;
 
+  final _senderKey = GlobalKey<LineSenderState>();
+
+  /// 서버가 연결을 닫은 뒤 사용자가 "다시 연결"이나 "탭 닫기"를 골랐다 (접속 화면으로 넘어가도 된다).
+  bool _lostHandled = false;
+  bool _lostDialogOpen = false;
+
+  /// 서버가 연결을 닫았을 때: 화면(LineSender 포함)을 그대로 두고 물어본다. 접속 화면으로 바로 넘어가면
+  /// LineSender의 내용이 사라지기 때문이다. 저장하지 않은 내용이 있으면 고른 뒤에 저장/버리기를 묻는다.
+  Future<void> _askAfterLost() async {
+    _lostDialogOpen = true;
+    final l10n = AppLocalizations.of(context);
+    final controller = context.read<SessionsController>();
+    while (mounted) {
+      final close = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.connectLostTitle),
+          content: Text(l10n.connectLostBody),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.tabClose)),
+            FilledButton(
+              autofocus: true,
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.connectReconnect),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      // 저장하지 않은 내용을 저장하거나 버리기로 했을 때만 진행한다. 취소하면 다시 묻는다.
+      if (!(await (_senderKey.currentState?.confirmDiscard() ?? Future.value(true)))) continue;
+      if (!mounted) return;
+      _lostDialogOpen = false;
+      if (close ?? false) {
+        controller.closeAt(controller.sessions.indexOf(widget.session));
+      } else {
+        setState(() => _lostHandled = true);
+      }
+      return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = context.watch<TerminalSession>();
+    if (session.connected) _lostHandled = false;
+    final ssh = widget.session;
+    final lost = ssh is SshSessionProvider && ssh.status == SessionStatus.error && ssh.error == SessionError.closed;
+    final askLost = lost && !_lostHandled;
+    if (askLost && !_lostDialogOpen && session.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_lostDialogOpen) _askAfterLost();
+      });
+    }
     // SSH 탭은 연결하기 전에 접속 폼을 보여 준다.
-    if (!session.connected && widget.session is SshSessionProvider) {
+    if (!session.connected && ssh is SshSessionProvider && !askLost) {
       return const ConnectPanel();
     }
     // 시리얼 탭은 연결하기 전에 포트와 통신 설정을 고르는 폼을 보여 준다.
@@ -253,7 +305,7 @@ class _SessionViewState extends State<_SessionView> {
                           color: scheme.outlineVariant,
                           onDrag: (d) => setState(() => _senderHeight = (sender - d).clamp(_minSender, maxSender)),
                         ),
-                        SizedBox(height: sender, child: const LineSender().help(HelpId.sender)),
+                        SizedBox(height: sender, child: LineSender(key: _senderKey).help(HelpId.sender)),
                       ],
                     ),
                   ),
