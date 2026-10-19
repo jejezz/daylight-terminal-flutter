@@ -722,6 +722,15 @@ class TerminalViewState extends State<TerminalView> {
     final lockModes = hardwareKeyboard.lockModesEnabled;
     final altGraphActive = _isAltGraphActive(event, hardwareKeyboard);
 
+    final edit = _customTextEditKey.currentState;
+    // macOS 한글 입력 중의 Backspace는 IME가 앞 글자를 고치도록 넘긴다(고친 결과는 입력으로 들어와 반영된다).
+    if (edit != null &&
+        edit.imeBufferActive &&
+        terminalKey == TerminalKey.backspace &&
+        eventType != TerminalKeyEventType.release) {
+      edit.backspaceFallback();
+      return KeyEventResult.ignored;
+    }
     final handled = widget.terminal.keyInput(
       terminalKey,
       ctrl: hardwareKeyboard.isControlPressed && !altGraphActive,
@@ -738,6 +747,7 @@ class TerminalViewState extends State<TerminalView> {
     );
 
     if (handled) {
+      if (eventType != TerminalKeyEventType.release) edit?.resetImeBuffer();
       _scrollToBottom();
       return KeyEventResult.handled;
     }
@@ -748,6 +758,7 @@ class TerminalViewState extends State<TerminalView> {
           eventType,
           altGraphActive: altGraphActive,
         )) {
+      edit?.resetImeBuffer();
       widget.terminal.textInput(fallbackText);
       _scrollToBottom();
       return KeyEventResult.handled;
@@ -776,6 +787,12 @@ class TerminalViewState extends State<TerminalView> {
       if (altPrefixesEscape) return false;
     }
     if (HardwareKeyboard.instance.isMetaPressed) {
+      return false;
+    }
+    // macOS는 한글 같은 조합 글자도 키 이벤트의 character로 자모 하나씩 온다(ㅎ, ㅏ, ㄴ...). 여기서 바로 보내 버리면 IME가
+    // 키를 받지 못해 조합이 안 된다. 비 ASCII는 처리하지 않고 넘겨서 IME(CustomTextEdit)가 만든 글을 받게 한다.
+    if (defaultTargetPlatform == TargetPlatform.macOS &&
+        text.runes.any((r) => r > 0x7f)) {
       return false;
     }
     return true;
