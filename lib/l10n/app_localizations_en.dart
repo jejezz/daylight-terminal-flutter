@@ -463,6 +463,38 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get paneMoveCopyTitle => 'Move or copy';
+
+  @override
+  String paneMoveCopyOne(String name, String dest) {
+    return 'Move or copy \'$name\' into the \'$dest\' folder.';
+  }
+
+  @override
+  String paneMoveCopyMany(int count, String dest) {
+    return 'Move or copy $count items into the \'$dest\' folder.';
+  }
+
+  @override
+  String get paneMove => 'Move';
+
+  @override
+  String get paneCopy => 'Copy';
+
+  @override
+  String get paneCopyNoteRemote =>
+      'The app does not copy inside the server. It puts a copy command on the clipboard; paste it into the terminal or the input box to run it.';
+
+  @override
+  String get paneCopyCommandCopied =>
+      'Copy command placed on the clipboard. Paste it into the terminal or the input box to run it.';
+
+  @override
+  String paneMoveSkipped(String names) {
+    return 'Not moved because the name already exists: $names';
+  }
+
+  @override
   String sftpDeleteConfirmMany(int count) {
     return 'Delete the $count selected items? This cannot be undone.';
   }
@@ -757,11 +789,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpExplorerSftp =>
-      'Server explorer (SFTP)\nFolders and files on the server. Drop files here to upload, drag them out to download.';
+      'Server explorer (SFTP)\nFolders and files on the server. Drop onto a folder to be asked whether to move (Ctrl: copy command to clipboard). Drop files here to upload, drag them out to download.';
 
   @override
   String get helpExplorerLocal =>
-      'Folder view\nFolders and files on this PC. Deleting is permanent; there is no Recycle Bin.';
+      'Folder view\nFolders and files on this PC. Drop onto a folder to be asked whether to move (Ctrl: copy). Deleting is permanent; there is no Recycle Bin.';
 
   @override
   String get helpTerminal =>

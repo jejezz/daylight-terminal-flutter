@@ -104,6 +104,43 @@ class _SftpPaneState extends State<SftpPane> {
 
   // ───────────────────────── 동작 ─────────────────────────
 
+  /// 같은 탐색기에서 끌던 항목들을 놓을 수 있는 폴더인가.
+  bool _canDropInto(SshSessionProvider session, FileItem target) {
+    final drag = _drag;
+    if (drag == null || drag.from != session.remotePath) return false;
+    return SshSessionProvider.transferable(drag.from, drag.items, session.pathOf(target)).isNotEmpty;
+  }
+
+  /// 끌던 항목들을 서버의 폴더 [target]에 놓았다. 이동은 서버 안에서 바로 하고, 복사는 SFTP에 없어서 `cp` 명령을
+  /// 클립보드에 복사해 주고 사용자가 터미널이나 입력 칸에 붙여 넣어 실행하게 한다.
+  Future<void> _dropInto(SshSessionProvider session, FileItem target) async {
+    final drag = _drag;
+    if (drag == null) return;
+    final dest = session.pathOf(target);
+    final items = SshSessionProvider.transferable(drag.from, drag.items, dest);
+    if (items.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
+    final choice = await askMoveOrCopy(
+      context,
+      count: items.length,
+      firstName: items.first.name,
+      destName: target.name,
+      copyFirst: copyModifierPressed(),
+      note: l10n.paneCopyNoteRemote,
+    );
+    if (choice == null || !mounted) return;
+    if (choice == MoveOrCopy.copy) {
+      await Clipboard.setData(ClipboardData(text: SshSessionProvider.copyCommand(drag.from, items, dest)));
+      _toast(l10n.paneCopyCommandCopied);
+      return;
+    }
+    await _guard(() async {
+      final result = await session.moveInto(drag.from, items, dest);
+      if (result.skipped.isNotEmpty) _toast(l10n.paneMoveSkipped(result.skipped.join(', ')));
+    });
+    if (mounted) setState(_selection.clear);
+  }
+
   Future<void> _onDrop(List<String> paths) async {
     // 이 앱에서 끌어낸 것이 다시 들어온 경우는 무시한다.
     if (FlutterDragOut.inProgress) return;
@@ -216,21 +253,25 @@ class _SftpPaneState extends State<SftpPane> {
 
   void _onDragStarted(SshSessionProvider session, FileItem e) {
     final items = _targetsFor(session, e);
-    final drag = _Drag(items, session.remotePath);
-    _drag = drag;
-    // 파일 프로미스가 없는 플랫폼(Windows/Linux)은 로컬 사본이 있어야 끌어낼 수 있다.
-    // 끌기가 창을 벗어나기 전에 미리 받기 시작해서 기다리는 시간을 줄인다.
-    if (!FlutterDragOut.supportsPromises) {
-      drag.staged = session
-          .stageForDrag(items, from: drag.from)
-          .then<List<String>?>(
-            (paths) => paths,
-            onError: (Object err) {
-              _toast('$err');
-              return null;
-            },
-          );
-    }
+    _drag = _Drag(items, session.remotePath);
+  }
+
+  /// 파일 프로미스가 없는 플랫폼(Windows/Linux)은 로컬 사본이 있어야 끌어낼 수 있다. 같은 탐색기 안에서 옮기려고 끄는 것까지
+  /// 내려받지 않도록, 끌기가 이 탐색기 밖으로 나갈 때 받기 시작한다 (창을 벗어나기 전에 미리 받아서 기다림을 줄인다).
+  Future<List<String>?> _stage(SshSessionProvider session, _Drag drag) => drag.staged ??= session
+      .stageForDrag(drag.items, from: drag.from)
+      .then<List<String>?>(
+        (paths) => paths,
+        onError: (Object err) {
+          _toast('$err');
+          return null;
+        },
+      );
+
+  bool _insidePane(Offset globalPosition) {
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.attached) return true;
+    return (box.localToGlobal(Offset.zero) & box.size).contains(globalPosition);
   }
 
   void _onDragUpdate(SshSessionProvider session, DragUpdateDetails details) {
@@ -258,15 +299,18 @@ class _SftpPaneState extends State<SftpPane> {
           ];
         },
       );
-    } else if (!(Offset.zero & viewSize).contains(details.globalPosition)) {
-      drag.handedOver = true;
-      unawaited(_handOver(drag));
+    } else {
+      if (!_insidePane(details.globalPosition)) unawaited(_stage(session, drag));
+      if (!(Offset.zero & viewSize).contains(details.globalPosition)) {
+        drag.handedOver = true;
+        unawaited(_handOver(session, drag));
+      }
     }
   }
 
   /// 로컬 사본이 다 받아지면 OS 끌기 세션을 시작한다. 그 사이 마우스를 놓았다면 아무것도 하지 않는다.
-  Future<void> _handOver(_Drag drag) async {
-    final paths = await drag.staged;
+  Future<void> _handOver(SshSessionProvider session, _Drag drag) async {
+    final paths = await _stage(session, drag);
     if (paths == null || !identical(_drag, drag)) return;
     await FlutterDragOut.start(paths);
   }
@@ -346,6 +390,8 @@ class _SftpPaneState extends State<SftpPane> {
                             onDragStarted: () => _onDragStarted(session, e),
                             onDragUpdate: (d) => _onDragUpdate(session, d),
                             onDragEnd: () => _drag = null,
+                            canDropInto: () => _canDropInto(session, e),
+                            onDropInto: () => _dropInto(session, e),
                             dragData: PaneDragData(
                               (accept) async {
                                 final items = [

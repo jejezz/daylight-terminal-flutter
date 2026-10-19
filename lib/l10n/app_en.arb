@@ -316,6 +316,41 @@
       }
     }
   },
+  "paneMoveCopyTitle": "Move or copy",
+  "paneMoveCopyOne": "Move or copy '{name}' into the '{dest}' folder.",
+  "@paneMoveCopyOne": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "paneMoveCopyMany": "Move or copy {count} items into the '{dest}' folder.",
+  "@paneMoveCopyMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "paneMove": "Move",
+  "paneCopy": "Copy",
+  "paneCopyNoteRemote": "The app does not copy inside the server. It puts a copy command on the clipboard; paste it into the terminal or the input box to run it.",
+  "paneCopyCommandCopied": "Copy command placed on the clipboard. Paste it into the terminal or the input box to run it.",
+  "paneMoveSkipped": "Not moved because the name already exists: {names}",
+  "@paneMoveSkipped": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "sftpDeleteConfirmMany": "Delete the {count} selected items? This cannot be undone.",
   "@sftpDeleteConfirmMany": {
     "placeholders": {
@@ -519,8 +554,8 @@
   "helpLanguage": "Language\nChange the display language of the app.",
   "helpAbout": "About\nShows the version, licenses and update check.",
   "helpTabs": "Tabs\nOpen SSH connections and local shells as tabs. Each tab has its own terminal and explorer.",
-  "helpExplorerSftp": "Server explorer (SFTP)\nFolders and files on the server. Drop files here to upload, drag them out to download.",
-  "helpExplorerLocal": "Folder view\nFolders and files on this PC. Deleting is permanent; there is no Recycle Bin.",
+  "helpExplorerSftp": "Server explorer (SFTP)\nFolders and files on the server. Drop onto a folder to be asked whether to move (Ctrl: copy command to clipboard). Drop files here to upload, drag them out to download.",
+  "helpExplorerLocal": "Folder view\nFolders and files on this PC. Drop onto a folder to be asked whether to move (Ctrl: copy). Deleting is permanent; there is no Recycle Bin.",
   "helpTerminal": "Terminal\nThe shell screen. Drag to select and copy text; type directly with the keyboard.",
   "helpSender": "Line sender\nWrite a multi-line script or load one from a file and send it to the terminal line by line. Open and save are here too.",
   "helpStatusBar": "Status bar\nShows the state of this tab, such as the connection and current path.",

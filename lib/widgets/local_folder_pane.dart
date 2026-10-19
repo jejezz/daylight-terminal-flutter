@@ -5,6 +5,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_drag_out/flutter_drag_out.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../help/help_mode.dart';
@@ -60,6 +61,34 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     final session = context.read<LocalFolderSession>();
     if (!await confirmOverwriteDialog(context, session.copyConflicts(paths))) return;
     await _guard(() => session.copyIn(paths));
+  }
+
+  /// 같은 탐색기에서 끌던 항목들을 놓을 수 있는 폴더인가 (자기 자신·자기 안쪽·이미 그 안에 있는 것만 끌었다면 안 된다).
+  bool _canDropInto(LocalFolderSession session, FileItem target) {
+    final sources = _dragPaths;
+    if (sources == null) return false;
+    return LocalFolderSession.transferable(sources, session.pathOf(target)).isNotEmpty;
+  }
+
+  /// 끌던 항목들을 폴더 [target]에 놓았다: 이동/복사를 묻고 실행한다. 끌기가 끝나면 [_dragPaths]가 비워지므로 먼저 챙겨 둔다.
+  Future<void> _dropInto(LocalFolderSession session, FileItem target) async {
+    final sources = _dragPaths;
+    if (sources == null) return;
+    final dest = session.pathOf(target);
+    final items = LocalFolderSession.transferable(sources, dest);
+    if (items.isEmpty) return;
+    final copyFirst = copyModifierPressed();
+    final choice = await askMoveOrCopy(
+      context,
+      count: items.length,
+      firstName: p.basename(items.first),
+      destName: target.name,
+      copyFirst: copyFirst,
+    );
+    if (choice == null || !mounted) return;
+    if (!await confirmOverwriteDialog(context, session.copyConflicts(items, to: dest))) return;
+    await _guard(() => choice == MoveOrCopy.copy ? session.copyIn(items, to: dest) : session.moveIn(items, to: dest));
+    if (mounted && choice == MoveOrCopy.move) setState(_selection.clear);
   }
 
   Future<String?> _askText(String title, String label, {String initial = ''}) {
@@ -253,6 +282,8 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                             onDragStarted: () => _onDragStarted(session, e),
                             onDragUpdate: _onDragUpdate,
                             onDragEnd: () => _dragPaths = null,
+                            canDropInto: () => _canDropInto(session, e),
+                            onDropInto: () => _dropInto(session, e),
                             dragData: PaneDragData(
                               (accept) async => [
                                 for (final i in _targetsFor(session, e))

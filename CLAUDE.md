@@ -38,6 +38,17 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   임시 사본은 다음 끌기를 시작할 때와 앱을 끝낼 때 지운다.
 - 이 앱에서 끌어낸 것이 다시 들어오면 업로드하지 않는다 (`FlutterDragOut.inProgress`).
 
+## 탐색기 안에서 끌어놓기 (이동/복사)
+
+- 탐색기(로컬 폴더 뷰, SFTP) 행을 같은 탐색기의 **폴더 행** 위로 끌어다 놓으면 이동/복사를 **늘 먼저 묻는다**
+  (`askMoveOrCopy`, `file_pane_parts.dart`). 놓는 순간 Ctrl(macOS는 ⌥)이 눌려 있으면 복사가, 아니면 이동이 기본 버튼이다.
+  폴더 행만 받고(`FileRow.canDropInto`/`onDropInto`), 자기 자신·자기 안쪽·이미 그 안에 있는 것뿐이면 묻지 않는다 (`transferable`).
+- 로컬: 이동은 이름 바꾸기(다른 드라이브면 복사 뒤 삭제), 같은 이름은 덮어쓰기 확인 창을 거친다 (`moveIn`/`copyIn(to:)`).
+- SFTP: 이동은 서버 안 `rename`이고 같은 이름은 덮어쓰지 않고 건너뛴다. **복사는 앱이 하지 않는다** — SFTP에 복사가 없어서
+  `cp -a -- 'src' 'dest/'` 명령을 클립보드에 복사해 주고 사용자가 터미널이나 LineSender에 붙여 넣어 실행한다 (`copyCommand`).
+- Windows/Linux에서 SFTP 끌기는 이 탐색기 **밖으로 나갈 때** 로컬 사본을 받기 시작한다 (같은 탐색기 안에서 옮기려는 끌기가
+  내려받지 않게). 창을 벗어난 순간 아직 시작 전이면 그때 시작한다 (`_stage`).
+
 ## 주소록과 터미널 글꼴
 
 - 주소록(`address_book_dialog.dart`, Ctrl+Shift+O / ⌘O): 이름·그룹·메모를 붙여 저장하고, 검색·편집·삭제·연결.

@@ -461,6 +461,36 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get paneMoveCopyTitle => '이동 또는 복사';
+
+  @override
+  String paneMoveCopyOne(String name, String dest) {
+    return '\'$name\'을(를) \'$dest\' 폴더로 옮기거나 복사합니다.';
+  }
+
+  @override
+  String paneMoveCopyMany(int count, String dest) {
+    return '$count개 항목을 \'$dest\' 폴더로 옮기거나 복사합니다.';
+  }
+
+  @override
+  String get paneMove => '이동';
+
+  @override
+  String get paneCopy => '복사';
+
+  @override
+  String get paneCopyNoteRemote => '서버 안 복사는 앱이 실행하지 않습니다. 복사 명령을 클립보드에 복사해 드리니, 터미널이나 입력 칸에 붙여 넣어 실행하세요.';
+
+  @override
+  String get paneCopyCommandCopied => '복사 명령을 클립보드에 복사했습니다. 터미널이나 입력 칸에 붙여 넣어 실행하세요.';
+
+  @override
+  String paneMoveSkipped(String names) {
+    return '같은 이름이 이미 있어 옮기지 않았습니다: $names';
+  }
+
+  @override
   String sftpDeleteConfirmMany(int count) {
     return '선택한 $count개 항목을 삭제할까요? 되돌릴 수 없습니다.';
   }
@@ -747,10 +777,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get helpTabs => '탭\nSSH 연결과 로컬 셸을 탭으로 나눠 엽니다. 탭마다 터미널과 탐색기가 따로 있습니다.';
 
   @override
-  String get helpExplorerSftp => '서버 탐색기 (SFTP)\n서버의 폴더와 파일입니다. 파일을 끌어넣으면 업로드, 밖으로 끌어내면 다운로드됩니다.';
+  String get helpExplorerSftp =>
+      '서버 탐색기 (SFTP)\n서버의 폴더와 파일입니다. 폴더 위로 끌어다 놓으면 이동(Ctrl: 복사 명령 복사)을 묻습니다. 파일을 끌어넣으면 업로드, 밖으로 끌어내면 다운로드됩니다.';
 
   @override
-  String get helpExplorerLocal => '폴더 보기\n이 PC의 폴더와 파일입니다. 삭제는 휴지통 없이 영구 삭제됩니다.';
+  String get helpExplorerLocal => '폴더 보기\n이 PC의 폴더와 파일입니다. 폴더 위로 끌어다 놓으면 이동(Ctrl: 복사)을 묻습니다. 삭제는 휴지통 없이 영구 삭제됩니다.';
 
   @override
   String get helpTerminal => '터미널\n셸 화면입니다. 글을 드래그해 복사하고, 키보드로 바로 입력합니다.';
