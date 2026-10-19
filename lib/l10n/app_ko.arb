@@ -427,6 +427,34 @@
       }
     }
   },
+  "localFolderErrorDenied": "이 폴더를 볼 권한이 없습니다: {path}",
+  "@localFolderErrorDenied": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "localFolderErrorFailed": "폴더를 열지 못했습니다: {path}",
+  "@localFolderErrorFailed": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "localFolderErrorMoved": "대신 열 수 있는 폴더로 이동했습니다: {path}",
+  "@localFolderErrorMoved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "localFolderErrorHint": "다른 계정으로 실행했거나 보안 프로그램(제어된 폴더 액세스 등)이 막고 있는지 확인하세요.",
+  "localFolderErrorDismiss": "오류 닫기",
+  "localFolderErrorOpenExplorer": "탐색기에서 보기",
+  "localFolderErrorRetry": "다시 시도",
   "shellExited": "셸이 종료되었습니다 (종료 코드 {code})",
   "@shellExited": {
     "placeholders": {

@@ -90,10 +90,7 @@ abstract class AppLocalizations {
   ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[
-    Locale('en'),
-    Locale('ko')
-  ];
+  static const List<Locale> supportedLocales = <Locale>[Locale('en'), Locale('ko')];
 
   /// No description provided for @aboutTooltip.
   ///
@@ -1151,6 +1148,48 @@ abstract class AppLocalizations {
   /// **'폴더를 읽지 못했습니다: {detail}'**
   String localFolderError(String detail);
 
+  /// No description provided for @localFolderErrorDenied.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 폴더를 볼 권한이 없습니다: {path}'**
+  String localFolderErrorDenied(String path);
+
+  /// No description provided for @localFolderErrorFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더를 열지 못했습니다: {path}'**
+  String localFolderErrorFailed(String path);
+
+  /// No description provided for @localFolderErrorMoved.
+  ///
+  /// In ko, this message translates to:
+  /// **'대신 열 수 있는 폴더로 이동했습니다: {path}'**
+  String localFolderErrorMoved(String path);
+
+  /// No description provided for @localFolderErrorHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 계정으로 실행했거나 보안 프로그램(제어된 폴더 액세스 등)이 막고 있는지 확인하세요.'**
+  String get localFolderErrorHint;
+
+  /// No description provided for @localFolderErrorDismiss.
+  ///
+  /// In ko, this message translates to:
+  /// **'오류 닫기'**
+  String get localFolderErrorDismiss;
+
+  /// No description provided for @localFolderErrorOpenExplorer.
+  ///
+  /// In ko, this message translates to:
+  /// **'탐색기에서 보기'**
+  String get localFolderErrorOpenExplorer;
+
+  /// No description provided for @localFolderErrorRetry.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 시도'**
+  String get localFolderErrorRetry;
+
   /// No description provided for @shellExited.
   ///
   /// In ko, this message translates to:
@@ -1732,18 +1771,18 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en': return AppLocalizationsEn();
-    case 'ko': return AppLocalizationsKo();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'ko':
+      return AppLocalizationsKo();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
+    'that was used.',
   );
 }

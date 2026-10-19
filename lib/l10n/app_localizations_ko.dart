@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -55,7 +56,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aboutTagline => 'SSH 터미널과 SFTP 파일 탐색기를 한 창에서';
 
   @override
-  String get aboutDescription => '하나의 SSH 연결로 터미널과 SFTP 파일 탐색기를 나란히 보여 줍니다. 파일을 끌어다 놓아 올리고 내려받고, 원할 때만 터미널과 탐색기의 경로를 맞춥니다.';
+  String get aboutDescription =>
+      '하나의 SSH 연결로 터미널과 SFTP 파일 탐색기를 나란히 보여 줍니다. 파일을 끌어다 놓아 올리고 내려받고, 원할 때만 터미널과 탐색기의 경로를 맞춥니다.';
 
   @override
   String get homeEmptyTitle => '서버에 연결해 시작하세요';
@@ -606,6 +608,33 @@ class AppLocalizationsKo extends AppLocalizations {
   String localFolderError(String detail) {
     return '폴더를 읽지 못했습니다: $detail';
   }
+
+  @override
+  String localFolderErrorDenied(String path) {
+    return '이 폴더를 볼 권한이 없습니다: $path';
+  }
+
+  @override
+  String localFolderErrorFailed(String path) {
+    return '폴더를 열지 못했습니다: $path';
+  }
+
+  @override
+  String localFolderErrorMoved(String path) {
+    return '대신 열 수 있는 폴더로 이동했습니다: $path';
+  }
+
+  @override
+  String get localFolderErrorHint => '다른 계정으로 실행했거나 보안 프로그램(제어된 폴더 액세스 등)이 막고 있는지 확인하세요.';
+
+  @override
+  String get localFolderErrorDismiss => '오류 닫기';
+
+  @override
+  String get localFolderErrorOpenExplorer => '탐색기에서 보기';
+
+  @override
+  String get localFolderErrorRetry => '다시 시도';
 
   @override
   String shellExited(int code) {

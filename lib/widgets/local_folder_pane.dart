@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
@@ -229,18 +230,9 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                   ),
                 ],
               ),
+              if (session.folderError != null) _FolderErrorBanner(session: session),
               Expanded(
-                child: session.folderError != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: SelectableText(
-                            l10n.localFolderError(session.folderError!),
-                            style: TextStyle(color: scheme.error),
-                          ),
-                        ),
-                      )
-                    : session.entries.isEmpty && !session.folderLoading
+                child: session.entries.isEmpty && !session.folderLoading
                     ? Center(
                         child: Text(l10n.sftpEmpty, style: TextStyle(color: scheme.onSurfaceVariant)),
                       )
@@ -292,6 +284,85 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 폴더를 못 읽었을 때 목록 위에 붙는 안내. 오류는 목록과 따로 보이고, 대신 열어 준 폴더가 있으면 함께 알려 준다.
+class _FolderErrorBanner extends StatelessWidget {
+  const _FolderErrorBanner({required this.session});
+
+  final LocalFolderSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final path = session.folderErrorPath ?? '';
+    final style = TextStyle(color: scheme.onErrorContainer, fontSize: 12);
+    final moved = session.folderErrorMovedTo;
+    final buttonStyle = OutlinedButton.styleFrom(
+      visualDensity: VisualDensity.compact,
+      foregroundColor: scheme.onErrorContainer,
+      side: BorderSide(color: scheme.onErrorContainer),
+    );
+    return Container(
+      color: scheme.errorContainer,
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.xs, AppSpacing.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_outline, size: 18, color: scheme.onErrorContainer),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: SelectionArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    session.folderErrorDenied ? l10n.localFolderErrorDenied(path) : l10n.localFolderErrorFailed(path),
+                    style: style.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  if (moved != null) Text(l10n.localFolderErrorMoved(moved), style: style),
+                  if (session.folderErrorDenied) Text(l10n.localFolderErrorHint, style: style),
+                  Text(l10n.localFolderError(session.folderError!), style: style.copyWith(fontSize: 11)),
+                  if (session.folderErrorDenied && path.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.xs),
+                      child: Wrap(
+                        spacing: AppSpacing.sm,
+                        children: [
+                          // 탐색기가 권한 상승(UAC) 창을 띄워 준다. 앱을 관리자로 올리지 않고 그 폴더만 허용받는다.
+                          if (Platform.isWindows)
+                            OutlinedButton.icon(
+                              style: buttonStyle,
+                              icon: const Icon(Icons.open_in_new, size: 14),
+                              label: Text(l10n.localFolderErrorOpenExplorer),
+                              onPressed: () => unawaited(FileRevealService.open(path).catchError((_) {})),
+                            ),
+                          OutlinedButton.icon(
+                            style: buttonStyle,
+                            icon: const Icon(Icons.refresh, size: 14),
+                            label: Text(l10n.localFolderErrorRetry),
+                            onPressed: () => unawaited(session.loadFolder(path)),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            iconSize: 16,
+            visualDensity: VisualDensity.compact,
+            tooltip: l10n.localFolderErrorDismiss,
+            color: scheme.onErrorContainer,
+            icon: const Icon(Icons.close),
+            onPressed: session.dismissFolderError,
+          ),
         ],
       ),
     );
