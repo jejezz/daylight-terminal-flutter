@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -55,7 +56,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutTagline => 'SSH terminal and SFTP file explorer in one window';
 
   @override
-  String get aboutDescription => 'Shows a terminal and an SFTP file explorer side by side over a single SSH connection. Drag and drop to upload and download, and sync the terminal and explorer paths only when you ask.';
+  String get aboutDescription =>
+      'Shows a terminal and an SFTP file explorer side by side over a single SSH connection. Drag and drop to upload and download, and sync the terminal and explorer paths only when you ask.';
 
   @override
   String get homeEmptyTitle => 'Connect to a server to get started';
@@ -113,7 +115,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateErrorNetwork => 'Couldn\'t reach the update server. Check your internet connection and try again.';
 
   @override
-  String get updateErrorChecksum => 'The downloaded file didn\'t pass verification, so it was not installed. Please try again later.';
+  String get updateErrorChecksum =>
+      'The downloaded file didn\'t pass verification, so it was not installed. Please try again later.';
 
   @override
   String get updateErrorInstall => 'Couldn\'t start the installation.';
@@ -254,7 +257,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectLostTitle => 'Connection lost';
 
   @override
-  String get connectLostBody => 'Reconnect, or close this tab? If the script box has unsaved changes, you will be asked whether to save or discard them next.';
+  String get connectLostBody =>
+      'Reconnect, or close this tab? If the script box has unsaved changes, you will be asked whether to save or discard them next.';
 
   @override
   String get connectDisconnect => 'Disconnect';
@@ -542,7 +546,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreTabs => 'Reopen the tabs you had open last time';
 
   @override
-  String get restoreTabsHelp => 'Local shells open in the same folder. SSH and serial tabs only get their connection details filled in — passwords are never saved and nothing connects by itself.';
+  String get restoreTabsHelp =>
+      'Local shells open in the same folder. SSH and serial tabs only get their connection details filled in — passwords are never saved and nothing connects by itself.';
 
   @override
   String get refreshLocal => 'Refresh local folders automatically';
@@ -554,7 +559,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refreshSsh => 'Refresh SFTP folders automatically';
 
   @override
-  String get refreshSshHelp => 'Re-reads the server folder of the visible tab every 5 seconds. Off by default because it uses the network.';
+  String get refreshSshHelp =>
+      'Re-reads the server folder of the visible tab every 5 seconds. Off by default because it uses the network.';
 
   @override
   String get terminalFontFamily => 'Font';
@@ -571,7 +577,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalFontCustomName => 'Installed font name';
 
   @override
-  String get terminalFontCustomHelp => 'Type the exact name of a font installed on this computer. If it is not found, the bundled font is used instead.';
+  String get terminalFontCustomHelp =>
+      'Type the exact name of a font installed on this computer. If it is not found, the bundled font is used instead.';
 
   @override
   String get terminalFontSize => 'Size';
@@ -583,7 +590,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalScrollback => 'Scrollback lines';
 
   @override
-  String get terminalScrollbackHelp => 'The most past output lines you can scroll back to. Applies to tabs opened from now on; open tabs keep their current setting.';
+  String get terminalScrollbackHelp =>
+      'The most past output lines you can scroll back to. Applies to tabs opened from now on; open tabs keep their current setting.';
 
   @override
   String terminalScrollbackLines(int count) {
@@ -606,6 +614,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String localFolderError(String detail) {
     return 'Could not read the folder: $detail';
   }
+
+  @override
+  String localFolderErrorDenied(String path) {
+    return 'No permission to view this folder: $path';
+  }
+
+  @override
+  String localFolderErrorFailed(String path) {
+    return 'Could not open the folder: $path';
+  }
+
+  @override
+  String localFolderErrorMoved(String path) {
+    return 'Moved to a folder that can be opened instead: $path';
+  }
+
+  @override
+  String get localFolderErrorHint =>
+      'Check whether the app is running as a different account or a security program (such as Controlled Folder Access) is blocking it.';
+
+  @override
+  String get localFolderErrorDismiss => 'Dismiss error';
+
+  @override
+  String get localFolderErrorOpenExplorer => 'View in Explorer';
+
+  @override
+  String get localFolderErrorRetry => 'Retry';
 
   @override
   String shellExited(int code) {
@@ -697,7 +733,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpButton => 'Help mode\nHover over a control to see what it does. Click anywhere or press Esc to leave.';
 
   @override
-  String get helpDisconnect => 'Disconnect / end shell\nCloses the SSH connection or ends the local shell. The tab stays open.';
+  String get helpDisconnect =>
+      'Disconnect / end shell\nCloses the SSH connection or ends the local shell. The tab stays open.';
 
   @override
   String get helpAddressBook => 'Address book\nSearch, edit and connect to saved SSH hosts. Passwords are never saved.';
@@ -715,19 +752,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpAbout => 'About\nShows the version, licenses and update check.';
 
   @override
-  String get helpTabs => 'Tabs\nOpen SSH connections and local shells as tabs. Each tab has its own terminal and explorer.';
+  String get helpTabs =>
+      'Tabs\nOpen SSH connections and local shells as tabs. Each tab has its own terminal and explorer.';
 
   @override
-  String get helpExplorerSftp => 'Server explorer (SFTP)\nFolders and files on the server. Drop files here to upload, drag them out to download.';
+  String get helpExplorerSftp =>
+      'Server explorer (SFTP)\nFolders and files on the server. Drop files here to upload, drag them out to download.';
 
   @override
-  String get helpExplorerLocal => 'Folder view\nFolders and files on this PC. Deleting is permanent; there is no Recycle Bin.';
+  String get helpExplorerLocal =>
+      'Folder view\nFolders and files on this PC. Deleting is permanent; there is no Recycle Bin.';
 
   @override
-  String get helpTerminal => 'Terminal\nThe shell screen. Drag to select and copy text; type directly with the keyboard.';
+  String get helpTerminal =>
+      'Terminal\nThe shell screen. Drag to select and copy text; type directly with the keyboard.';
 
   @override
-  String get helpSender => 'Line sender\nWrite a multi-line script or load one from a file and send it to the terminal line by line. Open and save are here too.';
+  String get helpSender =>
+      'Line sender\nWrite a multi-line script or load one from a file and send it to the terminal line by line. Open and save are here too.';
 
   @override
   String get helpStatusBar => 'Status bar\nShows the state of this tab, such as the connection and current path.';
@@ -757,19 +799,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpPaneNewFolder => 'New folder\nCreate a new folder in the current folder.';
 
   @override
-  String get helpPanePathSync => 'Sync paths\nMove the terminal to this folder, or the explorer to the terminal\'s current path. Nothing moves automatically.';
+  String get helpPanePathSync =>
+      'Sync paths\nMove the terminal to this folder, or the explorer to the terminal\'s current path. Nothing moves automatically.';
 
   @override
   String get helpPanePlaces => 'Places\nJump to common folders such as Home and Desktop.';
 
   @override
-  String get helpFileRow => 'File / folder\nDouble-click to open; Ctrl/⌘ and Shift select several. Right-click for a menu; drag to move, upload or download.';
+  String get helpFileRow =>
+      'File / folder\nDouble-click to open; Ctrl/⌘ and Shift select several. Right-click for a menu; drag to move, upload or download.';
 
   @override
   String get helpTransferClear => 'Clear finished\nRemove completed transfers from the list.';
 
   @override
-  String get helpStatusStripAnsi => 'Strip escapes\nWhen on, recordings, copies and saves keep only plain text without colors and control codes.';
+  String get helpStatusStripAnsi =>
+      'Strip escapes\nWhen on, recordings, copies and saves keep only plain text without colors and control codes.';
 
   @override
   String get helpStatusCopyBuffer => 'Copy terminal contents\nCopy everything in the terminal buffer to the clipboard.';
@@ -778,7 +823,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpStatusSaveBuffer => 'Save terminal contents\nSave everything in the terminal buffer to a file.';
 
   @override
-  String get helpStatusRecord => 'Start / stop recording\nRecord the terminal output to a file. Available while connected.';
+  String get helpStatusRecord =>
+      'Start / stop recording\nRecord the terminal output to a file. Available while connected.';
 
   @override
   String get helpStatusRevealLog => 'Show log file\nOpen the folder containing the recording in your file manager.';
@@ -796,10 +842,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpSenderSaveAs => 'Save as\nSave the box contents to a different file.';
 
   @override
-  String get helpSenderLineEnding => 'Line ending\nChoose the character appended after each line sent (CR, LF, CRLF or none). Usually CR for SSH.';
+  String get helpSenderLineEnding =>
+      'Line ending\nChoose the character appended after each line sent (CR, LF, CRLF or none). Usually CR for SSH.';
 
   @override
-  String get helpSenderSend => 'Send\nSend the line at the cursor to the terminal and move to the next. Requires a connection.';
+  String get helpSenderSend =>
+      'Send\nSend the line at the cursor to the terminal and move to the next. Requires a connection.';
 
   @override
   String get newTabSerial => 'Serial port';
@@ -890,7 +938,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serialEcho => 'Local echo';
 
   @override
-  String get serialEchoTooltip => 'Also show what you send from the line sender on the terminal screen. Turn on when the device does not echo input back.';
+  String get serialEchoTooltip =>
+      'Also show what you send from the line sender on the terminal screen. Turn on when the device does not echo input back.';
 
   @override
   String serialBytes(int count) {
@@ -901,7 +950,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serialHexEmpty => 'No data received yet.';
 
   @override
-  String get helpSerialBar => 'Serial toolbar\nSwitch between the terminal view and the hex view, and turn local echo on or off. The hex view shows the bytes actually received, not the terminal screen.';
+  String get helpSerialBar =>
+      'Serial toolbar\nSwitch between the terminal view and the hex view, and turn local echo on or off. The hex view shows the bytes actually received, not the terminal screen.';
 
   @override
   String get tabNewSsh => 'New SSH connection';

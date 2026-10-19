@@ -410,6 +410,34 @@
       }
     }
   },
+  "localFolderErrorDenied": "No permission to view this folder: {path}",
+  "@localFolderErrorDenied": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "localFolderErrorFailed": "Could not open the folder: {path}",
+  "@localFolderErrorFailed": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "localFolderErrorMoved": "Moved to a folder that can be opened instead: {path}",
+  "@localFolderErrorMoved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "localFolderErrorHint": "Check whether the app is running as a different account or a security program (such as Controlled Folder Access) is blocking it.",
+  "localFolderErrorDismiss": "Dismiss error",
+  "localFolderErrorOpenExplorer": "View in Explorer",
+  "localFolderErrorRetry": "Retry",
   "shellExited": "The shell has exited (exit code {code})",
   "@shellExited": {
     "placeholders": {

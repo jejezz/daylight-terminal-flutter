@@ -286,9 +286,39 @@ void main() {
       expect(s.folderError, isNotNull);
       expect(s.folderPath, tmp.path);
       expect(s.entries.map((e) => e.name), ['keep.txt']);
+      expect(s.folderErrorPath, p.join(tmp.path, 'does-not-exist'));
+      expect(s.folderErrorMovedTo, isNull);
       await s.refreshFolder();
       expect(s.folderError, isNull);
+      expect(s.folderErrorPath, isNull);
       s.dispose();
+    });
+
+    test('a folder that disappears moves the view to a readable parent and keeps the error', () async {
+      final gone = Directory(p.join(tmp.path, 'gone'))..createSync();
+      final s = make();
+      await s.start();
+      await s.loadFolder(gone.path);
+      expect(s.folderPath, gone.path);
+      gone.deleteSync();
+      await s.refreshFolder();
+      expect(s.folderError, isNotNull);
+      expect(s.folderErrorPath, gone.path);
+      expect(s.folderErrorMovedTo, tmp.path);
+      expect(s.folderPath, tmp.path);
+      s.dismissFolderError();
+      expect(s.folderError, isNull);
+      s.dispose();
+    });
+
+    test('an unreadable start folder falls back to a readable folder instead of an empty view', () async {
+      final missing = p.join(tmp.path, 'a', 'b');
+      final fresh = LocalShellSession(_bash, ptyFactory: ptys.call, startDirectory: missing);
+      await fresh.loadFolder(missing);
+      expect(fresh.folderError, isNotNull);
+      expect(fresh.folderErrorMovedTo, tmp.path);
+      expect(fresh.folderPath, tmp.path);
+      fresh.dispose();
     });
 
     test('new folder, rename (file and folder), delete (file and non-empty folder)', () async {

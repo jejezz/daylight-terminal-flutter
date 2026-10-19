@@ -18,11 +18,70 @@ abstract class LocalFolderSession extends TerminalSession {
   bool _folderLoading = false;
   bool _autoRefreshing = false;
   String? _folderError;
+  String? _folderErrorPath;
+  bool _folderErrorDenied = false;
+  String? _folderErrorMovedTo;
+  bool _hasListing = false;
 
   String get folderPath => _folderPath;
   List<FileItem> get entries => _entries;
   bool get folderLoading => _folderLoading;
   String? get folderError => _folderError;
+
+  /// 읽지 못한 폴더 경로. 오류가 없으면 null.
+  String? get folderErrorPath => _folderErrorPath;
+
+  /// 권한이 없어서 읽지 못했는가 (Windows errno 5, POSIX EACCES/EPERM).
+  bool get folderErrorDenied => _folderErrorDenied;
+
+  /// 읽지 못해서 대신 열어 준 폴더. 이동하지 않았으면 null.
+  String? get folderErrorMovedTo => _folderErrorMovedTo;
+
+  /// 오류 안내를 닫는다 (목록은 그대로).
+  void dismissFolderError() {
+    if (_folderError == null) return;
+    _clearFolderError();
+    notify();
+  }
+
+  void _clearFolderError() {
+    _folderError = null;
+    _folderErrorPath = null;
+    _folderErrorDenied = false;
+    _folderErrorMovedTo = null;
+  }
+
+  static bool _isAccessDenied(Object e) {
+    if (e is PathAccessException) return true;
+    if (e is! FileSystemException) return false;
+    final code = e.osError?.errorCode;
+    return Platform.isWindows ? code == 5 : (code == 13 || code == 1);
+  }
+
+  /// [failed]를 못 읽을 때 대신 열 폴더를 찾는다: 위쪽 폴더를 차례로, 홈, 현재 폴더, 임시 폴더 순.
+  /// 읽을 수 있는 첫 폴더를 목록으로 싣고 그 경로를 돌려준다. 하나도 없으면 null.
+  Future<String?> _loadFallback(String failed) async {
+    final candidates = <String>[];
+    for (var cur = failed;;) {
+      final parent = p.dirname(cur);
+      if (parent == cur) break;
+      candidates.add(parent);
+      cur = parent;
+    }
+    candidates.addAll([homeDirectory(), Directory.current.path, Directory.systemTemp.path]);
+    final tried = <String>{p.normalize(failed)};
+    for (final c in candidates) {
+      if (!tried.add(p.normalize(c))) continue;
+      try {
+        final dir = Directory(c);
+        _entries = await _list(dir);
+        _folderPath = dir.absolute.path;
+        _hasListing = true;
+        return _folderPath;
+      } catch (_) {}
+    }
+    return null;
+  }
 
   /// 위로 갈 수 있는 폴더인가 (드라이브나 `/` 같은 뿌리는 못 간다).
   bool get canGoUp => p.dirname(_folderPath) != _folderPath;
@@ -79,6 +138,8 @@ abstract class LocalFolderSession extends TerminalSession {
     }
   }
 
+  /// [path]를 연다. 못 읽으면 오류를 따로 기록한다. 이미 보고 있는 목록이 있고 다른 폴더로 가려던 것이면 그 자리에
+  /// 남고, 보던 폴더 자체가 못 읽게 됐거나 보여 줄 목록이 아직 없으면 읽을 수 있는 폴더로 옮겨 간다.
   Future<void> loadFolder(String path) async {
     final done = DiagLog.begin('local.loadFolder');
     _folderLoading = true;
@@ -87,9 +148,19 @@ abstract class LocalFolderSession extends TerminalSession {
       final dir = Directory(path);
       _entries = await _list(dir);
       _folderPath = dir.absolute.path;
-      _folderError = null;
+      _hasListing = true;
+      _clearFolderError();
     } catch (e) {
       _folderError = e.toString();
+      _folderErrorPath = Directory(path).absolute.path;
+      _folderErrorDenied = _isAccessDenied(e);
+      _folderErrorMovedTo = null;
+      final stayHere = _hasListing && p.normalize(_folderErrorPath!) != p.normalize(_folderPath);
+      if (!stayHere) {
+        try {
+          _folderErrorMovedTo = await _loadFallback(_folderErrorPath!);
+        } catch (_) {}
+      }
     } finally {
       _folderLoading = false;
       notify();
