@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:daylight_terminal/models/file_item.dart';
 import 'package:daylight_terminal/models/line_ending.dart';
 import 'package:daylight_terminal/models/local_shell.dart';
+import 'package:daylight_terminal/state/local_folder_session.dart';
 import 'package:daylight_terminal/state/local_shell_session.dart';
 import 'package:daylight_terminal/state/terminal_session.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -52,6 +53,66 @@ void main() {
       expect(s.entries.map((e) => e.name), containsAll(['a.txt', 'dir', 'here.txt']));
       // 이제 같은 이름이 있으니 충돌로 잡힌다.
       expect(s.copyConflicts(sources), ['a.txt', 'dir']);
+      s.dispose();
+    });
+  });
+
+  group('items dragged onto a folder inside the view', () {
+    test('transferable skips items already there, the folder itself and its own subfolders', () {
+      final dest = p.join(tmp.path, 'dest');
+      final sub = p.join(tmp.path, 'dest', 'sub');
+      expect(LocalFolderSession.transferable([p.join(tmp.path, 'a.txt')], dest), [p.join(tmp.path, 'a.txt')]);
+      expect(LocalFolderSession.transferable([p.join(dest, 'x.txt')], dest), isEmpty); // 이미 그 안에 있다
+      expect(LocalFolderSession.transferable([dest], dest), isEmpty); // 자기 자신
+      expect(LocalFolderSession.transferable([dest], sub), isEmpty); // 자기 안쪽으로
+      expect(LocalFolderSession.transferable([p.join(tmp.path, 'dest2')], dest), hasLength(1)); // 이름만 비슷한 다른 폴더
+    });
+
+    test('move renames files and folders into the target folder and removes them from here', () async {
+      File(p.join(tmp.path, 'a.txt')).writeAsStringSync('A');
+      Directory(p.join(tmp.path, 'dir', 'inner')).createSync(recursive: true);
+      File(p.join(tmp.path, 'dir', 'inner', 'b.txt')).writeAsStringSync('B');
+      Directory(p.join(tmp.path, 'dest')).createSync();
+      final s = make();
+      await s.loadFolder(tmp.path);
+
+      final sources = [p.join(tmp.path, 'a.txt'), p.join(tmp.path, 'dir')];
+      final dest = p.join(tmp.path, 'dest');
+      expect(s.copyConflicts(sources, to: dest), isEmpty);
+      expect(await s.moveIn(sources, to: dest), ['a.txt', 'dir']);
+      expect(File(p.join(dest, 'a.txt')).readAsStringSync(), 'A');
+      expect(File(p.join(dest, 'dir', 'inner', 'b.txt')).readAsStringSync(), 'B');
+      expect(File(p.join(tmp.path, 'a.txt')).existsSync(), isFalse);
+      expect(Directory(p.join(tmp.path, 'dir')).existsSync(), isFalse);
+      expect(s.entries.map((e) => e.name), ['dest']);
+      s.dispose();
+    });
+
+    test('copy leaves the originals, and an existing name is a conflict that is overwritten', () async {
+      File(p.join(tmp.path, 'a.txt')).writeAsStringSync('new');
+      Directory(p.join(tmp.path, 'dest')).createSync();
+      File(p.join(tmp.path, 'dest', 'a.txt')).writeAsStringSync('old');
+      final s = make();
+      await s.loadFolder(tmp.path);
+
+      final sources = [p.join(tmp.path, 'a.txt')];
+      final dest = p.join(tmp.path, 'dest');
+      expect(s.copyConflicts(sources, to: dest), ['a.txt']);
+      await s.copyIn(sources, to: dest);
+      expect(File(p.join(dest, 'a.txt')).readAsStringSync(), 'new');
+      expect(File(p.join(tmp.path, 'a.txt')).existsSync(), isTrue);
+      s.dispose();
+    });
+
+    test('move onto an existing name overwrites it and still removes the original', () async {
+      File(p.join(tmp.path, 'a.txt')).writeAsStringSync('new');
+      Directory(p.join(tmp.path, 'dest')).createSync();
+      File(p.join(tmp.path, 'dest', 'a.txt')).writeAsStringSync('old');
+      final s = make();
+      await s.loadFolder(tmp.path);
+      await s.moveIn([p.join(tmp.path, 'a.txt')], to: p.join(tmp.path, 'dest'));
+      expect(File(p.join(tmp.path, 'dest', 'a.txt')).readAsStringSync(), 'new');
+      expect(File(p.join(tmp.path, 'a.txt')).existsSync(), isFalse);
       s.dispose();
     });
   });

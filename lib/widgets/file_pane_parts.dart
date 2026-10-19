@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/gestures.dart' show kPrimaryButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -142,6 +143,8 @@ class FileRow extends StatelessWidget {
     required this.onDragUpdate,
     required this.onDragEnd,
     required this.dragData,
+    this.canDropInto,
+    this.onDropInto,
   });
 
   final FileItem entry;
@@ -155,15 +158,29 @@ class FileRow extends StatelessWidget {
   final VoidCallback onDragEnd;
   final PaneDragData dragData;
 
+  /// 이 행(폴더)에 같은 탐색기의 다른 항목을 끌어다 놓을 수 있는가. 폴더 행만 받는다.
+  final bool Function()? canDropInto;
+
+  /// 이 행(폴더)에 항목을 놓았을 때 (이동/복사를 묻고 실행하는 쪽이 정한다).
+  final VoidCallback? onDropInto;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final small = Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
-    final content = Container(
+    final droppable = entry.isDirectory && canDropInto != null && onDropInto != null;
+    Widget buildContent({required bool hovered}) => Container(
       height: 30,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      color: selected ? scheme.primary.withValues(alpha: 0.14) : null,
+      decoration: BoxDecoration(
+        color: hovered
+            ? scheme.primary.withValues(alpha: 0.22)
+            : selected
+            ? scheme.primary.withValues(alpha: 0.14)
+            : null,
+        border: hovered ? Border.all(color: scheme.primary) : null,
+      ),
       child: Row(
         children: [
           Icon(
@@ -183,49 +200,56 @@ class FileRow extends StatelessWidget {
         ],
       ),
     );
+    Widget row({required bool hovered}) => Draggable<PaneDragData>(
+      data: dragData,
+      maxSimultaneousDrags: 1,
+      feedback: Builder(
+        builder: (context) {
+          final n = dragCount();
+          return Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(AppRadius.button),
+            color: scheme.surfaceContainerHighest,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+              child: Text(n == 1 ? entry.name : l10n.sftpDragCount(n), style: const TextStyle(fontSize: 13)),
+            ),
+          );
+        },
+      ),
+      onDragStarted: onDragStarted,
+      onDragUpdate: onDragUpdate,
+      onDragEnd: (_) => onDragEnd(),
+      // InkWell에 onTap과 onDoubleTap을 같이 걸면 Flutter가 더블클릭인지 기다리느라 onTap을 ~300ms 미룬다.
+      // 선택은 누르는 순간 하고(Listener), 더블클릭 열기만 InkWell에 맡긴다.
+      child: Listener(
+        onPointerDown: (e) {
+          if (e.buttons == kPrimaryButton) {
+            DiagLog.log('ui.row select');
+            onTap();
+          }
+        },
+        child: InkWell(
+          splashFactory: NoSplash.splashFactory,
+          onDoubleTap: () {
+            DiagLog.log('ui.row open');
+            onOpen();
+          },
+          child: buildContent(hovered: hovered),
+        ),
+      ),
+    );
     return HelpTarget(
       id: HelpId.fileRow,
       child: GestureDetector(
         onSecondaryTapDown: (d) => onMenu(d.globalPosition),
-        child: Draggable<PaneDragData>(
-          data: dragData,
-          maxSimultaneousDrags: 1,
-          feedback: Builder(
-            builder: (context) {
-              final n = dragCount();
-              return Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(AppRadius.button),
-                color: scheme.surfaceContainerHighest,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-                  child: Text(n == 1 ? entry.name : l10n.sftpDragCount(n), style: const TextStyle(fontSize: 13)),
-                ),
-              );
-            },
-          ),
-          onDragStarted: onDragStarted,
-          onDragUpdate: onDragUpdate,
-          onDragEnd: (_) => onDragEnd(),
-          // InkWell에 onTap과 onDoubleTap을 같이 걸면 Flutter가 더블클릭인지 기다리느라 onTap을 ~300ms 미룬다.
-          // 선택은 누르는 순간 하고(Listener), 더블클릭 열기만 InkWell에 맡긴다.
-          child: Listener(
-            onPointerDown: (e) {
-              if (e.buttons == kPrimaryButton) {
-                DiagLog.log('ui.row select');
-                onTap();
-              }
-            },
-            child: InkWell(
-              splashFactory: NoSplash.splashFactory,
-              onDoubleTap: () {
-                DiagLog.log('ui.row open');
-                onOpen();
-              },
-              child: content,
-            ),
-          ),
-        ),
+        child: droppable
+            ? DragTarget<PaneDragData>(
+                onWillAcceptWithDetails: (_) => canDropInto!(),
+                onAcceptWithDetails: (_) => onDropInto!(),
+                builder: (context, candidates, _) => row(hovered: candidates.isNotEmpty),
+              )
+            : row(hovered: false),
       ),
     );
   }
@@ -256,6 +280,58 @@ String formatFileSize(int bytes) {
     i++;
   }
   return i == 0 ? '$bytes B' : '${value.toStringAsFixed(value < 10 ? 1 : 0)} ${units[i]}';
+}
+
+/// 탐색기 안에서 끌어다 놓은 항목을 어떻게 할지.
+enum MoveOrCopy { move, copy }
+
+/// 놓는 순간 복사 키(Ctrl, macOS는 ⌥)가 눌려 있는가. 묻는 창의 기본 버튼만 정한다.
+bool copyModifierPressed() {
+  final keyboard = HardwareKeyboard.instance;
+  return keyboard.isControlPressed || (defaultTargetPlatform == TargetPlatform.macOS && keyboard.isAltPressed);
+}
+
+/// 끌어다 놓은 [count]개 항목(하나면 [firstName])을 [destName] 폴더로 옮길지 복사할지 묻는다. 실수로 끌었을 때를
+/// 위해 늘 묻고, [copyFirst]면 복사 쪽이 기본 선택이다. 취소하면 null. [note]는 본문 아래의 안내.
+Future<MoveOrCopy?> askMoveOrCopy(
+  BuildContext context, {
+  required int count,
+  required String firstName,
+  required String destName,
+  required bool copyFirst,
+  String? note,
+}) {
+  final l10n = AppLocalizations.of(context);
+  final preferred = copyFirst ? MoveOrCopy.copy : MoveOrCopy.move;
+  final other = copyFirst ? MoveOrCopy.move : MoveOrCopy.copy;
+  String label(MoveOrCopy c) => c == MoveOrCopy.copy ? l10n.paneCopy : l10n.paneMove;
+  return showDialog<MoveOrCopy>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.paneMoveCopyTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(count == 1 ? l10n.paneMoveCopyOne(firstName, destName) : l10n.paneMoveCopyMany(count, destName)),
+          if (note != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              note,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonCancel)),
+        OutlinedButton(onPressed: () => Navigator.pop(context, other), child: Text(label(other))),
+        FilledButton(autofocus: true, onPressed: () => Navigator.pop(context, preferred), child: Text(label(preferred))),
+      ],
+    ),
+  );
 }
 
 /// 같은 이름을 덮어써도 되는지 묻는다. 겹치는 이름이 없으면 묻지 않고 true.

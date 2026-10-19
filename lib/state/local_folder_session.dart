@@ -216,31 +216,84 @@ abstract class LocalFolderSession extends TerminalSession {
     await refreshFolder();
   }
 
-  /// [sources](이 PC의 파일/폴더)를 지금 폴더로 복사한다. 같은 폴더에 있는 것은 건너뛰고, 같은 이름은 덮어쓴다 —
-  /// 호출하는 쪽이 [copyConflicts]로 먼저 확인받는다. 복사한 최상위 이름을 돌려준다.
-  Future<List<String>> copyIn(List<String> sources) async {
+  /// [sources](이 PC의 파일/폴더)를 [to](기본: 지금 폴더)로 복사한다. 이미 [to] 안에 있는 것과 자기 자신(안)으로 가는 것은
+  /// 건너뛰고, 같은 이름은 덮어쓴다 — 호출하는 쪽이 [copyConflicts]로 먼저 확인받는다. 복사한 최상위 이름을 돌려준다.
+  Future<List<String>> copyIn(List<String> sources, {String? to}) async {
+    final dest = to ?? _folderPath;
     final done = <String>[];
-    for (final src in _copyable(sources)) {
-      await _copyEntity(src, p.join(_folderPath, p.basename(src)));
+    for (final src in transferable(sources, dest)) {
+      await _copyEntity(src, p.join(dest, p.basename(src)));
       done.add(p.basename(src));
     }
     await refreshFolder();
     return done;
   }
 
-  /// [sources] 중 지금 폴더에 같은 이름이 이미 있는 것.
-  List<String> copyConflicts(List<String> sources) => [
-    for (final src in _copyable(sources))
-      if (FileSystemEntity.typeSync(p.join(_folderPath, p.basename(src)), followLinks: false) !=
-          FileSystemEntityType.notFound)
-        p.basename(src),
+  /// [sources](이 PC의 파일/폴더)를 [to](기본: 지금 폴더)로 옮긴다. 같은 이름이 없으면 이름만 바꿔 옮기고(드라이브가
+  /// 다르면 복사한 뒤 지운다), 있으면 복사처럼 덮어쓴 뒤 원본을 지운다 — 호출하는 쪽이 [copyConflicts]로 먼저 확인받는다.
+  /// 옮긴 최상위 이름을 돌려준다.
+  Future<List<String>> moveIn(List<String> sources, {String? to}) async {
+    final dest = to ?? _folderPath;
+    final done = <String>[];
+    for (final src in transferable(sources, dest)) {
+      final target = p.join(dest, p.basename(src));
+      if (FileSystemEntity.typeSync(target, followLinks: false) == FileSystemEntityType.notFound) {
+        try {
+          await _renameEntity(src, target);
+        } on FileSystemException {
+          // 다른 드라이브(볼륨)로는 이름만 바꿔서 옮길 수 없다.
+          await _copyEntity(src, target);
+          await _deleteEntity(src);
+        }
+      } else {
+        await _copyEntity(src, target);
+        await _deleteEntity(src);
+      }
+      done.add(p.basename(src));
+    }
+    await refreshFolder();
+    return done;
+  }
+
+  /// [sources] 중 [to](기본: 지금 폴더)에 같은 이름이 이미 있는 것.
+  List<String> copyConflicts(List<String> sources, {String? to}) {
+    final dest = to ?? _folderPath;
+    return [
+      for (final src in transferable(sources, dest))
+        if (FileSystemEntity.typeSync(p.join(dest, p.basename(src)), followLinks: false) !=
+            FileSystemEntityType.notFound)
+          p.basename(src),
+    ];
+  }
+
+  /// [sources] 중 [dest] 폴더로 옮기거나 복사할 수 있는 것. 이미 [dest] 안에 있는 것, 자기 자신, 자기 안쪽 폴더로 가는
+  /// 것은 뺀다 (폴더를 자기 하위 폴더로 옮길 수 없다).
+  static List<String> transferable(List<String> sources, String dest) => [
+    for (final s in sources)
+      if (!p.equals(p.dirname(s), dest) && !p.equals(s, dest) && !p.isWithin(s, dest)) s,
   ];
 
-  // 이미 이 폴더 안에 있는 것은 복사할 필요가 없다.
-  List<String> _copyable(List<String> sources) => [
-    for (final s in sources)
-      if (!p.equals(p.dirname(s), _folderPath)) s,
-  ];
+  Future<void> _renameEntity(String from, String to) async {
+    switch (FileSystemEntity.typeSync(from, followLinks: false)) {
+      case FileSystemEntityType.directory:
+        await Directory(from).rename(to);
+      case FileSystemEntityType.link:
+        await Link(from).rename(to);
+      default:
+        await File(from).rename(to);
+    }
+  }
+
+  Future<void> _deleteEntity(String path) async {
+    switch (FileSystemEntity.typeSync(path, followLinks: false)) {
+      case FileSystemEntityType.link:
+        await Link(path).delete();
+      case FileSystemEntityType.directory:
+        await Directory(path).delete(recursive: true);
+      default:
+        await File(path).delete();
+    }
+  }
 
   Future<void> _copyEntity(String from, String to) async {
     if (await FileSystemEntity.isDirectory(from)) {
@@ -255,16 +308,7 @@ abstract class LocalFolderSession extends TerminalSession {
 
   /// 영구 삭제다 (휴지통을 거치지 않는다). 링크는 가리키는 대상이 아니라 링크만 지운다.
   Future<void> delete(FileItem e) async {
-    final path = pathOf(e);
-    final type = await FileSystemEntity.type(path, followLinks: false);
-    switch (type) {
-      case FileSystemEntityType.link:
-        await Link(path).delete();
-      case FileSystemEntityType.directory:
-        await Directory(path).delete(recursive: true);
-      default:
-        await File(path).delete();
-    }
+    await _deleteEntity(pathOf(e));
     await refreshFolder();
   }
 

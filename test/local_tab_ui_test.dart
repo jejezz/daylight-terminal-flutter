@@ -18,6 +18,7 @@ import 'package:daylight_terminal/widgets/status_bar.dart';
 import 'package:daylight_terminal/widgets/terminal_pane.dart';
 import 'package:flutter/gestures.dart' show kSecondaryButton;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -385,5 +386,69 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
     expect(local.folderPath, endsWith('projects'));
+  });
+
+  /// [from] 행을 [to] 행 위로 끌어다 놓는다.
+  Future<void> dragRowOnto(WidgetTester tester, String from, String to) async {
+    final gesture = await tester.startGesture(tester.getCenter(find.text(from)));
+    await gesture.moveBy(const Offset(0, 6));
+    await tester.pump();
+    await gesture.moveTo(tester.getCenter(find.text(to)));
+    await tester.pump();
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
+
+  Future<void> settleIo(WidgetTester tester) async {
+    for (var k = 0; k < 4; k++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+  }
+
+  testWidgets('dropping a file on a folder asks first; Move moves it, Cancel does nothing', (tester) async {
+    final sessions = await pumpApp(tester);
+    await openFromPlusMenu(tester, 'bash');
+    await pointAtTmp(tester, sessions);
+    final sep = Platform.pathSeparator;
+
+    await dragRowOnto(tester, 'notes.txt', 'projects');
+    expect(find.text('이동 또는 복사'), findsOneWidget);
+    expect(find.textContaining("'notes.txt'"), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await settleIo(tester);
+    expect(File('${tmp.path}${sep}notes.txt').existsSync(), isTrue); // 묻기만 하고 아무 일도 없다
+
+    await dragRowOnto(tester, 'notes.txt', 'projects');
+    await tester.tap(find.widgetWithText(FilledButton, '이동')); // Ctrl 없이 놓으면 이동이 기본
+    await settleIo(tester);
+    expect(File('${tmp.path}${sep}notes.txt').existsSync(), isFalse);
+    expect(File('${tmp.path}${sep}projects${sep}notes.txt').readAsStringSync(), 'hi');
+  });
+
+  testWidgets('with Ctrl held, Copy is the default and leaves the original', (tester) async {
+    final sessions = await pumpApp(tester);
+    await openFromPlusMenu(tester, 'bash');
+    await pointAtTmp(tester, sessions);
+    final sep = Platform.pathSeparator;
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await dragRowOnto(tester, 'notes.txt', 'projects');
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.tap(find.widgetWithText(FilledButton, '복사'));
+    await settleIo(tester);
+    expect(File('${tmp.path}${sep}notes.txt').existsSync(), isTrue);
+    expect(File('${tmp.path}${sep}projects${sep}notes.txt').existsSync(), isTrue);
+  });
+
+  testWidgets('dropping a folder on itself or a file on a file does not even ask', (tester) async {
+    final sessions = await pumpApp(tester);
+    await openFromPlusMenu(tester, 'bash');
+    await pointAtTmp(tester, sessions);
+
+    await dragRowOnto(tester, 'projects', 'projects');
+    expect(find.text('이동 또는 복사'), findsNothing);
+    await dragRowOnto(tester, 'projects', 'notes.txt');
+    expect(find.text('이동 또는 복사'), findsNothing);
   });
 }

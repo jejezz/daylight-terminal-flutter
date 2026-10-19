@@ -261,6 +261,48 @@ class SshSessionProvider extends TerminalSession {
     await refresh();
   }
 
+  /// [items](서버의 [fromDir] 안 항목) 중 [destDir]로 옮기거나 복사할 수 있는 것. 이미 [destDir] 안에 있는 것, 자기
+  /// 자신, 자기 안쪽 폴더로 가는 것은 뺀다.
+  static List<FileItem> transferable(String fromDir, List<FileItem> items, String destDir) => [
+    for (final e in items)
+      if (!p.posix.equals(fromDir, destDir) &&
+          !p.posix.equals(p.posix.join(fromDir, e.name), destDir) &&
+          !p.posix.isWithin(p.posix.join(fromDir, e.name), destDir))
+        e,
+  ];
+
+  /// [items](서버의 [fromDir] 안 항목)를 서버의 [destDir]로 옮긴다 (SFTP 이름 바꾸기라 서버 안에서 바로 끝난다).
+  /// [destDir]에 같은 이름이 이미 있는 것은 덮어쓰지 않고 건너뛴다. 옮긴 이름과 건너뛴 이름을 돌려준다.
+  Future<({List<String> moved, List<String> skipped})> moveInto(
+    String fromDir,
+    List<FileItem> items,
+    String destDir,
+  ) async {
+    final sftp = _sftp;
+    final moved = <String>[];
+    final skipped = <String>[];
+    if (sftp == null) return (moved: moved, skipped: skipped);
+    final existing = {for (final n in await sftp.listdir(destDir)) n.filename};
+    for (final e in transferable(fromDir, items, destDir)) {
+      if (existing.contains(e.name)) {
+        skipped.add(e.name);
+        continue;
+      }
+      await sftp.rename(_join(fromDir, e.name), _join(destDir, e.name));
+      moved.add(e.name);
+    }
+    await refresh();
+    return (moved: moved, skipped: skipped);
+  }
+
+  /// 서버 안에서 [items]를 [destDir]로 복사하는 셸 명령. SFTP에는 복사가 없어서, 앱이 실행하지 않고 사용자가 터미널이나
+  /// 입력 칸에 붙여 넣어 실행하게 한다.
+  static String copyCommand(String fromDir, List<FileItem> items, String destDir) {
+    final sources = [for (final e in items) ShellCommands.posixQuote(p.posix.join(fromDir, e.name))];
+    final dest = destDir.endsWith('/') ? destDir : '$destDir/';
+    return 'cp -a -- ${sources.join(' ')} ${ShellCommands.posixQuote(dest)}';
+  }
+
   Future<void> delete(FileItem e) async {
     final sftp = _sftp;
     if (sftp == null) return;

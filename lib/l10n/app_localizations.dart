@@ -884,6 +884,54 @@ abstract class AppLocalizations {
   /// **'{count}개 항목'**
   String sftpDragCount(int count);
 
+  /// No description provided for @paneMoveCopyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이동 또는 복사'**
+  String get paneMoveCopyTitle;
+
+  /// No description provided for @paneMoveCopyOne.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{name}\'을(를) \'{dest}\' 폴더로 옮기거나 복사합니다.'**
+  String paneMoveCopyOne(String name, String dest);
+
+  /// No description provided for @paneMoveCopyMany.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 항목을 \'{dest}\' 폴더로 옮기거나 복사합니다.'**
+  String paneMoveCopyMany(int count, String dest);
+
+  /// No description provided for @paneMove.
+  ///
+  /// In ko, this message translates to:
+  /// **'이동'**
+  String get paneMove;
+
+  /// No description provided for @paneCopy.
+  ///
+  /// In ko, this message translates to:
+  /// **'복사'**
+  String get paneCopy;
+
+  /// No description provided for @paneCopyNoteRemote.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버 안 복사는 앱이 실행하지 않습니다. 복사 명령을 클립보드에 복사해 드리니, 터미널이나 입력 칸에 붙여 넣어 실행하세요.'**
+  String get paneCopyNoteRemote;
+
+  /// No description provided for @paneCopyCommandCopied.
+  ///
+  /// In ko, this message translates to:
+  /// **'복사 명령을 클립보드에 복사했습니다. 터미널이나 입력 칸에 붙여 넣어 실행하세요.'**
+  String get paneCopyCommandCopied;
+
+  /// No description provided for @paneMoveSkipped.
+  ///
+  /// In ko, this message translates to:
+  /// **'같은 이름이 이미 있어 옮기지 않았습니다: {names}'**
+  String paneMoveSkipped(String names);
+
   /// No description provided for @sftpDeleteConfirmMany.
   ///
   /// In ko, this message translates to:
@@ -1385,13 +1433,13 @@ abstract class AppLocalizations {
   /// No description provided for @helpExplorerSftp.
   ///
   /// In ko, this message translates to:
-  /// **'서버 탐색기 (SFTP)\n서버의 폴더와 파일입니다. 파일을 끌어넣으면 업로드, 밖으로 끌어내면 다운로드됩니다.'**
+  /// **'서버 탐색기 (SFTP)\n서버의 폴더와 파일입니다. 폴더 위로 끌어다 놓으면 이동(Ctrl: 복사 명령 복사)을 묻습니다. 파일을 끌어넣으면 업로드, 밖으로 끌어내면 다운로드됩니다.'**
   String get helpExplorerSftp;
 
   /// No description provided for @helpExplorerLocal.
   ///
   /// In ko, this message translates to:
-  /// **'폴더 보기\n이 PC의 폴더와 파일입니다. 삭제는 휴지통 없이 영구 삭제됩니다.'**
+  /// **'폴더 보기\n이 PC의 폴더와 파일입니다. 폴더 위로 끌어다 놓으면 이동(Ctrl: 복사)을 묻습니다. 삭제는 휴지통 없이 영구 삭제됩니다.'**
   String get helpExplorerLocal;
 
   /// No description provided for @helpTerminal.
