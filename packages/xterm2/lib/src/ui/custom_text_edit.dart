@@ -239,9 +239,9 @@ class CustomTextEditState extends State<CustomTextEdit> with TextInputClient {
   /// 보낸 글을 기억하며 되풀이를 막는 처리는 Windows 한글 IME 때문에 넣은 것이다.
   bool get _trackSentText => defaultTargetPlatform == TargetPlatform.windows;
 
-  /// macOS 한글 IME는 조합 중인 글을 표시(setMarkedText)하지 않고, 글자를 쓸 때마다 앞 글자를 바꿔 달라는 요청(insertText +
-  /// replacementRange: ㅎ → 하 → 한)으로 보낸다. 편집 상태를 비우면 바꿀 글이 없어서 자모가 따로따로 들어오므로, 한글이 이어지는
-  /// 동안은 글을 비우지 않고 바뀐 부분만 터미널로 보낸다(바뀌면 백스페이스 + 새 글).
+  /// macOS 한글 IME는 편집 상태가 비어 있으면 글자를 따로따로 확정해서(ㅎ, ㅏ, ㄴ) 보내고, 글이 남아 있으면 앞 글자와 이어 쓴다
+  /// (조합 표시(setMarkedText) 또는 앞 글자를 바꿔 달라는 insertText + replacementRange: ㅎ → 하 → 한). 그래서 한글이 이어지는
+  /// 동안은 편집 상태를 비우지 않고, 확정된 글 중 바뀐 부분만 터미널로 보낸다(바뀌면 백스페이스 + 새 글).
   bool get _macImeMode => defaultTargetPlatform == TargetPlatform.macOS;
 
   /// macOS: 엔진 편집 상태에 남겨 둔 글(이미 터미널로 보낸 것).
