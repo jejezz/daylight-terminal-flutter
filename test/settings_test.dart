@@ -120,14 +120,14 @@ void main() {
     expect(refresh.local, isFalse);
 
     // 목록에서 고르기
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Consolas').last);
     await tester.pumpAndSettle();
     expect(prefs.family, 'Consolas');
 
     // 직접 입력
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('직접 입력…').last);
     await tester.pumpAndSettle();
@@ -148,10 +148,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(prefs.scrollback, 50000);
 
+    // 색상 구성표
+    expect(prefs.scheme.id, 'vscode-dark');
+    await tester.ensureVisible(find.text('VS Code Dark'));
+    await tester.tap(find.text('VS Code Dark'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dracula').last);
+    await tester.pumpAndSettle();
+    expect(prefs.scheme.id, 'dracula');
+
     // 기본값으로
     await tester.tap(find.text('기본값으로'));
     await tester.pumpAndSettle();
     expect((prefs.family, prefs.size, prefs.scrollback), ('AgaveNerdFontMono', 13, 10000));
+    expect(prefs.scheme.id, 'vscode-dark');
     expect((refresh.local, refresh.ssh), (true, false));
     expect(tester.takeException(), isNull);
   });

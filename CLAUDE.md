@@ -57,6 +57,8 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   `assets/licenses/agave-nerd-font.txt`). 목록에서 고르거나 설치된 글꼴 이름을 직접 적을 수 있고, 어느 쪽이든
   fallback 맨 앞에 내장 글꼴이 있어 아이콘 글리프는 항상 나온다. 설정 키: `terminal_font_family`, `terminal_font_size`, `terminal_scrollback`(스크롤백 줄 수, 기본 10000 — xterm2는 생성 때만 정해서 새로 여는 탭부터 적용).
   (규약 fonts.md §4의 기본 고정폭 목록 대신 Nerd Font를 기본으로 쓰는 것은 사용자 요청.)
+- 터미널 색상 구성표(`terminal_schemes.dart`, 설정 창 "터미널 색상" 섹션, 키 `terminal_color_scheme`): 기본(VS Code Dark), Solarized Dark/Light, Dracula, One Dark,
+  Tokyo Night, Gruvbox Dark, Nord, Monokai, GitHub Light. 이름은 고유 이름이라 번역하지 않는다. 열린 탭에도 바로 적용된다. 모르는 id는 기본으로 돌아간다.
 
 ## 설정 창과 탐색기 자동 새로 고침
 

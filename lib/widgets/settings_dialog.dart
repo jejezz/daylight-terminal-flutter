@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:xterm2/ui.dart' show TerminalTheme;
 
 import '../l10n/app_localizations.dart';
 import '../settings/refresh_prefs.dart';
 import '../settings/restore_prefs.dart';
 import '../settings/terminal_prefs.dart';
+import '../settings/terminal_schemes.dart';
 import '../theme/app_theme.dart';
 
-/// 설정 창: 새로 고침 옵션, 시작할 때 탭 복원, 터미널 글꼴·크기·스크롤백. 바꾸는 즉시 적용되고 저장된다.
+/// 설정 창: 새로 고침 옵션, 시작할 때 탭 복원, 터미널 글꼴·크기·스크롤백·색상 구성표. 바꾸는 즉시 적용되고 저장된다.
 Future<void> showSettingsDialog(BuildContext context) =>
     showDialog<void>(context: context, builder: (_) => const _SettingsDialog());
 
@@ -152,17 +154,39 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 if (n != null) prefs.setScrollback(n);
               },
             ),
+            const SizedBox(height: AppSpacing.lg),
+            _SectionHeader(l10n.settingsSectionTerminalColors),
+            DropdownButtonFormField<String>(
+              initialValue: prefs.scheme.id,
+              decoration: InputDecoration(labelText: l10n.terminalColorScheme),
+              items: [
+                for (final s in TerminalScheme.all)
+                  DropdownMenuItem(
+                    value: s.id,
+                    child: Row(
+                      children: [
+                        _Swatches(s.theme),
+                        const SizedBox(width: AppSpacing.md),
+                        Text(s.name),
+                      ],
+                    ),
+                  ),
+              ],
+              onChanged: (id) {
+                if (id != null) prefs.setScheme(TerminalScheme.byId(id));
+              },
+            ),
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: const Color(0xFF000000),
+                color: prefs.scheme.theme.background,
                 borderRadius: BorderRadius.circular(AppRadius.button),
               ),
               child: Text(
                 _sample,
                 style: TextStyle(
-                  color: const Color(0xFFE5E5E5),
+                  color: prefs.scheme.theme.foreground,
                   fontSize: preview.fontSize,
                   height: preview.height,
                   fontFamily: preview.fontFamily,
@@ -188,6 +212,37 @@ class _SettingsDialogState extends State<_SettingsDialog> {
         ),
         FilledButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonClose)),
       ],
+    );
+  }
+}
+
+/// 구성표의 배경 위에 ANSI 8색을 늘어놓은 견본.
+class _Swatches extends StatelessWidget {
+  const _Swatches(this.theme);
+
+  final TerminalTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = [
+      theme.red,
+      theme.green,
+      theme.yellow,
+      theme.blue,
+      theme.magenta,
+      theme.cyan,
+    ];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [for (final c in colors) Container(width: 10, height: 14, color: c)],
+      ),
     );
   }
 }
