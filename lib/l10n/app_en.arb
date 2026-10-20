@@ -402,6 +402,8 @@
   "settingsTitle": "Settings",
   "settingsSectionRefresh": "Refresh",
   "settingsSectionTerminalFont": "Terminal font",
+  "settingsSectionTerminalColors": "Terminal colors",
+  "terminalColorScheme": "Color scheme",
   "settingsSectionStartup": "Startup",
   "restoreTabs": "Reopen the tabs you had open last time",
   "restoreTabsHelp": "Local shells open in the same folder. SSH and serial tabs only get their connection details filled in — passwords are never saved and nothing connects by itself.",

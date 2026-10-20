@@ -99,7 +99,7 @@ class _TerminalPaneState extends State<TerminalPane> {
           scrollController: _scroll,
           focusNode: _focusNode,
           autofocus: true,
-          theme: xterm_ui.TerminalThemes.defaultTheme,
+          theme: prefs.scheme.theme,
           textStyle: prefs.style,
           padding: const EdgeInsets.all(AppSpacing.sm),
           // 앱 전역 단축키는 xterm이 제어 문자로 보내버리기 전에 상위 CallbackShortcuts로 넘긴다.

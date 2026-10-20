@@ -3,14 +3,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xterm2/ui.dart' show TerminalStyle;
 
 import '../theme/app_theme.dart';
+import 'terminal_schemes.dart';
 
-/// 터미널 글꼴·크기·스크롤백 줄 수. 설정 키는 `terminal_font_family`, `terminal_font_size`, `terminal_scrollback`.
+/// 터미널 글꼴·크기·스크롤백 줄 수·색상 구성표. 설정 키는 `terminal_font_family`, `terminal_font_size`,
+/// `terminal_scrollback`, `terminal_color_scheme`.
 ///
 /// 기본값은 내장된 Agave Nerd Font Mono (파워라인·아이콘 글리프 포함)다. 사용자는 목록에서 고르거나
 /// 설치된 글꼴의 이름을 직접 적을 수 있다. 어느 쪽이든 fallback 목록 맨 앞에 내장 글꼴을 두어,
 /// 고른 글꼴에 없는 글리프는 내장 글꼴이, 한글은 OS 한글 글꼴이 채운다.
 class TerminalPrefs extends ChangeNotifier {
-  TerminalPrefs._(this._prefs, this._family, this._size, this._scrollback);
+  TerminalPrefs._(this._prefs, this._family, this._size, this._scrollback, this._scheme);
 
   static const bundledFamily = 'AgaveNerdFontMono';
   static const defaultSize = 13.0;
@@ -38,11 +40,13 @@ class TerminalPrefs extends ChangeNotifier {
   static const _familyKey = 'terminal_font_family';
   static const _sizeKey = 'terminal_font_size';
   static const _scrollbackKey = 'terminal_scrollback';
+  static const _schemeKey = 'terminal_color_scheme';
 
   final SharedPreferences _prefs;
   String _family;
   double _size;
   int _scrollback;
+  TerminalScheme _scheme;
 
   static Future<TerminalPrefs> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -53,12 +57,14 @@ class TerminalPrefs extends ChangeNotifier {
       family == null || family.trim().isEmpty ? bundledFamily : family.trim(),
       (size ?? defaultSize).clamp(minSize, maxSize),
       (prefs.getInt(_scrollbackKey) ?? defaultScrollback).clamp(minScrollback, maxScrollback),
+      TerminalScheme.byId(prefs.getString(_schemeKey)),
     );
   }
 
   String get family => _family;
   double get size => _size;
   int get scrollback => _scrollback;
+  TerminalScheme get scheme => _scheme;
 
   /// 목록에 있는 글꼴이면 true, 직접 적은 이름이면 false.
   bool get isPreset => presets.any((p) => p.$2 == _family);
@@ -87,14 +93,23 @@ class TerminalPrefs extends ChangeNotifier {
     await _prefs.setInt(_scrollbackKey, v);
   }
 
+  Future<void> setScheme(TerminalScheme value) async {
+    if (value.id == _scheme.id) return;
+    _scheme = value;
+    notifyListeners();
+    await _prefs.setString(_schemeKey, value.id);
+  }
+
   Future<void> reset() async {
     _family = bundledFamily;
     _size = defaultSize;
     _scrollback = defaultScrollback;
+    _scheme = TerminalScheme.byId(TerminalScheme.defaultId);
     notifyListeners();
     await _prefs.remove(_familyKey);
     await _prefs.remove(_sizeKey);
     await _prefs.remove(_scrollbackKey);
+    await _prefs.remove(_schemeKey);
   }
 
   /// xterm에 넘길 글자 스타일.
