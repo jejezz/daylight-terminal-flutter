@@ -758,6 +758,24 @@ abstract class AppLocalizations {
   /// **'실패: {error}'**
   String transferFailed(String error);
 
+  /// No description provided for @transferCancel.
+  ///
+  /// In ko, this message translates to:
+  /// **'취소'**
+  String get transferCancel;
+
+  /// No description provided for @transferCancelled.
+  ///
+  /// In ko, this message translates to:
+  /// **'취소됨'**
+  String get transferCancelled;
+
+  /// No description provided for @transferCancelling.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} 취소하는 중'**
+  String transferCancelling(String name);
+
   /// No description provided for @transferClear.
   ///
   /// In ko, this message translates to:
