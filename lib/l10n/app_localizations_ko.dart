@@ -386,6 +386,17 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get transferCancel => '취소';
+
+  @override
+  String get transferCancelled => '취소됨';
+
+  @override
+  String transferCancelling(String name) {
+    return '$name 취소하는 중';
+  }
+
+  @override
   String get transferClear => '완료된 항목 지우기';
 
   @override

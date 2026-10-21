@@ -390,6 +390,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get transferCancel => 'Cancel';
+
+  @override
+  String get transferCancelled => 'Cancelled';
+
+  @override
+  String transferCancelling(String name) {
+    return 'Cancelling $name';
+  }
+
+  @override
   String get transferClear => 'Clear finished';
 
   @override

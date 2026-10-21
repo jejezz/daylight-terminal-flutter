@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +12,7 @@ import '../models/ssh_profile.dart';
 import '../models/transfer.dart';
 import '../services/drag_staging.dart';
 import '../services/profile_store.dart';
+import '../services/sftp_upload_worker.dart';
 import '../services/shell_commands.dart';
 import '../services/ssh_connection.dart';
 import 'terminal_session.dart';
@@ -38,6 +40,11 @@ class SshSessionProvider extends TerminalSession {
   SessionError? _error;
   String? _errorDetail;
   SshProfile? _profile;
+
+  /// 업로드 워커가 두 번째 연결을 열 때 쓰려고 연결이 살아 있는 동안만 메모리에 들고 있다 (저장하지 않는다).
+  String? _password;
+  String? _keyPassphrase;
+  final Set<Isolate> _uploadWorkers = {};
 
   // SFTP 탐색기 상태
   String _remotePath = '/';
@@ -111,6 +118,8 @@ class SshSessionProvider extends TerminalSession {
   Future<void> _connect(SshProfile profile, {String? password, String? keyPassphrase}) async {
     if (status == SessionStatus.connecting || connected) return;
     _profile = profile;
+    _password = password;
+    _keyPassphrase = keyPassphrase;
     setStatus(SessionStatus.connecting);
     _error = null;
     _errorDetail = null;
@@ -161,6 +170,11 @@ class SshSessionProvider extends TerminalSession {
     _stdoutSub?.cancel();
     _stderrSub?.cancel();
     _stdoutSub = _stderrSub = null;
+    _password = _keyPassphrase = null;
+    for (final w in _uploadWorkers) {
+      w.kill(priority: Isolate.immediate);
+    }
+    _uploadWorkers.clear();
     if (conn != null) unawaited(conn.close());
     if (isLogging) unawaited(stopLogging());
     cancelPendingCwd();
@@ -339,20 +353,139 @@ class SshSessionProvider extends TerminalSession {
     final sftp = _sftp;
     if (sftp == null) return const [];
     final target = to ?? _remotePath;
-    final done = <String>[];
-    for (final path in localPaths) {
-      final t = Transfer(p.basename(path), TransferDirection.upload);
+    final transfers = [for (final path in localPaths) Transfer(p.basename(path), TransferDirection.upload)];
+    for (final t in transfers.reversed) {
+      t.onCancel = () {}; // 멈추는 방법은 올리는 쪽이 바꿔 단다
       _transfers.insert(0, t);
-      notify();
+    }
+    notify();
+    // 암호화가 메인 isolate를 붙잡아 앱이 느려지지 않게 별도 isolate의 별도 연결로 올린다.
+    // 그 연결을 못 열면(일회용 인증 등) 지금 연결로 직접 올린다.
+    final done =
+        await _uploadInWorker(localPaths, transfers, target) ?? await _uploadHere(sftp, localPaths, transfers, target);
+    if (_remotePath == target) await refresh();
+    return done;
+  }
+
+  /// 별도 isolate에서 올린다. 워커가 서버에 붙지 못했으면 아무것도 올리지 않은 채 null.
+  Future<List<String>?> _uploadInWorker(List<String> localPaths, List<Transfer> transfers, String target) async {
+    final profile = _profile;
+    if (profile == null || (profile.keyPath == null && _password == null)) return null;
+    final hostKey = store.knownHostKey(profile.host, profile.port);
+    if (hostKey == null) return null;
+
+    final events = ReceivePort();
+    final result = Completer<List<String>?>();
+    final succeeded = <String>[];
+    SendPort? commands;
+
+    void finishWith(List<String>? value) {
+      if (result.isCompleted) return;
+      for (final t in transfers) {
+        if (value != null && t.status == TransferStatus.running) t.finish('upload stopped');
+      }
+      result.complete(value);
+    }
+
+    events.listen((Object? m) {
+      if (m == null) return finishWith(commands != null ? succeeded : null); // 워커가 갑자기 끝났다
+      final [kind as String, index as int, value] = m as List;
+      switch (kind) {
+        case UploadEvent.connectFailed:
+          finishWith(null);
+        case UploadEvent.ready:
+          final port = commands = value as SendPort;
+          for (var i = 0; i < transfers.length; i++) {
+            if (transfers[i].cancelRequested) port.send(i);
+          }
+        case UploadEvent.total:
+          transfers[index].update(addTotal: value as int);
+        case UploadEvent.done:
+          transfers[index].update(setDone: value as int);
+        case UploadEvent.itemOk:
+          transfers[index].finish();
+          succeeded.add(transfers[index].name);
+        case UploadEvent.itemCancelled:
+          transfers[index].finishCancelled();
+        case UploadEvent.itemFailed:
+          transfers[index].finish(value);
+        case UploadEvent.finished:
+          finishWith(succeeded);
+      }
+    });
+
+    for (var i = 0; i < transfers.length; i++) {
+      final index = i;
+      transfers[i].onCancel = () => commands?.send(index);
+    }
+
+    Isolate? worker;
+    try {
+      worker = await Isolate.spawn(
+        sftpUploadMain,
+        UploadRequest(
+          host: profile.host,
+          port: profile.port,
+          username: profile.username,
+          keyPath: profile.keyPath,
+          password: _password,
+          keyPassphrase: _keyPassphrase,
+          hostKey: hostKey,
+          items: [for (final path in localPaths) (path, _join(target, p.basename(path)))],
+          events: events.sendPort,
+        ),
+        onExit: events.sendPort,
+      );
+      _uploadWorkers.add(worker);
+      return await result.future;
+    } catch (_) {
+      return null;
+    } finally {
+      if (worker != null) {
+        _uploadWorkers.remove(worker);
+        worker.kill();
+      }
+      events.close();
+    }
+  }
+
+  /// 지금 연결로 직접 올린다 (메인 isolate를 쓴다).
+  Future<List<String>> _uploadHere(
+    SftpClient sftp,
+    List<String> localPaths,
+    List<Transfer> transfers,
+    String target,
+  ) async {
+    final done = <String>[];
+    for (var i = 0; i < localPaths.length; i++) {
+      final path = localPaths[i];
+      final t = transfers[i];
+      final cancel = UploadCancel();
+      t.onCancel = cancel.cancel;
+      if (t.cancelRequested) cancel.cancel();
+      var latest = 0;
+      final throttle = ProgressThrottle(() => t.update(setDone: latest));
       try {
-        await _uploadPath(sftp, path, _join(target, p.basename(path)), t);
+        await uploadPath(
+          sftp,
+          path,
+          _join(target, p.basename(path)),
+          cancel: cancel,
+          onTotal: (n) => t.update(addTotal: n),
+          onProgress: (n) {
+            latest = n;
+            throttle.poke();
+          },
+        );
+        t.update(setDone: latest);
         t.finish();
         done.add(p.basename(path));
+      } on UploadCancelled {
+        t.finishCancelled();
       } catch (e) {
         t.finish(e);
       }
     }
-    if (_remotePath == target) await refresh();
     return done;
   }
 
@@ -390,34 +523,6 @@ class SshSessionProvider extends TerminalSession {
     final names = await upload(localPaths, to: dir);
     typePaths([for (final n in names) _join(dir, n)]);
     return TerminalDropResult(fallbackDir: cwd == null ? dir : null);
-  }
-
-  Future<void> _uploadPath(SftpClient sftp, String local, String remote, Transfer t) async {
-    if (await FileSystemEntity.isDirectory(local)) {
-      try {
-        await sftp.mkdir(remote);
-      } catch (_) {
-        // 이미 있는 폴더면 그 안에 이어서 올린다.
-      }
-      await for (final child in Directory(local).list(followLinks: false)) {
-        await _uploadPath(sftp, child.path, _join(remote, p.basename(child.path)), t);
-      }
-      return;
-    }
-    final file = File(local);
-    final length = await file.length();
-    t.update(addTotal: length);
-    final base = t.done;
-    final remoteFile = await sftp.open(
-      remote,
-      mode: SftpFileOpenMode.create | SftpFileOpenMode.truncate | SftpFileOpenMode.write,
-    );
-    try {
-      final stream = file.openRead().map((c) => c is Uint8List ? c : Uint8List.fromList(c));
-      await remoteFile.write(stream, onProgress: (n) => t.update(setDone: base + n)).done;
-    } finally {
-      await remoteFile.close();
-    }
   }
 
   /// [items]와 같은 이름이 [localDir]에 이미 있는지 확인한다.

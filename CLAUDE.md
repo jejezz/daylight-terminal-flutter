@@ -49,6 +49,16 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - Windows/Linux에서 SFTP 끌기는 이 탐색기 **밖으로 나갈 때** 로컬 사본을 받기 시작한다 (같은 탐색기 안에서 옮기려는 끌기가
   내려받지 않게). 창을 벗어난 순간 아직 시작 전이면 그때 시작한다 (`_stage`).
 
+## SFTP 업로드 (별도 isolate)
+
+- dartssh2의 암호화가 순수 Dart라서 메인 isolate에서 올리면 큰 파일을 올리는 동안 앱 전체(화면·키 입력)가 느려졌다.
+  그래서 `SshSessionProvider.upload`는 `sftp_upload_worker.dart`의 워커 isolate가 **같은 서버에 따로 접속해서** 올리고,
+  메인은 진행 상황 메시지만 받는다(0.1초에 한 번). 호스트 키는 메인이 이미 믿고 있는 값과 같을 때만 접속한다.
+- 두 번째 연결에 쓰려고 비밀번호·키 암호를 **연결이 살아 있는 동안 메모리에만** 들고 있다(`_password`, `_keyPassphrase`; 끊기면 지운다, 저장하지 않는다).
+- 워커가 접속하지 못하면(일회용 인증 등) 아무것도 올리기 전에 알려 오고, 그때는 지금 연결로 메인 isolate에서 올린다(`_uploadHere`, 진행 알림만 줄임).
+- 올리는 도중 전송 줄의 X 버튼으로 취소할 수 있다(`Transfer.cancel`, 워커에는 항목 번호를 보낸다). 쓰던 파일은 `writer.abort()`로 끊고 서버의 반쯤 올라간 파일은 지운다. 다운로드는 취소할 수 없다.
+- 다운로드는 아직 메인 isolate에서 한다.
+
 ## 주소록과 터미널 글꼴
 
 - 주소록(`address_book_dialog.dart`, Ctrl+Shift+O / ⌘O): 이름·그룹·메모를 붙여 저장하고, 검색·편집·삭제·연결.

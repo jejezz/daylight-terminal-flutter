@@ -245,6 +245,16 @@
       }
     }
   },
+  "transferCancel": "Cancel",
+  "transferCancelled": "Cancelled",
+  "transferCancelling": "Cancelling {name}",
+  "@transferCancelling": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "transferClear": "Clear finished",
   "senderHint": "Write several lines ahead and send them one by one with Enter (Ctrl+Enter: new line)",
   "senderLineEndingNone": "None",

@@ -262,6 +262,16 @@
       }
     }
   },
+  "transferCancel": "취소",
+  "transferCancelled": "취소됨",
+  "transferCancelling": "{name} 취소하는 중",
+  "@transferCancelling": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "transferClear": "완료된 항목 지우기",
   "senderHint": "여러 줄을 미리 써 두고 Enter로 한 줄씩 전송합니다 (Ctrl+Enter: 줄바꿈)",
   "senderLineEndingNone": "없음",

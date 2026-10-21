@@ -486,12 +486,14 @@ class _TransferTile extends StatelessWidget {
       builder: (context, _) {
         final running = transfer.status == TransferStatus.running;
         final label = switch (transfer.status) {
+          TransferStatus.running when transfer.cancelRequested => l10n.transferCancelling(transfer.name),
           TransferStatus.running =>
             transfer.direction == TransferDirection.upload
                 ? l10n.transferUploading(transfer.name)
                 : l10n.transferDownloading(transfer.name),
           TransferStatus.done => '${transfer.name} · ${l10n.transferDone}',
           TransferStatus.failed => '${transfer.name} · ${l10n.transferFailed(transfer.error ?? '')}',
+          TransferStatus.cancelled => '${transfer.name} · ${l10n.transferCancelled}',
         };
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 3),
@@ -516,6 +518,15 @@ class _TransferTile extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (transfer.cancellable)
+                    IconButton(
+                      tooltip: l10n.transferCancel,
+                      icon: const Icon(Icons.close_rounded, size: 14),
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints.tightFor(width: 24, height: 20),
+                      onPressed: transfer.cancel,
+                    ),
                 ],
               ),
               if (running) LinearProgressIndicator(value: transfer.progress, minHeight: 3),
