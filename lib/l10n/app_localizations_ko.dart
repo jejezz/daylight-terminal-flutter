@@ -602,6 +602,28 @@ class AppLocalizationsKo extends AppLocalizations {
       '로컬 셸은 같은 폴더에서 바로 열고, SSH와 시리얼은 접속 정보만 채워 둡니다. 비밀번호는 저장하지 않으며 자동으로 연결하지 않습니다.';
 
   @override
+  String get settingsSectionAdmin => '관리자 권한';
+
+  @override
+  String get adminBadge => '관리자 모드';
+
+  @override
+  String get adminRunning => '관리자 권한으로 실행 중';
+
+  @override
+  String get adminRunningHelp => '지금 여는 로컬 셸은 관리자 권한을 가집니다.';
+
+  @override
+  String get adminRestart => '관리자 권한으로 다시 시작';
+
+  @override
+  String get adminRestartHelp =>
+      '로컬 셸은 앱의 권한을 그대로 물려받으므로, 관리자 셸을 쓰려면 앱을 관리자 권한으로 다시 시작합니다 (Windows 확인 창이 뜹니다). 열어 둔 탭은 시작할 때처럼 다시 열립니다.';
+
+  @override
+  String get adminRestartFailed => '관리자 권한으로 다시 시작하지 못했습니다. 확인 창을 거절했을 수 있습니다.';
+
+  @override
   String get refreshLocal => '로컬 폴더 자동 새로 고침';
 
   @override

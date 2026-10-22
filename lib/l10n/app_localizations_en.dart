@@ -611,6 +611,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Local shells open in the same folder. SSH and serial tabs only get their connection details filled in — passwords are never saved and nothing connects by itself.';
 
   @override
+  String get settingsSectionAdmin => 'Administrator';
+
+  @override
+  String get adminBadge => 'Administrator';
+
+  @override
+  String get adminRunning => 'Running as administrator';
+
+  @override
+  String get adminRunningHelp =>
+      'Local shells opened now have administrator rights.';
+
+  @override
+  String get adminRestart => 'Restart as administrator';
+
+  @override
+  String get adminRestartHelp =>
+      'Local shells inherit this app\'s rights, so to get an administrator shell the app restarts with administrator rights (a Windows confirmation appears). Open tabs are reopened the same way as at startup.';
+
+  @override
+  String get adminRestartFailed =>
+      'Could not restart as administrator. The confirmation may have been declined.';
+
+  @override
   String get refreshLocal => 'Refresh local folders automatically';
 
   @override

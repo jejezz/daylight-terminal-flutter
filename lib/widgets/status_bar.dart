@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
+import '../services/elevation.dart';
 import '../services/file_reveal_service.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
@@ -63,6 +64,12 @@ class StatusBar extends StatelessWidget {
           Icon(Icons.circle, size: 8, color: session.connected ? AppColors.success : scheme.outline),
           const SizedBox(width: AppSpacing.sm),
           Text(session.statusLabel, style: small),
+          if (Elevation.isElevated) ...[
+            const SizedBox(width: AppSpacing.md),
+            Icon(Icons.shield_rounded, size: 14, color: AppColors.warning),
+            const SizedBox(width: AppSpacing.xs),
+            Text(l10n.adminBadge, style: small?.copyWith(color: AppColors.warning)),
+          ],
           const Spacer(),
           if (session.isLogging) ...[
             Flexible(
