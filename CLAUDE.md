@@ -145,6 +145,15 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 끌어넣기: 입력 칸에 텍스트 파일(`SenderFile.textExtensions`: txt, md, cfg, ini, conf, json, yaml, sh 등)을 끌어놓으면 열기와 같이 내용을 불러온다(변경이 있으면 먼저 묻는다). 목록에 없는 형식은 안내만 하고 열지 않는다. 이 앱에서 끌어낸 것(`FlutterDragOut.inProgress`)은 무시한다.
 - 테스트의 파일 선택창은 `FileSelectorPlatform.instance`를 가짜로 바꿔서 쓴다 (`test/line_sender_file_test.dart`).
 
+## 관리자 권한 (Windows)
+
+- 설정 창 "관리자 권한" 섹션(Windows만). 로컬 셸(ConPTY)은 앱의 권한을 그대로 물려받고 실행 중인 프로세스의 권한은 못 바꾸므로,
+  "관리자 권한으로 다시 시작"은 탭 목록을 저장하고(`SessionsController.saveTabsNow`) `ShellExecuteW(runas)`로 같은 exe를 UAC 상승으로 띄운 뒤
+  이 앱을 끝낸다 (`services/elevation.dart`). UAC를 거절하면 그대로 두고 안내만 한다. 이미 관리자면 "관리자 권한으로 실행 중"만 보인다(`IsUserAnAdmin`).
+- 관리자로 실행 중이면 제목 표시줄에 "(관리자 모드)"가 붙고 상태 바에 방패 아이콘과 "관리자 모드"가 보인다.
+- 새 프로세스는 탭 복원(`restore_tabs`)으로 로컬 셸을 다시 연다. 복원을 꺼 두었으면 빈 창으로 시작한다.
+- 알려진 한계: 관리자로 뜬 앱에는 일반 권한 탐색기에서 끌어넣기가 막힌다(Windows UIPI). 자동 테스트로 UAC 흐름은 확인하지 못했다.
+
 ## 창 위치 (Windows)
 
 - `lib/window/window_placement.dart`: 마지막 창 위치·크기를 `window_placement` 키로 저장하고(물리 픽셀, 최대화 여부 포함) 다시 켤 때 복원한다.

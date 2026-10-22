@@ -23,6 +23,7 @@ import 'l10n/app_localizations.dart';
 import 'settings/app_settings.dart';
 import 'screens/home_screen.dart';
 import 'services/diag_log.dart';
+import 'services/elevation.dart';
 import 'services/profile_store.dart';
 import 'settings/refresh_prefs.dart';
 import 'settings/restore_prefs.dart';
@@ -169,6 +170,17 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     windowManager.setBrightness(brightness);
   }
 
+  String? _windowTitle;
+
+  /// 관리자 권한으로 실행 중이면 제목 표시줄에 "(관리자 모드)"를 붙인다.
+  void _syncWindowTitle(String badge) {
+    if (!_isDesktop || !Elevation.isElevated) return;
+    final title = '${AppIdentity.displayName} ($badge)';
+    if (title == _windowTitle) return;
+    _windowTitle = title;
+    windowManager.setTitle(title);
+  }
+
   void _showAbout() {
     final context = _navigatorKey.currentContext;
     if (context == null) return;
@@ -210,11 +222,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             localeResolutionCallback: AppSettings.resolveLocale,
-            builder: (context, child) => AppMenuBar(
-              onAbout: _showAbout,
-              onCheckForUpdates: widget.updates == null ? null : _checkForUpdates,
-              child: child!,
-            ),
+            builder: (context, child) {
+              _syncWindowTitle(AppLocalizations.of(context).adminBadge);
+              return AppMenuBar(
+                onAbout: _showAbout,
+                onCheckForUpdates: widget.updates == null ? null : _checkForUpdates,
+                child: child!,
+              );
+            },
             home: HomeScreen(onAbout: _showAbout),
           ),
         ),

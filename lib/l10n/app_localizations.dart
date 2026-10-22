@@ -1124,6 +1124,48 @@ abstract class AppLocalizations {
   /// **'로컬 셸은 같은 폴더에서 바로 열고, SSH와 시리얼은 접속 정보만 채워 둡니다. 비밀번호는 저장하지 않으며 자동으로 연결하지 않습니다.'**
   String get restoreTabsHelp;
 
+  /// No description provided for @settingsSectionAdmin.
+  ///
+  /// In ko, this message translates to:
+  /// **'관리자 권한'**
+  String get settingsSectionAdmin;
+
+  /// No description provided for @adminBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'관리자 모드'**
+  String get adminBadge;
+
+  /// No description provided for @adminRunning.
+  ///
+  /// In ko, this message translates to:
+  /// **'관리자 권한으로 실행 중'**
+  String get adminRunning;
+
+  /// No description provided for @adminRunningHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 여는 로컬 셸은 관리자 권한을 가집니다.'**
+  String get adminRunningHelp;
+
+  /// No description provided for @adminRestart.
+  ///
+  /// In ko, this message translates to:
+  /// **'관리자 권한으로 다시 시작'**
+  String get adminRestart;
+
+  /// No description provided for @adminRestartHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'로컬 셸은 앱의 권한을 그대로 물려받으므로, 관리자 셸을 쓰려면 앱을 관리자 권한으로 다시 시작합니다 (Windows 확인 창이 뜹니다). 열어 둔 탭은 시작할 때처럼 다시 열립니다.'**
+  String get adminRestartHelp;
+
+  /// No description provided for @adminRestartFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'관리자 권한으로 다시 시작하지 못했습니다. 확인 창을 거절했을 수 있습니다.'**
+  String get adminRestartFailed;
+
   /// No description provided for @refreshLocal.
   ///
   /// In ko, this message translates to:

@@ -178,6 +178,9 @@ class SessionsController extends ChangeNotifier {
 
   void closeCurrent() => closeAt(_selected);
 
+  /// 열어 둔 탭 목록을 지금 저장한다 (관리자 권한으로 다시 시작하기 전에, 새 프로세스가 읽을 수 있게).
+  Future<void> saveTabsNow() => _save();
+
   Future<void> prepareForExit() async {
     await _save(); // 마지막 폴더까지 저장한다
     for (final s in sessions) {

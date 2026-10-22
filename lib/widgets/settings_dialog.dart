@@ -1,9 +1,14 @@
+import 'dart:ui' show AppExitType;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show ServicesBinding;
 import 'package:provider/provider.dart';
 import 'package:xterm2/ui.dart' show TerminalTheme;
 
 import '../l10n/app_localizations.dart';
+import '../services/elevation.dart';
 import '../settings/refresh_prefs.dart';
+import '../state/sessions_controller.dart';
 import '../settings/restore_prefs.dart';
 import '../settings/terminal_prefs.dart';
 import '../settings/terminal_schemes.dart';
@@ -38,6 +43,18 @@ class _SettingsDialogState extends State<_SettingsDialog> {
   void dispose() {
     _custom.dispose();
     super.dispose();
+  }
+
+  /// 탭 목록을 저장한 뒤 관리자 권한으로 새로 띄우고, 성공하면 이 앱은 끝낸다. UAC를 거절하면 그대로 둔다.
+  Future<void> _restartAsAdmin() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = AppLocalizations.of(context).adminRestartFailed;
+    await context.read<SessionsController>().saveTabsNow();
+    if (Elevation.relaunchAsAdmin()) {
+      await ServicesBinding.instance.exitApplication(AppExitType.required);
+    } else {
+      messenger.showSnackBar(SnackBar(content: Text(failed)));
+    }
   }
 
   /// Powerline·Nerd Font 글리프와 한글, 헷갈리기 쉬운 글자를 한 번에 보여 주는 미리보기.
@@ -85,6 +102,29 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               value: restore.enabled,
               onChanged: restore.setEnabled,
             ),
+            if (Elevation.supported) ...[
+              const SizedBox(height: AppSpacing.lg),
+              _SectionHeader(l10n.settingsSectionAdmin),
+              if (Elevation.isElevated)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.verified_user_rounded),
+                  title: Text(l10n.adminRunning),
+                  subtitle: Text(l10n.adminRunningHelp),
+                )
+              else ...[
+                Text(l10n.adminRestartHelp, style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: AppSpacing.sm),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.shield_outlined),
+                    label: Text(l10n.adminRestart),
+                    onPressed: _restartAsAdmin,
+                  ),
+                ),
+              ],
+            ],
             const SizedBox(height: AppSpacing.lg),
             _SectionHeader(l10n.settingsSectionTerminalFont),
             DropdownButtonFormField<String>(

@@ -137,6 +137,8 @@ void main() {
     expect(prefs.isPreset, isFalse);
 
     // 크기
+    await tester.ensureVisible(find.byType(Slider));
+    await tester.pump();
     await tester.drag(find.byType(Slider), const Offset(120, 0));
     await tester.pump();
     expect(prefs.size, greaterThan(13));
