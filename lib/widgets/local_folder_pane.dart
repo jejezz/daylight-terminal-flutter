@@ -190,6 +190,8 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
     }
   }
 
+  BuildContext? _placesButtonContext;
+
   Future<void> _showPlaces(LocalFolderSession session, BuildContext buttonContext) async {
     final places = await session.places();
     if (!mounted || !buttonContext.mounted) return;
@@ -240,8 +242,14 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
             children: [
               PaneHeader(
                 path: session.folderPath,
-                canGoUp: session.canGoUp,
-                onUp: session.goUp,
+                // Windows의 드라이브 뿌리에서는 위로 가기가 드라이브 목록(자주 가는 곳 메뉴)을 연다.
+                canGoUp: session.canGoUp || Platform.isWindows,
+                onUp: session.canGoUp
+                    ? session.goUp
+                    : () {
+                        final c = _placesButtonContext;
+                        if (c != null && c.mounted) _showPlaces(session, c);
+                      },
                 onRefresh: session.refreshFolder,
                 onNewFolder: () => _newFolder(session),
                 onTerminalToHere: session.canMoveTerminal ? () => session.moveTerminalTo(session.folderPath) : null,
@@ -249,13 +257,16 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                 onExplorerToTerminal: session.canSyncExplorer ? () => _syncExplorer(session) : null,
                 extraActions: [
                   Builder(
-                    builder: (buttonContext) => IconButton(
-                      iconSize: 18,
-                      visualDensity: VisualDensity.compact,
-                      tooltip: l10n.localPlaces,
-                      icon: const Icon(Icons.home_outlined),
-                      onPressed: () => _showPlaces(session, buttonContext),
-                    ).help(HelpId.panePlaces),
+                    builder: (buttonContext) {
+                      _placesButtonContext = buttonContext;
+                      return IconButton(
+                        iconSize: 18,
+                        visualDensity: VisualDensity.compact,
+                        tooltip: l10n.localPlaces,
+                        icon: const Icon(Icons.home_outlined),
+                        onPressed: () => _showPlaces(session, buttonContext),
+                      ).help(HelpId.panePlaces);
+                    },
                   ),
                 ],
               ),
