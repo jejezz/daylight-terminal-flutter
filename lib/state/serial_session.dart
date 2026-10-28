@@ -3,9 +3,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_libserialport/flutter_libserialport.dart';
 
 import '../models/line_ending.dart';
 import '../models/serial_settings.dart';
+import '../services/ansi_codepage.dart';
 import '../services/serial_service.dart';
 import 'local_folder_session.dart';
 import 'terminal_session.dart';
@@ -179,7 +181,11 @@ class SerialSession extends LocalFolderSession {
   /// 기기가 갑자기 뽑히는 등 스트림에서 오류가 나면 죽은 포트를 붙잡고 있지 않도록 정리하고 오류 상태로 바꾼다.
   void _onStreamError(Object error) {
     _release();
-    _error = error is SerialServiceException ? error : SerialServiceException(SerialErrorKind.io, error.toString());
+    _error = switch (error) {
+      SerialServiceException() => error,
+      SerialPortError() => SerialServiceException(SerialErrorKind.io, fixWindowsAnsiMessage(error.message)),
+      _ => SerialServiceException(SerialErrorKind.io, error.toString()),
+    };
     setStatus(SessionStatus.error);
     notify();
   }
