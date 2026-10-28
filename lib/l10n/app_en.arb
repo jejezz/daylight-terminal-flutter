@@ -133,6 +133,7 @@
   "connectPort": "Port",
   "connectUser": "User",
   "connectPassword": "Password",
+  "capsLockWarning": "Caps Lock is on",
   "connectKeyFile": "Private key file (optional)",
   "connectKeyBrowse": "Browse",
   "connectKeyPassphrase": "Key passphrase (if any)",

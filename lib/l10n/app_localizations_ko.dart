@@ -219,6 +219,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get connectPassword => '비밀번호';
 
   @override
+  String get capsLockWarning => 'Caps Lock이 켜져 있습니다';
+
+  @override
   String get connectKeyFile => '개인 키 파일 (선택)';
 
   @override

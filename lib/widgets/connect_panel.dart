@@ -8,6 +8,7 @@ import '../state/sessions_controller.dart';
 import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
 import 'address_book_dialog.dart';
+import 'caps_lock_warning.dart';
 
 /// 연결되지 않은 탭에 보이는 접속 폼. 저장된 접속을 고르거나 새로 입력한다.
 /// 비밀번호와 키 암호는 저장하지 않는다.
@@ -28,6 +29,8 @@ class _ConnectPanelState extends State<ConnectPanel> {
   final _password = TextEditingController();
   final _keyPath = TextEditingController();
   final _passphrase = TextEditingController();
+  final _passwordFocus = FocusNode();
+  final _passphraseFocus = FocusNode();
   bool _save = true;
   String? _profileId;
 
@@ -50,6 +53,8 @@ class _ConnectPanelState extends State<ConnectPanel> {
     for (final c in [_host, _port, _user, _password, _keyPath, _passphrase]) {
       c.dispose();
     }
+    _passwordFocus.dispose();
+    _passphraseFocus.dispose();
     super.dispose();
   }
 
@@ -230,11 +235,15 @@ class _ConnectPanelState extends State<ConnectPanel> {
                 onSubmitted: (_) => _connect(),
               ),
               const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _password,
-                obscureText: true,
-                decoration: InputDecoration(labelText: l10n.connectPassword),
-                onSubmitted: (_) => _connect(),
+              CapsLockWarning(
+                focusNode: _passwordFocus,
+                child: TextField(
+                  controller: _password,
+                  focusNode: _passwordFocus,
+                  obscureText: true,
+                  decoration: InputDecoration(labelText: l10n.connectPassword),
+                  onSubmitted: (_) => _connect(),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               Row(
@@ -251,11 +260,15 @@ class _ConnectPanelState extends State<ConnectPanel> {
               ),
               if (_keyPath.text.trim().isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: _passphrase,
-                  obscureText: true,
-                  decoration: InputDecoration(labelText: l10n.connectKeyPassphrase),
-                  onSubmitted: (_) => _connect(),
+                CapsLockWarning(
+                  focusNode: _passphraseFocus,
+                  child: TextField(
+                    controller: _passphrase,
+                    focusNode: _passphraseFocus,
+                    obscureText: true,
+                    decoration: InputDecoration(labelText: l10n.connectKeyPassphrase),
+                    onSubmitted: (_) => _connect(),
+                  ),
                 ),
               ],
               const SizedBox(height: AppSpacing.sm),

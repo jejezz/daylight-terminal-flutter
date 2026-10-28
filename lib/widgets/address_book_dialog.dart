@@ -10,6 +10,7 @@ import '../services/profile_store.dart';
 import '../state/sessions_controller.dart';
 import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
+import 'caps_lock_warning.dart';
 
 /// 주소록을 연다. 접속을 고르면 비밀번호를 물은 뒤 연결한다 — 지금 탭이 비어 있으면 그 탭에서,
 /// 이미 연결 중이면 새 탭에서.
@@ -257,11 +258,15 @@ class _PromptDialog extends StatefulWidget {
 class _PromptDialogState extends State<_PromptDialog> {
   final _password = TextEditingController();
   final _passphrase = TextEditingController();
+  final _passwordFocus = FocusNode();
+  final _passphraseFocus = FocusNode();
 
   @override
   void dispose() {
     _password.dispose();
     _passphrase.dispose();
+    _passwordFocus.dispose();
+    _passphraseFocus.dispose();
     super.dispose();
   }
 
@@ -287,20 +292,28 @@ class _PromptDialogState extends State<_PromptDialog> {
           children: [
             Text(widget.profile.address, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _password,
-              obscureText: true,
-              autofocus: true,
-              decoration: InputDecoration(labelText: l10n.connectPassword, helperText: l10n.connectPromptHint),
-              onSubmitted: (_) => _submit(),
+            CapsLockWarning(
+              focusNode: _passwordFocus,
+              child: TextField(
+                controller: _password,
+                focusNode: _passwordFocus,
+                obscureText: true,
+                autofocus: true,
+                decoration: InputDecoration(labelText: l10n.connectPassword, helperText: l10n.connectPromptHint),
+                onSubmitted: (_) => _submit(),
+              ),
             ),
             if (hasKey) ...[
               const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _passphrase,
-                obscureText: true,
-                decoration: InputDecoration(labelText: l10n.connectKeyPassphrase),
-                onSubmitted: (_) => _submit(),
+              CapsLockWarning(
+                focusNode: _passphraseFocus,
+                child: TextField(
+                  controller: _passphrase,
+                  focusNode: _passphraseFocus,
+                  obscureText: true,
+                  decoration: InputDecoration(labelText: l10n.connectKeyPassphrase),
+                  onSubmitted: (_) => _submit(),
+                ),
               ),
             ],
           ],
