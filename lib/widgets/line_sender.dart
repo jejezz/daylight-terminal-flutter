@@ -251,6 +251,26 @@ class LineSenderState extends State<LineSender> {
       }
     }
 
+    // Home/End: expands:true + maxLines:null인 TextField가, 다음 줄이 비어 있을 때 End를 누르면
+    // 커서를 그 줄 끝이 아니라 다음(빈) 줄로 보내는 Flutter 자체 결함이 있다. 글 내용만으로 줄 경계를
+    // 직접 계산해 선택 영역을 맞춰서 피해 간다. Shift/Ctrl 등 다른 조합(선택 넓히기, 문서 끝으로 등)은 그대로 둔다.
+    final isHome = event.logicalKey == LogicalKeyboardKey.home;
+    final isEnd = event.logicalKey == LogicalKeyboardKey.end;
+    if ((isHome || isEnd) && !kb.isShiftPressed && !kb.isControlPressed && !kb.isAltPressed && !kb.isMetaPressed) {
+      final text = _controller.text;
+      final cursor = _controller.selection.baseOffset;
+      final safeCursor = cursor < 0 ? text.length : cursor;
+      var lineStart = 0;
+      if (safeCursor > 0) {
+        final idx = text.lastIndexOf('\n', safeCursor - 1);
+        lineStart = idx == -1 ? 0 : idx + 1;
+      }
+      var lineEnd = text.indexOf('\n', safeCursor);
+      if (lineEnd == -1) lineEnd = text.length;
+      _controller.selection = TextSelection.collapsed(offset: isHome ? lineStart : lineEnd);
+      return KeyEventResult.handled;
+    }
+
     final isEnter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
     if (!isEnter) return KeyEventResult.ignored;
 
