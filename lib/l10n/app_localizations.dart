@@ -464,6 +464,12 @@ abstract class AppLocalizations {
   /// **'비밀번호'**
   String get connectPassword;
 
+  /// No description provided for @capsLockWarning.
+  ///
+  /// In ko, this message translates to:
+  /// **'Caps Lock이 켜져 있습니다'**
+  String get capsLockWarning;
+
   /// No description provided for @connectKeyFile.
   ///
   /// In ko, this message translates to:

@@ -221,6 +221,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectPassword => 'Password';
 
   @override
+  String get capsLockWarning => 'Caps Lock is on';
+
+  @override
   String get connectKeyFile => 'Private key file (optional)';
 
   @override

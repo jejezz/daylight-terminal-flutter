@@ -150,6 +150,7 @@
   "connectPort": "포트",
   "connectUser": "사용자",
   "connectPassword": "비밀번호",
+  "capsLockWarning": "Caps Lock이 켜져 있습니다",
   "connectKeyFile": "개인 키 파일 (선택)",
   "connectKeyBrowse": "찾아보기",
   "connectKeyPassphrase": "키 암호 (있으면)",
