@@ -19,8 +19,8 @@ import 'file_pane_parts.dart' show PaneDragData;
 import 'pass_through_cursor.dart';
 
 /// 여러 줄을 미리 써두고 한 줄씩 순서대로 전송하는 스크립트 러너.
-/// 그냥 Enter는 커서가 있는 줄을 전송하고, Ctrl+Enter는 평범한 줄바꿈이다.
-/// 전송 후 커서는 다음 줄의 끝으로 이동해서, Enter를 반복해서 누르면
+/// 그냥 Enter는 보통의 편집기와 같은 줄바꿈이고, Ctrl+Enter가 커서가 있는 줄을 전송한다.
+/// 전송 후 커서는 다음 줄의 끝으로 이동해서, Ctrl+Enter를 반복해서 누르면
 /// 위에서부터 한 줄씩 순서대로 흘러 내려가며 전송된다.
 ///
 /// 편집기처럼 스크립트를 파일에서 불러오고(Ctrl+O) 저장할 수 있다(Ctrl+S, 다른 이름으로: Ctrl+Shift+S).
@@ -182,7 +182,7 @@ class LineSenderState extends State<LineSender> {
     return true;
   }
 
-  /// 칸의 내용을 문서로 바꾼다. 커서는 맨 앞에 두어서 Enter를 누르면 첫 줄부터 보내진다.
+  /// 칸의 내용을 문서로 바꾼다. 커서는 맨 앞에 두어서 Ctrl+Enter를 누르면 첫 줄부터 보내진다.
   void _setDocument(String? path, String text, String eol, {bool remoteCopy = false}) {
     _path = path;
     _remoteCopy = remoteCopy;
@@ -274,29 +274,12 @@ class LineSenderState extends State<LineSender> {
     final isEnter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
     if (!isEnter) return KeyEventResult.ignored;
 
-    final connected = context.read<TerminalSession>().connected;
-    // 연결 전에는 전송할 대상이 없으므로 Enter도 보통의 줄바꿈으로만 동작해서
-    // 스크립트를 미리 자유롭게 써둘 수 있다.
-    if (!connected || HardwareKeyboard.instance.isControlPressed) {
-      _insertNewlineAtCursor();
-    } else {
-      _sendCurrentLine();
-    }
-    return KeyEventResult.handled;
-  }
+    // 그냥 Enter는 보통의 편집기처럼 TextField의 기본 동작(줄바꿈)에 맡긴다.
+    if (!HardwareKeyboard.instance.isControlPressed) return KeyEventResult.ignored;
 
-  // TextField의 기본 동작에 기대지 않고 직접 줄바꿈을 넣는다 — 플랫폼 텍스트 입력
-  // 채널이 raw 키 이벤트 처리와 별개로 움직여서 Ctrl+Enter를 무시(ignored)하면
-  // 줄바꿈이 전혀 안 들어가는 문제가 있었다.
-  void _insertNewlineAtCursor() {
-    final text = _controller.text;
-    final selection = _controller.selection;
-    final start = selection.start < 0 ? text.length : selection.start;
-    final end = selection.end < 0 ? text.length : selection.end;
-    _controller.value = TextEditingValue(
-      text: text.replaceRange(start, end, '\n'),
-      selection: TextSelection.collapsed(offset: start + 1),
-    );
+    // 연결 전에는 보낼 곳이 없다 — Ctrl+Enter는 아무 일도 하지 않는다.
+    if (context.read<TerminalSession>().connected) _sendCurrentLine();
+    return KeyEventResult.handled;
   }
 
   void _sendCurrentLine() {

@@ -408,7 +408,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get senderHint =>
-      'Write several lines ahead and send them one by one with Enter (Ctrl+Enter: new line)';
+      'Write several lines ahead and send them one by one with Ctrl+Enter (Enter: new line)';
 
   @override
   String get senderLineEndingNone => 'None';

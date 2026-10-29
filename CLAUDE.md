@@ -106,7 +106,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 구조: `LocalFolderSession`(폴더 뷰 상태·동작, `LocalShellSession`에서 뽑아냄)을 `LocalShellSession`과 `SerialSession`이 상속한다.
   `LocalFolderPane`은 `LocalFolderSession`을 찾는다. 시리얼에는 셸이 없어서 `canMoveTerminal`/`canSyncExplorer`가 false — "경로 이동" 메뉴가 숨는다.
 - `SerialService`(`flutter_libserialport` 래퍼)는 portside와 같되 `open(SerialSettings)`로 통신 설정을 모두 받는다. 테스트는 `test/helpers/fake_serial.dart`.
-- 도구 줄(`_SerialBar`): 터미널/Hex 보기, 로컬 에코(기본 켜짐: LineSender로 보낸 줄을 화면에도 씀 — 터미널에 직접 친 키는 에코하지 않는다), 받은 바이트 수.
+- 도구 줄(`_SerialBar`): 터미널/Hex 보기, 로컬 에코(기본 꺼짐: 켜면 LineSender로 보낸 줄을 화면에도 씀 — 터미널에 직접 친 키는 에코하지 않는다), 받은 바이트 수.
   Hex 보기는 터미널 화면이 아니라 실제로 받은 바이트(`rawBytes`, 최대 2MB)다. 줄 끝 기본값은 LF(portside와 같음, SSH/셸은 CR). 연결하면 깨우는 CRLF를 한 번 보낸다.
 - 장치가 뽑히면(스트림 오류 또는 오류 없이 끝남, 쓰기 오류) 포트를 닫고 오류 상태가 되어 연결 폼으로 돌아간다. 기록(Recording)은 받은 바이트를 그대로 쓴다.
 - 네이티브 `libserialport`는 플러그인이 빌드한다. macOS는 podspec이 `autogen.sh`/`configure`를 돌려서 `brew install automake libtool`이,
@@ -136,7 +136,8 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   저장하지 않은 변경이 있으면 이름이 `● 이름 (변경됨)`으로 바뀐다. 파일과 연결되기 전(새 스크립트)에는 `제목 없음`이 보인다. 열기·새로 만들기 전에 변경이 있으면 취소/버리기/저장을 묻는다.
 - 규칙(`sender_file.dart`): UTF-8 텍스트만(BOM은 떼고, UTF-8이 아니면 깨져 보이게 열지 않고 거부), 2MB 초과 거부. 칸 안에서는
   줄바꿈을 LF로 통일하고(한 줄씩 보내는 로직이 LF 기준), 저장할 때 파일이 원래 쓰던 줄바꿈(CRLF 등)으로 돌려놓는다.
-- 불러온 뒤 커서는 맨 앞이라 Enter를 누르면 첫 줄부터 보내진다. 마지막 줄을 보내면 새 줄이 붙지만 그것만으로
+- 그냥 Enter는 보통의 편집기와 같은 줄바꿈이고, Ctrl+Enter가 커서가 있는 줄을 터미널로 보낸다(연결 전에는 아무 일도 하지 않는다).
+  불러온 뒤 커서는 맨 앞이라 Ctrl+Enter를 누르면 첫 줄부터 보내진다. 마지막 줄을 보내면 새 줄이 붙지만 그것만으로
   "변경됨"이 되지는 않는다(끝의 빈 줄은 비교에서 뺀다). 스크립트와 파일 연결은 탭마다 따로다.
 - 스크롤바 위 마우스 커서: TextField가 칸 전체를 I자 커서로 덮어서 안쪽 스크롤바 위에서도 커서가 안 바뀐다. 스크롤바가 있을
   때만 오른쪽 가장자리(안쪽 여백 10px + 스크롤바 18px)에 `PassThroughCursorRegion`(화살표 커서, 마우스 이벤트는 통과)을

@@ -113,6 +113,12 @@ void main() {
     await tester.pump();
   }
 
+  Future<void> pressCtrlEnter(WidgetTester tester) async {
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+  }
+
   Future<void> tapOpen(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.folder_open_rounded)));
   Future<void> tapSave(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.save_outlined)));
 
@@ -132,27 +138,47 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
   }
 
-  testWidgets('Open loads a script; the cursor is at the top so Enter sends the first line; the file name shows', (
-    tester,
-  ) async {
-    File(file('deploy.sh')).writeAsStringSync('cd /srv\nls -l\nexit\n');
-    dialogs.openAnswers.add(file('deploy.sh'));
+  testWidgets(
+    'Open loads a script; the cursor is at the top so Ctrl+Enter sends the first line; the file name shows',
+    (tester) async {
+      File(file('deploy.sh')).writeAsStringSync('cd /srv\nls -l\nexit\n');
+      dialogs.openAnswers.add(file('deploy.sh'));
+      await pumpSender(tester);
+      expect(find.text('deploy.sh'), findsNothing); // 파일과 연결되기 전에는 이름 줄이 없다
+
+      await tapOpen(tester);
+      expect(text(tester), 'cd /srv\nls -l\nexit\n');
+      expect(find.text('deploy.sh'), findsOneWidget);
+      expect(find.textContaining('변경됨'), findsNothing);
+
+      // 칸에 포커스만 준다 (눌러서 캐럿을 옮기면 "맨 앞에서 시작"을 확인할 수 없다).
+      tester.widget<TextField>(field()).focusNode!.requestFocus();
+      await tester.pump();
+      await pressCtrlEnter(tester);
+      await tester.pump();
+      // 첫 줄부터 한 줄씩: 커서가 맨 앞에서 시작했다.
+      expect(ptys.last.writtenText, 'cd /srv\r');
+    },
+  );
+
+  testWidgets('a plain Enter does not send (raw key event alone, as a real Enter would reach us)', (tester) async {
+    File(file('plain.sh')).writeAsStringSync('cd /srv\nls -l\n');
+    dialogs.openAnswers.add(file('plain.sh'));
     await pumpSender(tester);
-    expect(find.text('deploy.sh'), findsNothing); // 파일과 연결되기 전에는 이름 줄이 없다
-
     await tapOpen(tester);
-    expect(text(tester), 'cd /srv\nls -l\nexit\n');
-    expect(find.text('deploy.sh'), findsOneWidget);
-    expect(find.textContaining('변경됨'), findsNothing);
 
-    // 칸에 포커스만 준다 (눌러서 캐럿을 옮기면 "맨 앞에서 시작"을 확인할 수 없다).
     tester.widget<TextField>(field()).focusNode!.requestFocus();
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
-    // 첫 줄부터 한 줄씩: 커서가 맨 앞에서 시작했다.
-    expect(ptys.last.writtenText, 'cd /srv\r');
+
+    // 실제 기기에서는 줄바꿈 자체가 raw 키 이벤트가 아니라 엔진의 텍스트 입력 채널로 들어오고
+    // (performAction(newline) 때 "이미 들어가 있다"는 flutter 자체 문서/구현), sendKeyEvent는 그
+    // 채널을 흉내 내지 않는다 — 여기서는 우리 코드가 보통의 편집 동작에 끼어들어 뭔가를
+    // 보내지는 않는지만 확인한다.
+    expect(ptys.last.writtenText, isEmpty);
   });
+
 
   testWidgets('editing marks the file modified; Save writes it and clears the mark; the button needs no file yet', (
     tester,
@@ -316,8 +342,8 @@ void main() {
     await tapOpen(tester);
     await tester.tap(field());
     await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter); // one
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter); // two → 끝에 새 줄이 붙는다
+    await pressCtrlEnter(tester); // one
+    await pressCtrlEnter(tester); // two → 끝에 새 줄이 붙는다
     await tester.pump();
     expect(text(tester).endsWith('\n'), isTrue);
     expect(find.textContaining('변경됨'), findsNothing);

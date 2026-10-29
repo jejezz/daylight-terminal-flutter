@@ -34,7 +34,7 @@ class SerialSession extends LocalFolderSession {
   SerialSettings? _active;
   SerialServiceException? _error;
   final List<int> _rawBytes = [];
-  bool _localEcho = true;
+  bool _localEcho = false;
   SerialViewMode _viewMode = SerialViewMode.terminal;
 
   // 연결 전에 고르고 있는 설정. 탭을 바꿔도 남아야 해서 위젯이 아니라 여기 둔다.

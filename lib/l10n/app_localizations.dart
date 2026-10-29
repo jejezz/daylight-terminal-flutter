@@ -791,7 +791,7 @@ abstract class AppLocalizations {
   /// No description provided for @senderHint.
   ///
   /// In ko, this message translates to:
-  /// **'여러 줄을 미리 써 두고 Enter로 한 줄씩 전송합니다 (Ctrl+Enter: 줄바꿈)'**
+  /// **'여러 줄을 미리 써 두고 Ctrl+Enter로 한 줄씩 전송합니다 (Enter: 줄바꿈)'**
   String get senderHint;
 
   /// No description provided for @senderLineEndingNone.

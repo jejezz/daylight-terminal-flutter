@@ -61,13 +61,18 @@ class SerialService {
   }
 
   /// 바이트를 전송하고 실제로 쓰여진 바이트 수를 반환한다.
+  ///
+  /// 기본 호출(타임아웃을 안 주면)은 비블로킹이라 OS 송신 버퍼가 꽉 차 있으면 그 자리에서 바로
+  /// 일부(또는 0바이트)만 쓰고 돌아온다 — 나머지는 다시 보내 주지 않으면 조용히 사라진다. 그래서
+  /// 짧게(300ms) 블로킹해서 버퍼가 비기를 기다렸다가 전부 쓴다. 그래도 다 못 쓰면(흐름 제어로 막혀
+  /// 있는 등) 그만큼만 돌려준다 — 메인 isolate를 오래 막지는 않는다.
   int write(Uint8List bytes) {
     final port = _port;
     if (port == null) {
       throw SerialServiceException(SerialErrorKind.notOpen);
     }
     try {
-      return port.write(bytes);
+      return port.write(bytes, timeout: 300);
     } on SerialPortError catch (e) {
       // 기기가 도중에 뽑히면 여기서 네이티브 에러가 난다 — 상위가 일관되게 처리할 수 있는 타입으로 감싼다.
       throw SerialServiceException(SerialErrorKind.io, fixWindowsAnsiMessage(e.message));

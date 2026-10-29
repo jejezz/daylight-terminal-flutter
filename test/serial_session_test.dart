@@ -74,22 +74,22 @@ void main() {
     expect(session.byteCount, 9);
   });
 
-  test('LineSender: 줄 끝 문자를 붙여 보내고, 로컬 에코가 켜져 있으면 화면에도 쓴다', () async {
+  test('LineSender: 로컬 에코는 기본으로 꺼져 있다', () async {
     session.connect(settings);
     serial.clearWritten();
     session.send('AT');
     expect(serial.writtenText, 'AT\n');
-    expect(session.terminal.buffer.getText(), contains('AT'));
+    expect(session.terminal.buffer.getText(), isNot(contains('AT')));
   });
 
-  test('로컬 에코를 끄면 화면에 쓰지 않는다', () {
+  test('로컬 에코를 켜면 LineSender로 보낸 줄이 화면에도 쓰인다', () {
     session.connect(settings);
-    session.setLocalEcho(false);
+    session.setLocalEcho(true);
     serial.clearWritten();
     session.setLineEnding(LineEnding.crlf);
     session.send('AT');
     expect(serial.writtenText, 'AT\r\n');
-    expect(session.terminal.buffer.getText(), isNot(contains('AT')));
+    expect(session.terminal.buffer.getText(), contains('AT'));
   });
 
   test('터미널에서 친 키는 그대로 보낸다 (에코는 장치 몫)', () {

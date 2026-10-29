@@ -257,7 +257,7 @@
     }
   },
   "transferClear": "Clear finished",
-  "senderHint": "Write several lines ahead and send them one by one with Enter (Ctrl+Enter: new line)",
+  "senderHint": "Write several lines ahead and send them one by one with Ctrl+Enter (Enter: new line)",
   "senderLineEndingNone": "None",
   "senderLineEndingTooltip": "Line ending",
   "senderSend": "Send current line",

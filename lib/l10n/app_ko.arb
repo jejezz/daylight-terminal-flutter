@@ -274,7 +274,7 @@
     }
   },
   "transferClear": "완료된 항목 지우기",
-  "senderHint": "여러 줄을 미리 써 두고 Enter로 한 줄씩 전송합니다 (Ctrl+Enter: 줄바꿈)",
+  "senderHint": "여러 줄을 미리 써 두고 Ctrl+Enter로 한 줄씩 전송합니다 (Enter: 줄바꿈)",
   "senderLineEndingNone": "없음",
   "senderLineEndingTooltip": "줄 끝 문자",
   "senderSend": "현재 줄 전송",

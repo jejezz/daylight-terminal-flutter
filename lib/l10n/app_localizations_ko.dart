@@ -403,7 +403,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get transferClear => '완료된 항목 지우기';
 
   @override
-  String get senderHint => '여러 줄을 미리 써 두고 Enter로 한 줄씩 전송합니다 (Ctrl+Enter: 줄바꿈)';
+  String get senderHint => '여러 줄을 미리 써 두고 Ctrl+Enter로 한 줄씩 전송합니다 (Enter: 줄바꿈)';
 
   @override
   String get senderLineEndingNone => '없음';
