@@ -8,6 +8,7 @@ import 'package:xterm2/ui.dart' show TerminalTheme;
 import '../l10n/app_localizations.dart';
 import '../services/elevation.dart';
 import '../settings/refresh_prefs.dart';
+import '../settings/settings_menus.dart';
 import '../state/sessions_controller.dart';
 import '../settings/restore_prefs.dart';
 import '../settings/terminal_prefs.dart';
@@ -78,6 +79,19 @@ class _SettingsDialogState extends State<_SettingsDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _SectionHeader(l10n.settingsSectionAppearance),
+            Text(l10n.settingsMode, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: AppSpacing.xs),
+            const ModeSegmentedButton(),
+            const SizedBox(height: AppSpacing.md),
+            Text(l10n.settingsPalette, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: AppSpacing.xs),
+            const AccentPaletteChips(),
+            const SizedBox(height: AppSpacing.md),
+            Text(l10n.languageMenuTooltip, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: AppSpacing.xs),
+            const LanguageSegmentedButton(),
+            const SizedBox(height: AppSpacing.lg),
             _SectionHeader(l10n.settingsSectionRefresh),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,

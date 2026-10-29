@@ -1,5 +1,6 @@
 import 'package:daylight_terminal/l10n/app_localizations.dart';
 import 'package:daylight_terminal/services/profile_store.dart';
+import 'package:daylight_terminal/settings/app_settings.dart';
 import 'package:daylight_terminal/settings/refresh_prefs.dart';
 import 'package:daylight_terminal/settings/restore_prefs.dart';
 import 'package:daylight_terminal/settings/terminal_prefs.dart';
@@ -84,21 +85,25 @@ void main() {
     final prefs = await TerminalPrefs.load();
     final refresh = await RefreshPrefs.load();
     final restore = await RestorePrefs.load();
+    final settings = await AppSettings.load();
     await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<TerminalPrefs>.value(value: prefs),
-          ChangeNotifierProvider<RefreshPrefs>.value(value: refresh),
-          ChangeNotifierProvider<RestorePrefs>.value(value: restore),
-        ],
-        child: MaterialApp(
-          theme: AppTheme.dark(),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('ko'),
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: TextButton(onPressed: () => showSettingsDialog(context), child: const Text('open')),
+      AppSettingsScope(
+        settings: settings,
+        child: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<TerminalPrefs>.value(value: prefs),
+            ChangeNotifierProvider<RefreshPrefs>.value(value: refresh),
+            ChangeNotifierProvider<RestorePrefs>.value(value: restore),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.dark(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('ko'),
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(onPressed: () => showSettingsDialog(context), child: const Text('open')),
+              ),
             ),
           ),
         ),
@@ -120,6 +125,7 @@ void main() {
     expect(refresh.local, isFalse);
 
     // 목록에서 고르기
+    await tester.ensureVisible(find.byType(DropdownButtonFormField<String>).first);
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Consolas').last);
@@ -127,6 +133,7 @@ void main() {
     expect(prefs.family, 'Consolas');
 
     // 직접 입력
+    await tester.ensureVisible(find.byType(DropdownButtonFormField<String>).first);
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('직접 입력…').last);
@@ -144,6 +151,7 @@ void main() {
     expect(prefs.size, greaterThan(13));
 
     // 스크롤백 줄 수
+    await tester.ensureVisible(find.text('10,000줄'));
     await tester.tap(find.text('10,000줄'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('50,000줄').last);

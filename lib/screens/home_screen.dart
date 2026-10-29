@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../app_identity.dart';
 import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
-import '../settings/settings_menus.dart';
 import '../state/sessions_controller.dart';
 import '../state/local_folder_session.dart';
 import '../state/local_shell_session.dart';
@@ -116,8 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.settings_rounded),
               onPressed: () => showSettingsDialog(context),
             ).help(HelpId.settings),
-            const ThemeMenuButton().help(HelpId.theme),
-            const LanguageMenuButton().help(HelpId.language),
             IconButton(
               tooltip: l10n.aboutTooltip,
               icon: const Icon(Icons.info_outline_rounded),
