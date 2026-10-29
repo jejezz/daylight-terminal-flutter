@@ -267,13 +267,7 @@ class LineSenderState extends State<LineSender> {
       }
       var lineEnd = text.indexOf('\n', safeCursor);
       if (lineEnd == -1) lineEnd = text.length;
-      // End로 보낸 자리가 줄 끝이면서 마침 칸 폭에 꽉 차서 줄바꿈되는 위치와도 겹치면, affinity가
-      // downstream(기본값)인 채로는 캐럿이 그 다음(보이는) 줄 맨 앞에 그려진다 — upstream으로 고정해서
-      // 늘 이 줄의 끝에 그려지게 한다.
-      _controller.selection = TextSelection.collapsed(
-        offset: isHome ? lineStart : lineEnd,
-        affinity: isHome ? TextAffinity.downstream : TextAffinity.upstream,
-      );
+      _controller.selection = TextSelection.collapsed(offset: isHome ? lineStart : lineEnd);
       return KeyEventResult.handled;
     }
 

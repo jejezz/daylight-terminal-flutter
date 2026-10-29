@@ -71,7 +71,7 @@ void main() {
     if (tmp.existsSync()) await tmp.delete(recursive: true);
   });
 
-  Future<void> pumpSender(WidgetTester tester, {bool connected = true}) async {
+  Future<void> pumpSender(WidgetTester tester, {bool connected = true, double? width}) async {
     tester.view.physicalSize = const Size(1000, 600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -84,10 +84,10 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('ko'),
-          home: const Scaffold(
+          home: Scaffold(
             body: Align(
               alignment: Alignment.bottomCenter,
-              child: SizedBox(height: 200, child: LineSender()),
+              child: SizedBox(height: 200, width: width, child: const LineSender()),
             ),
           ),
         ),
@@ -385,5 +385,29 @@ void main() {
       tester.getRect(find.text(longName)).bottom,
       lessThanOrEqualTo(tester.getRect(find.byType(TextField)).top + 1),
     );
+  });
+
+  testWidgets('Ctrl+Enter on a line that wraps within the box still sends only that line and advances one', (
+    tester,
+  ) async {
+    // 칸 폭에 꽉 차서 두 줄로 보이는(wrap) 긴 명령줄에서도 보내는 내용과 다음 줄로의 이동은 줄바꿈과 무관하다.
+    const fdt = 'fdt set /soc/card_boot@45000014 sprite_gpio0 <0x54 0x6 0x13 0x1 0xffffffff 0xffffffff 0x1>';
+    File(file('s.txt')).writeAsStringSync('line1\n$fdt\nline3\nline4');
+    dialogs.openAnswers.add(file('s.txt'));
+    await pumpSender(tester, width: 350); // fdt 줄이 칸 안에서 두 줄로 보이도록 좁게.
+    await tapOpen(tester);
+
+    final fdtStart = text(tester).indexOf(fdt);
+    final controller = tester.widget<TextField>(field()).controller!;
+    tester.widget<TextField>(field()).focusNode!.requestFocus();
+    controller.selection = TextSelection.collapsed(offset: fdtStart + 5); // fdt 줄 중간
+    await tester.pump();
+
+    await pressCtrlEnter(tester);
+    await tester.pump();
+
+    expect(ptys.last.writtenText, '$fdt\r');
+    final before = text(tester).substring(0, controller.selection.baseOffset);
+    expect('\n'.allMatches(before).length, 2); // line1, fdt 다음 — line3 끝에 있다
   });
 }
