@@ -48,27 +48,10 @@ Future<void> main() async {
   }
 
   WindowPlacement? placement;
+  Future<void> Function()? showWindow;
   if (_isDesktop) {
     await windowManager.ensureInitialized();
-    // ui-ux.md §5: 최소 크기는 960×600 이하 (1366×768 노트북).
-    const defaultSize = Size(1200, 720);
-    // Windows: 모니터마다 배율이 다르면 window_manager의 center가 창을 한쪽으로 쏠리게 해서, 마지막 위치를
-    // 기억하고 물리 픽셀로 직접 배치한다 (window_placement.dart). 다른 OS는 기존대로 center.
-    if (WindowPlacement.enabled) {
-      placement = WindowPlacement(await SharedPreferences.getInstance(), defaultSize: defaultSize);
-    }
-    final options = WindowOptions(
-      size: defaultSize,
-      minimumSize: const Size(960, 600),
-      center: placement == null,
-      title: AppIdentity.displayName,
-    );
-    await windowManager.waitUntilReadyToShow(options, () async {
-      await placement?.placeInitially();
-      placement?.attach();
-      await windowManager.show();
-      await windowManager.focus();
-    });
+    (placement, showWindow) = await _prepareWindow();
   }
 
   final settings = await AppSettings.load();
@@ -102,6 +85,51 @@ Future<void> main() async {
       ),
     ),
   );
+
+  if (showWindow != null) {
+    final show = showWindow;
+    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(show()));
+  }
+}
+
+/// 다음 프레임이 그려질 때까지 기다린다.
+Future<void> _nextFrame() {
+  final completer = Completer<void>();
+  WidgetsBinding.instance.addPostFrameCallback((_) => completer.complete());
+  WidgetsBinding.instance.scheduleFrame();
+  return completer.future;
+}
+
+/// ui-ux.md §5: 최소 크기는 960×600 이하 (1366×768 노트북).
+/// Windows: 모니터마다 배율이 다르면 window_manager의 center가 창을 한쪽으로 쏠리게 해서, 마지막 위치를
+/// 기억하고 물리 픽셀로 직접 배치한다 (window_placement.dart). 다른 OS는 기존대로 center.
+/// 배치가 끝나고 첫 프레임이 그려진 뒤에 show() 를 불러야 깜빡이지 않는다 (window-placement.md §5).
+Future<(WindowPlacement?, Future<void> Function())> _prepareWindow() async {
+  const defaultSize = Size(1200, 720);
+  WindowPlacement? placement;
+  if (WindowPlacement.enabled) {
+    placement = WindowPlacement(await SharedPreferences.getInstance(), defaultSize: defaultSize);
+  }
+  final options = WindowOptions(
+    size: defaultSize,
+    minimumSize: const Size(960, 600),
+    center: placement == null,
+    title: AppIdentity.displayName,
+  );
+  final placed = Completer<void>();
+  await windowManager.waitUntilReadyToShow(options, () async {
+    await placement?.placeInitially();
+    placed.complete();
+  });
+  Future<void> show() async {
+    await placed.future;
+    await _nextFrame();
+    await windowManager.show();
+    await windowManager.focus();
+    placement?.attach();
+  }
+
+  return (placement, show);
 }
 
 class App extends StatefulWidget {
