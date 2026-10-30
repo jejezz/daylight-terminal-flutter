@@ -50,8 +50,9 @@ void main() {
     expect(session.statusLabel, 'ttyUSB0 · 57600 8N1');
   });
 
-  test('연결하면 깨우는 Enter를 한 번 보낸다', () {
+  test('연결하면 깨우는 Enter를 한 번 보낸다', () async {
     session.connect(settings);
+    await Future<void>.delayed(Duration.zero);
     expect(serial.written, [0x0D, 0x0A]);
     expect(session.statusLabel, 'COM3 · 9600 7E2');
   });
@@ -78,24 +79,27 @@ void main() {
     session.connect(settings);
     serial.clearWritten();
     session.send('AT');
+    await Future<void>.delayed(Duration.zero);
     expect(serial.writtenText, 'AT\n');
     expect(session.terminal.buffer.getText(), isNot(contains('AT')));
   });
 
-  test('로컬 에코를 켜면 LineSender로 보낸 줄이 화면에도 쓰인다', () {
+  test('로컬 에코를 켜면 LineSender로 보낸 줄이 화면에도 쓰인다', () async {
     session.connect(settings);
     session.setLocalEcho(true);
     serial.clearWritten();
     session.setLineEnding(LineEnding.crlf);
     session.send('AT');
+    await Future<void>.delayed(Duration.zero);
     expect(serial.writtenText, 'AT\r\n');
     expect(session.terminal.buffer.getText(), contains('AT'));
   });
 
-  test('터미널에서 친 키는 그대로 보낸다 (에코는 장치 몫)', () {
+  test('터미널에서 친 키는 그대로 보낸다 (에코는 장치 몫)', () async {
     session.connect(settings);
     serial.clearWritten();
     session.terminal.textInput('a');
+    await Future<void>.delayed(Duration.zero);
     expect(serial.writtenText, 'a');
     expect(session.terminal.buffer.getText(), isNot(contains('a')));
   });
@@ -105,10 +109,12 @@ void main() {
     expect(serial.written, isEmpty);
   });
 
-  test('쓰다가 장치가 뽑히면 오류 상태로 바뀌고 포트를 닫는다', () {
+  test('쓰다가 장치가 뽑히면 오류 상태로 바뀌고 포트를 닫는다', () async {
     session.connect(settings);
+    await Future<void>.delayed(Duration.zero);
     serial.failWrite = SerialServiceException(SerialErrorKind.io, 'gone');
     session.send('x');
+    await Future<void>.delayed(Duration.zero);
     expect(session.status, SessionStatus.error);
     expect(session.error!.kind, SerialErrorKind.io);
     expect(serial.isOpen, isFalse);

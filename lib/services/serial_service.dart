@@ -1,5 +1,6 @@
 // portside-flutter의 serial_service.dart에서 가져와 데이터 비트·패리티·정지 비트·흐름 제어를 더했다.
 import 'dart:async';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:flutter_libserialport/flutter_libserialport.dart';
@@ -65,18 +66,27 @@ class SerialService {
   /// 기본 호출(타임아웃을 안 주면)은 비블로킹이라 OS 송신 버퍼가 꽉 차 있으면 그 자리에서 바로
   /// 일부(또는 0바이트)만 쓰고 돌아온다 — 나머지는 다시 보내 주지 않으면 조용히 사라진다. 그래서
   /// 짧게(300ms) 블로킹해서 버퍼가 비기를 기다렸다가 전부 쓴다. 그래도 다 못 쓰면(흐름 제어로 막혀
-  /// 있는 등) 그만큼만 돌려준다 — 메인 isolate를 오래 막지는 않는다.
-  int write(Uint8List bytes) {
+  /// 있는 등) 그만큼만 돌려준다.
+  ///
+  /// 이 블로킹 호출은 네이티브(FFI) 호출이라 메인 isolate에서 그대로 부르면 그 300ms 동안 화면·키
+  /// 입력이 멈춘다. 그래서 `Isolate.run`으로 따로 띄워서 쓴다 — 포트는 주소(int)로 건너가 새
+  /// isolate에서 같은 네이티브 핸들을 가리키는 `SerialPort`로 다시 만든다 ([SerialPortReader]가
+  /// 읽기에 쓰는 것과 같은 방법).
+  Future<int> write(Uint8List bytes) async {
     final port = _port;
     if (port == null) {
       throw SerialServiceException(SerialErrorKind.notOpen);
     }
     try {
-      return port.write(bytes, timeout: 300);
+      return await Isolate.run(() => _blockingWrite(port.address, bytes));
     } on SerialPortError catch (e) {
       // 기기가 도중에 뽑히면 여기서 네이티브 에러가 난다 — 상위가 일관되게 처리할 수 있는 타입으로 감싼다.
       throw SerialServiceException(SerialErrorKind.io, fixWindowsAnsiMessage(e.message));
     }
+  }
+
+  static int _blockingWrite(int portAddress, Uint8List bytes) {
+    return SerialPort.fromAddress(portAddress).write(bytes, timeout: 300);
   }
 
   /// 이미 뽑혀서 죽은 포트를 닫으려 할 때 네이티브 쪽에서 예외가 나도 앱이 죽지 않도록, 각 단계를 독립적으로 방어한다.

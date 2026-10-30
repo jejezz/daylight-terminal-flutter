@@ -210,8 +210,14 @@ class SerialSession extends LocalFolderSession {
   @override
   void writeInput(List<int> bytes) {
     if (!connected) return;
+    unawaited(_write(Uint8List.fromList(bytes)));
+  }
+
+  // 실제 쓰기는 별도 isolate에서 돈다(SerialService.write) — 여기서 기다리면 호출자(키 입력, LineSender)가
+  // 멈추므로 기다리지 않고 흘려보낸다. 끊긴 경우의 오류 처리만 비동기로 따라간다.
+  Future<void> _write(Uint8List bytes) async {
     try {
-      _service.write(Uint8List.fromList(bytes));
+      await _service.write(bytes);
     } on SerialServiceException catch (e) {
       _onStreamError(e);
     }

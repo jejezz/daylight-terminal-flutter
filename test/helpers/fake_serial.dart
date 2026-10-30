@@ -46,7 +46,7 @@ class FakeSerialService extends SerialService {
   }
 
   @override
-  int write(Uint8List bytes) {
+  Future<int> write(Uint8List bytes) async {
     final fail = failWrite;
     if (fail != null) throw fail;
     written.addAll(bytes);
