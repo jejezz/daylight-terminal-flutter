@@ -27,9 +27,11 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
-  });
+  // window_manager controls when the window is shown (see main.dart: it calls
+  // show() only after placement finishes and a post-placement frame renders).
+  // Showing here on the first frame would show the window before it moves to
+  // its final monitor/scale, causing a flash/resize jump (window_manager
+  // README: "Make sure you don't call Show() in windows/runner/flutter_window.cpp").
 
   // Flutter can complete the first frame before the "show window" callback is
   // registered. The following call ensures a frame is pending to ensure the
