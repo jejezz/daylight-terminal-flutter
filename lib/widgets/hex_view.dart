@@ -35,8 +35,13 @@ class _HexViewState extends State<HexView> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final session = context.watch<SerialSession>();
+    // 터미널 보기로 돌아가 있어도 IndexedStack이 이 위젯을 계속 데리고 있어서(스크롤 위치를 잃지 않으려고)
+    // session이 알릴 때마다 build가 불린다. 안 보이는 동안은 2MB까지 자랄 수 있는 rawBytes를 hex 문자열로
+    // 바꾸고 그 큰 글을 배치하는 비싼 일을 하지 않는다 — 이게 매번 돌면 화면 전체가 느려진다.
+    if (session.viewMode != SerialViewMode.hex) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context);
     final style = context.watch<TerminalPrefs>().style.toTextStyle();
     final scheme = Theme.of(context).colorScheme;
     final dump = hexDump(session.rawBytes);

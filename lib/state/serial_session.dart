@@ -26,6 +26,9 @@ class SerialSession extends LocalFolderSession {
   }
 
   static const _maxRawBytes = 2 * 1024 * 1024;
+  // 꽉 찬 뒤로도 매 청크마다 맨 앞을 깎으면 그때마다 2MB를 통째로 밀어야 해서(removeRange) 느려진다.
+  // 더 받아 두었다가(여유分) 한 번에 깎아서, 깎는 빈도를 청크 수백~수천 개에 한 번으로 줄인다.
+  static const _rawBytesTrimAt = _maxRawBytes + 256 * 1024;
 
   final SerialService _service;
   StreamSubscription<Uint8List>? _sub;
@@ -201,8 +204,9 @@ class SerialSession extends LocalFolderSession {
   @override
   void handleOutput(Uint8List chunk) {
     _rawBytes.addAll(chunk);
-    final overflow = _rawBytes.length - _maxRawBytes;
-    if (overflow > 0) _rawBytes.removeRange(0, overflow);
+    if (_rawBytes.length > _rawBytesTrimAt) {
+      _rawBytes.removeRange(0, _rawBytes.length - _maxRawBytes);
+    }
     super.handleOutput(chunk);
     _scheduleNotify();
   }

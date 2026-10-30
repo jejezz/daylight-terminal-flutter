@@ -135,14 +135,17 @@ void main() {
     expect(serial.isOpen, isFalse);
   });
 
-  test('raw 버퍼는 2MB를 넘으면 앞부분을 버린다', () async {
+  test('raw 버퍼는 2MB를 조금 넘는 여유까지는 그냥 두고, 여유를 넘기면 한 번에 2MB로 깎는다', () async {
     session.connect(settings);
-    serial.emitBytes(List.filled(1024 * 1024, 0x41));
-    serial.emitBytes(List.filled(1024 * 1024, 0x42));
-    serial.emitBytes([0x43, 0x44]);
+    serial.emitBytes(List.filled(2 * 1024 * 1024, 0x41));
+    serial.emitBytes([0x43, 0x44]); // 아직 여유(256KB) 안이라 깎지 않는다
+    await Future<void>.delayed(Duration.zero);
+    expect(session.byteCount, 2 * 1024 * 1024 + 2);
+
+    serial.emitBytes(List.filled(300 * 1024, 0x42)); // 여유를 넘겨 앞부분을 한 번에 버린다
     await Future<void>.delayed(Duration.zero);
     expect(session.byteCount, 2 * 1024 * 1024);
-    expect(session.rawBytes.last, 0x44);
+    expect(session.rawBytes.last, 0x42);
     expect(session.rawBytes.first, 0x41);
   });
 
