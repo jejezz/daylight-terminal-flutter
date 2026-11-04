@@ -130,22 +130,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   const TabBarRow().help(HelpId.tabs),
                   Expanded(
                     // 탭을 바꿔도 각 탭의 터미널·탐색기 상태가 유지되도록 모두 살려 둔다.
-                    child: IndexedStack(
-                      index: controller.selected,
+                    // IndexedStack은 자식마다 키 없는 감싸개를 둬서 탭 순서를 바꾸면 위치로 짝을 지어
+                    // 상태(LineSender 내용 등)가 사라진다. 그래서 키 있는 Offstage로 직접 쌓는다.
+                    child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        for (final s in controller.sessions)
+                        for (final (i, s) in controller.sessions.indexed)
                           // 공통 위젯(터미널, LineSender, 상태 바)은 TerminalSession으로, 탭 종류별 위젯은
                           // 자기 타입으로 찾을 수 있게 둘 다 제공한다.
-                          MultiProvider(
+                          Offstage(
                             key: ObjectKey(s),
-                            providers: [
-                              ChangeNotifierProvider<TerminalSession>.value(value: s),
-                              if (s is SshSessionProvider) ChangeNotifierProvider<SshSessionProvider>.value(value: s),
-                              if (s is LocalFolderSession) ChangeNotifierProvider<LocalFolderSession>.value(value: s),
-                              if (s is LocalShellSession) ChangeNotifierProvider<LocalShellSession>.value(value: s),
-                              if (s is SerialSession) ChangeNotifierProvider<SerialSession>.value(value: s),
-                            ],
-                            child: _SessionView(session: s),
+                            offstage: i != controller.selected,
+                            child: TickerMode(
+                              enabled: i == controller.selected,
+                              child: MultiProvider(
+                                providers: [
+                                  ChangeNotifierProvider<TerminalSession>.value(value: s),
+                                  if (s is SshSessionProvider)
+                                    ChangeNotifierProvider<SshSessionProvider>.value(value: s),
+                                  if (s is LocalFolderSession)
+                                    ChangeNotifierProvider<LocalFolderSession>.value(value: s),
+                                  if (s is LocalShellSession) ChangeNotifierProvider<LocalShellSession>.value(value: s),
+                                  if (s is SerialSession) ChangeNotifierProvider<SerialSession>.value(value: s),
+                                ],
+                                child: _SessionView(session: s),
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -302,7 +312,10 @@ class _SessionViewState extends State<_SessionView> {
                           color: scheme.outlineVariant,
                           onDrag: (d) => setState(() => _senderHeight = (sender - d).clamp(_minSender, maxSender)),
                         ),
-                        SizedBox(height: sender, child: LineSender(key: _senderKey).help(HelpId.sender)),
+                        SizedBox(
+                          height: sender,
+                          child: LineSender(key: _senderKey).help(HelpId.sender),
+                        ),
                       ],
                     ),
                   ),
