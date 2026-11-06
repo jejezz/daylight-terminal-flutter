@@ -11,6 +11,7 @@ import '../services/ansi_stripper.dart';
 import '../services/drag_staging.dart';
 import '../services/log_file_service.dart';
 import '../services/shell_commands.dart';
+import '../services/shell_integration.dart';
 
 enum SessionStatus { idle, connecting, connected, error }
 
@@ -32,9 +33,13 @@ abstract class TerminalSession extends ChangeNotifier {
     terminal.onOutput = (data) => writeInput(utf8.encode(data));
     terminal.onResize = onTerminalResize;
     terminal.onCurrentDirectoryChange = _onTerminalCwd;
+    terminal.onPrivateOSC = _onPrivateOsc;
   }
 
   final Terminal terminal;
+
+  /// 탭 색 막대의 색 번호. 탭 줄이 처음 그릴 때 정해 주고(`TabLabels.assignColors`) 탭이 사는 동안 그대로다.
+  int? tabColorIndex;
   final LogFileService _log = LogFileService();
   late final ByteConversionSink _terminalSink = const Utf8Decoder(allowMalformed: true)
       .startChunkedConversion(FnSink((s) => terminal.write(s)));
@@ -244,7 +249,69 @@ abstract class TerminalSession extends ChangeNotifier {
     } else if (!waiter.isCompleted) {
       waiter.complete(rest);
     }
+    if (waiter == null && _reportedCwd != rest) {
+      _reportedCwd = rest;
+      notify();
+    }
   }
+
+  /// 셸 통합(OSC 133/633)이 알려 주는 명령 상태. 탭이 "무슨 명령을 돌리는 중인지" 보여 주는 데 쓴다.
+  void _onPrivateOsc(String code, List<String> args) {
+    if (args.isEmpty) return;
+    switch (code) {
+      case '633':
+        if (args.first == 'E') _pendingCommand = ShellIntegration.unescapeCommand(args.skip(1).join(';'));
+      case '133':
+        switch (args.first) {
+          case 'C':
+            final command = _pendingCommand;
+            _pendingCommand = null;
+            _setRunning(command == null || command.isEmpty ? null : command, running: true);
+          case 'D':
+            _lastExitCode = args.length > 1 ? int.tryParse(args[1]) : _lastExitCode;
+            _pendingCommand = null;
+            _setRunning(null, running: false);
+          case 'A':
+            _pendingCommand = null;
+            _setRunning(null, running: false);
+        }
+    }
+  }
+
+  void _setRunning(String? command, {required bool running}) {
+    if (_commandRunning == running && _runningCommand == command) return;
+    _commandRunning = running;
+    _runningCommand = command;
+    notify();
+  }
+
+  /// 셸이 끝났거나 다시 시작할 때: 명령·경로 상태를 비운다.
+  @protected
+  void resetShellState() {
+    final changed = _commandRunning || _runningCommand != null || _reportedCwd != null;
+    _commandRunning = false;
+    _runningCommand = null;
+    _pendingCommand = null;
+    _reportedCwd = null;
+    if (changed) notify();
+  }
+
+  /// 셸 통합을 지원하는 셸이 알려 준 현재 폴더 (프롬프트마다 갱신). 모르면 null.
+  String? get reportedCwd => _reportedCwd;
+  String? _reportedCwd;
+
+  /// 지금 명령이 실행 중인가 (셸 통합이 있는 셸만 안다).
+  bool get commandRunning => _commandRunning;
+  bool _commandRunning = false;
+
+  /// 실행 중인 명령 줄. 실행 중이 아니거나 모르면 null.
+  String? get runningCommand => _runningCommand;
+  String? _runningCommand;
+  String? _pendingCommand;
+
+  /// 마지막으로 끝난 명령의 종료 코드. 아직 없으면 null.
+  int? get lastExitCode => _lastExitCode;
+  int? _lastExitCode;
 
   /// 셸이 요청 없이 스스로 알려 준 가장 최근 현재 경로. 그런 셸이 아니면 null.
   /// 프롬프트마다 갱신되는 값이라 믿을 수 있지만, 메뉴 요청으로 얻은 경로는 곧 낡으므로 담지 않는다.

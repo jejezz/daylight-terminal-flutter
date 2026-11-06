@@ -592,6 +592,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
+  String get uiTextScale => 'Interface text size';
+
+  @override
+  String get uiTextScaleHelp =>
+      'Size of all text outside the terminal: menus, tabs, folder names, the status bar. Terminal text is set separately under ‘Terminal font’ below.';
+
+  @override
   String get settingsSectionAppearance => 'Appearance';
 
   @override

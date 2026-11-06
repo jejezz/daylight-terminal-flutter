@@ -583,6 +583,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsTitle => '설정';
 
   @override
+  String get uiTextScale => '화면 글자 크기';
+
+  @override
+  String get uiTextScaleHelp =>
+      '메뉴, 탭, 폴더 이름, 상태 줄 등 터미널 밖의 모든 글자의 크기입니다. 터미널 글자는 아래 ‘터미널 글꼴’에서 따로 정합니다.';
+
+  @override
   String get settingsSectionAppearance => '외형';
 
   @override
