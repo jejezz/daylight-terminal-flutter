@@ -49,6 +49,18 @@ void main() {
         expect(env['PROMPT_COMMAND'], ShellIntegration.bashPromptCommand);
         expect(env['__DL_SI'], ShellIntegration.bashScript);
       }
+      // WSL: wsl.exe가 두 변수를 리눅스로 넘기도록 WSLENV에 올린다 (이미 있는 값은 지키고 중복은 만들지 않는다).
+      const wsl = LocalShell(
+        id: 'wsl:Ubuntu',
+        name: 'WSL: Ubuntu',
+        executable: r'C:\Windows\System32\wsl.exe',
+        kind: ShellKind.wsl,
+        arguments: ['-d', 'Ubuntu'],
+        wslDistro: 'Ubuntu',
+      );
+      final wslEnv = ShellIntegration.environment(wsl, const {'WSLENV': 'FOO/p'});
+      expect(wslEnv['WSLENV'], 'FOO/p:PROMPT_COMMAND:__DL_SI');
+      expect(ShellIntegration.environment(wsl, {...wslEnv})['WSLENV'], 'FOO/p:PROMPT_COMMAND:__DL_SI');
       expect(ShellIntegration.environment(zsh, const {}), isEmpty);
       expect(ShellIntegration.environment(_pwsh, const {}), isEmpty);
       // 이미 있는 PROMPT_COMMAND는 이어서 부르고, 한 번 넣은 것을 다시 감싸지 않는다.

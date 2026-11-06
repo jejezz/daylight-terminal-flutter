@@ -194,7 +194,10 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   `PS0`(bash 4.4+)로 명령 시작을 알린다(`history 1`로 명령 줄). 프롬프트마다 종료 코드(133;D)·폴더(OSC 7, Git Bash는 `cygpath -m`)를 알리고
   `$?`를 되돌려 놓는다. 기존 `PROMPT_COMMAND`는 이어서 부른다. macOS 기본 bash 3.2는 `PS0`가 없어 폴더만 알린다. 스페이스로 시작하는 명령(앱이 `cd`를 넣을 때)은
   히스토리에 안 남아 직전 명령이 잠깐 보일 수 있다 (0.5초 안에 끝나 스피너는 안 뜬다).
-- 아직: zsh·WSL·cmd는 셸 통합이 없다 (폴더 이름 대신 셸 이름), 탭 색 막대, 명령 숨기기 설정. PowerShell 7(pwsh)은 이 PC에 없어 실제로는 확인하지 못했다 (Windows PowerShell 5.1로만).
+- **WSL**도 같은 bash 스크립트를 쓴다: `wsl.exe`는 `WSLENV`에 이름이 올라 있는 환경 변수만 리눅스로 넘기므로 `PROMPT_COMMAND`·`__DL_SI`를 `WSLENV`에 보탠다.
+  폴더는 리눅스 경로(`/home/me`, `/mnt/c/…`) 그대로 탭에 보인다.
+- 아직: zsh·cmd는 셸 통합이 없다 (폴더 이름 대신 셸 이름), 탭 색 막대, 명령 숨기기 설정. zsh는 `ZDOTDIR`로 `.zshrc`를 감싸 `precmd`/`preexec`를 거는 방식이 될 텐데,
+  이 PC(Windows)에는 zsh가 없어 실제로 돌려 볼 수 없었다. PowerShell 7(pwsh)은 이 PC에 없어 실제로는 확인하지 못했다 (Windows PowerShell 5.1로만).
 
 ## 알려진 한계
 

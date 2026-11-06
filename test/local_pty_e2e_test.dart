@@ -217,6 +217,30 @@ void main() {
     timeout: const Timeout(Duration(seconds: 60)),
   );
 
+  test(
+    'wsl: shell integration reports the Linux folder, the running command and its exit code',
+    () async {
+      final wsl = shells.where((s) => s.kind == ShellKind.wsl).firstOrNull;
+      if (wsl == null) return;
+      final s = LocalShellSession(wsl, startDirectory: tmp.path);
+      await s.start();
+      expect(s.connected, isTrue, reason: s.startError);
+      await waitFor(() => s.reportedCwd != null, seconds: 40, reason: 'no cwd: ${screen(s)}');
+
+      s.send("sleep 2; bash -c 'exit 7'");
+      await waitFor(() => s.runningCommand != null, reason: 'never running: ${screen(s)}');
+      expect(s.runningCommand, "sleep 2; bash -c 'exit 7'");
+      await waitFor(() => !s.commandRunning, reason: 'still running: ${screen(s)}');
+      expect(s.lastExitCode, 7);
+
+      s.send('cd /tmp');
+      await waitFor(() => s.reportedCwd == '/tmp', reason: '${s.reportedCwd} ${screen(s)}');
+      s.dispose();
+    },
+    skip: skip,
+    timeout: const Timeout(Duration(seconds: 120)),
+  );
+
   for (final id in ['powershell', 'pwsh']) {
     test(
       '$id: shell integration reports the folder, the running command and its exit code',

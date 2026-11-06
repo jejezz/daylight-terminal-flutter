@@ -10,11 +10,12 @@ import '../models/local_shell.dart';
 /// 로컬 셸을 띄울 때 셸 인자로 넣는다(파일을 만들지 않는다 — Windows PowerShell의 실행 정책이 스크립트 파일을
 /// 막을 수 있다). 사용자의 프로필은 그대로 읽고, 그 뒤에 `prompt`와 입력 읽기를 감싼다.
 abstract final class ShellIntegration {
-  /// [shell]이 통합 스크립트를 받을 수 있는 종류인가. (PowerShell, bash, Git Bash. zsh·WSL·cmd는 아직.)
+  /// [shell]이 통합 스크립트를 받을 수 있는 종류인가. (PowerShell, bash, Git Bash, WSL. zsh·cmd는 아직.)
   static bool supports(LocalShell shell) => shell.kind == ShellKind.powershell || _isBash(shell);
 
   static bool _isBash(LocalShell shell) {
-    if (shell.kind == ShellKind.gitBash) return true;
+    // WSL의 기본 셸은 bash다 (다른 셸이면 PROMPT_COMMAND가 무시될 뿐 해롭지 않다).
+    if (shell.kind == ShellKind.gitBash || shell.kind == ShellKind.wsl) return true;
     if (shell.kind != ShellKind.posix) return false;
     final base = shell.executable.split(RegExp(r'[\\/]')).last.toLowerCase();
     return base == 'bash' || base == 'bash.exe';
@@ -29,7 +30,16 @@ abstract final class ShellIntegration {
     final hook = existing == null || existing.isEmpty || existing.contains(r'$__DL_SI')
         ? bashPromptCommand
         : '$bashPromptCommand; $existing';
-    return {'PROMPT_COMMAND': hook, '__DL_SI': bashScript};
+    final env = {'PROMPT_COMMAND': hook, '__DL_SI': bashScript};
+    if (shell.kind == ShellKind.wsl) {
+      // wsl.exe는 WSLENV에 이름을 올린 환경 변수만 리눅스 쪽으로 넘긴다.
+      final names = (base['WSLENV'] ?? '').split(':').where((n) => n.isNotEmpty).toList();
+      for (final n in ['PROMPT_COMMAND', '__DL_SI']) {
+        if (!names.any((e) => e.split('/').first == n)) names.add(n);
+      }
+      env['WSLENV'] = names.join(':');
+    }
+    return env;
   }
 
   static const bashPromptCommand = r'eval "$__DL_SI"';
