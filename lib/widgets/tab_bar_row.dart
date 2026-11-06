@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +20,8 @@ import '../utils/tab_label.dart';
 const double _tabHeight = 48;
 
 /// 아직 이름이 없는 탭은 종류를 알려 준다. 처음 여는 탭(SSH·시리얼·셸 중 고르는 화면)은 그냥 "새 연결".
-String _fallbackTitle(TerminalSession session, AppLocalizations l10n) => session.tabTitle.isNotEmpty
+String _fallbackTitle(TerminalSession session, AppLocalizations l10n) =>
+    session.tabTitle.isNotEmpty
     ? session.tabTitle
     : switch (session) {
         SerialSession() => l10n.tabNewSerial,
@@ -28,8 +30,36 @@ String _fallbackTitle(TerminalSession session, AppLocalizations l10n) => session
       };
 
 /// 세션 탭 줄. 탭마다 SSH 연결 하나(터미널 + 탐색기).
-class TabBarRow extends StatelessWidget {
+class TabBarRow extends StatefulWidget {
   const TabBarRow({super.key});
+
+  @override
+  State<TabBarRow> createState() => _TabBarRowState();
+}
+
+class _TabBarRowState extends State<TabBarRow> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// 마우스 휠(세로)로 탭 줄을 가로로 민다. 탭이 화면보다 많아도 오른쪽 탭에 갈 수 있게.
+  void _onWheel(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || !_scroll.hasClients) return;
+    final delta = event.scrollDelta.dx != 0
+        ? event.scrollDelta.dx
+        : event.scrollDelta.dy;
+    final position = _scroll.position;
+    _scroll.jumpTo(
+      (_scroll.offset + delta).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,18 +83,33 @@ class TabBarRow extends StatelessWidget {
                   controller.sessions,
                   fallbackTitle: (s) => _fallbackTitle(s, l10n),
                 );
-                return ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: controller.sessions.length,
-                  itemBuilder: (context, i) => _Tab(
-                    key: ObjectKey(controller.sessions[i]),
-                    index: i,
-                    session: controller.sessions[i],
-                    label: labels[i],
-                    selected: i == controller.selected,
-                    onSelect: () => controller.select(i),
-                    onClose: () => controller.closeAt(i),
-                    onMove: controller.move,
+                // 탭 수는 많지 않으므로 모두 만들어 둔다 (선택한 탭을 보이는 곳으로 가져오려면 만들어져 있어야 한다).
+                return Listener(
+                  onPointerSignal: _onWheel,
+                  child: Scrollbar(
+                    controller: _scroll,
+                    scrollbarOrientation: ScrollbarOrientation.bottom,
+                    thickness: 3,
+                    child: SingleChildScrollView(
+                      controller: _scroll,
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (final (i, session)
+                              in controller.sessions.indexed)
+                            _Tab(
+                              key: ObjectKey(session),
+                              index: i,
+                              session: session,
+                              label: labels[i],
+                              selected: i == controller.selected,
+                              onSelect: () => controller.select(i),
+                              onClose: () => controller.closeAt(i),
+                              onMove: controller.move,
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
               },
@@ -150,49 +195,48 @@ class _Tab extends StatelessWidget {
       listenable: session,
       builder: (context, _) {
         final body = _body(context, scheme, l10n);
-        return HelpTarget(
-          id: HelpId.tabItem,
-          child: DragTarget<int>(
-            onWillAcceptWithDetails: (d) => d.data != index,
-            onAcceptWithDetails: (d) => onMove(d.data, index),
-            builder: (context, candidates, _) {
-              final from = candidates.isEmpty ? null : candidates.first;
-              // 놓을 자리 표시: 오른쪽으로 끌면 이 탭의 오른쪽, 왼쪽으로 끌면 왼쪽에 들어간다.
-              final bar = Container(width: 3, color: scheme.primary);
-              return Stack(
-                children: [
-                  Draggable<int>(
-                    data: index,
-                    axis: Axis.horizontal,
-                    feedback: Material(
-                      color: Colors.transparent,
-                      child: Opacity(
-                        opacity: 0.85,
-                        child: ListenableBuilder(
-                          listenable: session,
-                          builder: (context, _) => _body(
-                            context,
-                            scheme,
-                            l10n,
-                            dragging: true,
+        return _EnsureVisible(
+          active: selected,
+          child: HelpTarget(
+            id: HelpId.tabItem,
+            child: DragTarget<int>(
+              onWillAcceptWithDetails: (d) => d.data != index,
+              onAcceptWithDetails: (d) => onMove(d.data, index),
+              builder: (context, candidates, _) {
+                final from = candidates.isEmpty ? null : candidates.first;
+                // 놓을 자리 표시: 오른쪽으로 끌면 이 탭의 오른쪽, 왼쪽으로 끌면 왼쪽에 들어간다.
+                final bar = Container(width: 3, color: scheme.primary);
+                return Stack(
+                  children: [
+                    Draggable<int>(
+                      data: index,
+                      axis: Axis.horizontal,
+                      feedback: Material(
+                        color: Colors.transparent,
+                        child: Opacity(
+                          opacity: 0.85,
+                          child: ListenableBuilder(
+                            listenable: session,
+                            builder: (context, _) =>
+                                _body(context, scheme, l10n, dragging: true),
                           ),
                         ),
                       ),
+                      childWhenDragging: Opacity(opacity: 0.35, child: body),
+                      child: body,
                     ),
-                    childWhenDragging: Opacity(opacity: 0.35, child: body),
-                    child: body,
-                  ),
-                  if (from != null)
-                    Positioned(
-                      top: 0,
-                      bottom: 0,
-                      left: from > index ? 0 : null,
-                      right: from > index ? null : 0,
-                      child: IgnorePointer(child: bar),
-                    ),
-                ],
-              );
-            },
+                    if (from != null)
+                      Positioned(
+                        top: 0,
+                        bottom: 0,
+                        left: from > index ? 0 : null,
+                        right: from > index ? null : 0,
+                        child: IgnorePointer(child: bar),
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
         );
       },
@@ -228,20 +272,18 @@ class _Tab extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              switch (session) {
-                LocalShellSession() => Icons.terminal_rounded,
-                SerialSession() => Icons.usb_rounded,
-                _ => Icons.dns_outlined,
-              },
-              size: 13,
-            ),
+            Icon(switch (session) {
+              LocalShellSession() => Icons.terminal_rounded,
+              SerialSession() => Icons.usb_rounded,
+              _ => Icons.dns_outlined,
+            }, size: 13),
             const SizedBox(width: AppSpacing.xs),
             _StatusMark(
               running: label.running,
               color: switch (session.status) {
                 // 마지막 명령이 실패로 끝났으면 다음 명령이 시작될 때까지 빨간 점.
-                SessionStatus.connected when (label.exitCode ?? 0) != 0 => AppColors.danger,
+                SessionStatus.connected when (label.exitCode ?? 0) != 0 =>
+                  AppColors.danger,
                 SessionStatus.connected => AppColors.success,
                 SessionStatus.connecting => AppColors.warning,
                 SessionStatus.error => AppColors.danger,
@@ -271,8 +313,12 @@ class _Tab extends StatelessWidget {
                           text: label.primary,
                           style: TextStyle(
                             fontSize: 12.5,
-                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                            color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: selected
+                                ? scheme.onSurface
+                                : scheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -287,8 +333,12 @@ class _Tab extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 11.5,
-                        fontWeight: label.running ? FontWeight.w600 : FontWeight.w400,
-                        color: label.running ? scheme.primary : scheme.onSurfaceVariant,
+                        fontWeight: label.running
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                        color: label.running
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant,
                       ),
                     ),
                 ],
@@ -307,8 +357,52 @@ class _Tab extends StatelessWidget {
     );
     final tip = label.tooltip;
     if (dragging || tip == null || tip.isEmpty) return tab;
-    return Tooltip(message: tip, waitDuration: const Duration(milliseconds: 600), child: tab);
+    return Tooltip(
+      message: tip,
+      waitDuration: const Duration(milliseconds: 600),
+      child: tab,
+    );
   }
+}
+
+/// [active]가 되면(탭을 고르거나 새 탭이 열리면) 이 위젯을 가로 스크롤 안에서 보이는 곳으로 가져온다.
+class _EnsureVisible extends StatefulWidget {
+  const _EnsureVisible({required this.active, required this.child});
+
+  final bool active;
+  final Widget child;
+
+  @override
+  State<_EnsureVisible> createState() => _EnsureVisibleState();
+}
+
+class _EnsureVisibleState extends State<_EnsureVisible> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.active) _schedule();
+  }
+
+  @override
+  void didUpdateWidget(_EnsureVisible old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !old.active) _schedule();
+  }
+
+  void _schedule() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// 탭 앞의 상태 표시: 명령이 실행 중이면 (조금 기다린 뒤) 돌아가는 표시, 아니면 연결 상태 점.
@@ -366,7 +460,10 @@ class _StatusMarkState extends State<_StatusMark> {
       width: 10,
       height: 10,
       child: widget.running && _show
-          ? CircularProgressIndicator(strokeWidth: 1.6, color: Theme.of(context).colorScheme.primary)
+          ? CircularProgressIndicator(
+              strokeWidth: 1.6,
+              color: Theme.of(context).colorScheme.primary,
+            )
           : Icon(Icons.circle, size: 8, color: widget.color),
     );
   }

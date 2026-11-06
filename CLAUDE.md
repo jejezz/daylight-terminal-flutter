@@ -182,6 +182,8 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 탭은 두 줄(높이 48)이다. 첫 줄 = `셸이름  폴더이름`(`TabLabels`, `lib/utils/tab_label.dart`; 셸 이름은 `pwsh`처럼 짧게 `primary` 색, 폴더는 집이면 `~`, 겹치면 부모를 붙여 `a/src`),
   둘째 줄 = 실행 중인 명령(`primary` 색) 또는 전체 경로. 폴더를 모르는 탭(SSH·시리얼·셸 통합 없는 셸)은 예전처럼 `tabTitle` 한 줄.
   툴팁에 전체 경로·셸·명령·종료 코드. 탭 앞 표시는 명령이 0.5초 넘게 돌면 스피너, 마지막 명령이 실패(종료 코드 ≠ 0)면 다음 명령까지 빨간 점.
+- 탭이 화면보다 많으면 탭 줄이 가로로 스크롤된다: 마우스 휠(세로 휠도 가로로 민다), 아래의 얇은 스크롤바, 그리고 탭을 고르거나 새 탭이 열리면
+  그 탭이 보이는 곳으로 자동으로 온다(`_EnsureVisible`). 탭은 `ListView.builder`가 아니라 `Row`에 모두 만든다(안 만들어진 탭은 가져올 수 없어서).
 - 폴더·명령은 **셸 통합**(`lib/services/shell_integration.dart`)이 알려 준다: 로컬 PowerShell(pwsh·Windows PowerShell)을 띄울 때
   `-NoExit -EncodedCommand`로 스크립트를 넣어(파일 없이 — 실행 정책 회피) 프로필 뒤에 `prompt`와 `PSConsoleHostReadLine`을 감싼다.
   프롬프트마다 OSC 7(폴더), 명령을 받으면 OSC 633;E(명령, `\\`·`\xHH` 이스케이프)와 133;C, 끝나면 133;D;종료코드.
