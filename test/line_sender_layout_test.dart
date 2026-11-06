@@ -8,6 +8,7 @@ import 'package:daylight_terminal/state/terminal_session.dart';
 import 'package:daylight_terminal/theme/app_theme.dart';
 import 'package:daylight_terminal/widgets/line_sender.dart';
 import 'package:flutter/material.dart';
+import 'package:daylight_terminal/theme/phosphor_icons.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
@@ -49,16 +50,16 @@ void main() {
 
   Rect rectOf(WidgetTester tester, Finder f) => tester.getRect(f);
 
-  Finder newFile() => find.byIcon(Icons.note_add_outlined);
-  Finder open() => find.byIcon(Icons.folder_open_rounded);
-  Finder save() => find.byIcon(Icons.save_outlined);
-  Finder saveAs() => find.byIcon(Icons.save_as_outlined);
+  Finder newFile() => find.byIcon(PhosphorIconsDuotone.filePlus);
+  Finder open() => find.byIcon(PhosphorIconsDuotone.folderOpen);
+  Finder save() => find.byIcon(PhosphorIconsDuotone.floppyDisk);
+  Finder saveAs() => find.byIcon(PhosphorIconsDuotone.floppyDiskBack);
   List<Finder> fileButtons() => [newFile(), open(), save(), saveAs()];
 
   /// 아이콘이 아니라 버튼 전체(누르는 영역)를 찾는다.
   Finder buttonOf(Finder icon) => find.ancestor(of: icon, matching: find.byType(IconButton));
   Finder endingChip() => find.byType(PopupMenuButton<LineEnding>);
-  Finder sendButton() => buttonOf(find.byIcon(Icons.send_rounded));
+  Finder sendButton() => buttonOf(find.byIcon(PhosphorIconsDuotone.paperPlaneTilt));
 
   testWidgets('the four file buttons are in the bottom bar, left-aligned, in editor order, on one line', (
     tester,
@@ -116,7 +117,7 @@ void main() {
     expect(field.top, greaterThanOrEqualTo(inputBox.top));
     expect(field.bottom, closeTo(inputBox.bottom, 1));
     // 버튼은 모두 상자 아래 하단 줄에 있다.
-    for (final b in [...fileButtons(), find.byIcon(Icons.send_rounded)]) {
+    for (final b in [...fileButtons(), find.byIcon(PhosphorIconsDuotone.paperPlaneTilt)]) {
       expect(rectOf(tester, b).top, greaterThanOrEqualTo(inputBox.bottom - 1), reason: '버튼이 상자 안/위에 있다');
     }
   });
@@ -337,14 +338,14 @@ void main() {
     );
     expect((chipDecoration(tester).border! as Border).top.color, isNot(cleanBorder));
     // 아이콘도 같은 색.
-    final icon = tester.widget<Icon>(find.descendant(of: nameChip(), matching: find.byType(Icon)));
+    final icon = tester.widget<Icon>(find.descendant(of: nameChip(), matching: find.byType(PhosphorIcon)));
     expect(icon.color, modifiedText);
   });
 
   testWidgets('a file shows the document icon, no file shows the edit-note icon', (tester) async {
     await pumpSender(tester, height: 200);
-    Icon iconInChip() => tester.widget<Icon>(find.descendant(of: nameChip(), matching: find.byType(Icon)));
-    expect(iconInChip().icon, Icons.edit_note_rounded);
+    Icon iconInChip() => tester.widget<Icon>(find.descendant(of: nameChip(), matching: find.byType(PhosphorIcon)));
+    expect(iconInChip().icon, PhosphorIconsDuotone.notePencil);
   });
 
   testWidgets('tapping the chip focuses the input box', (tester) async {

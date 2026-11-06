@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../help/help_mode.dart';
@@ -15,6 +16,7 @@ import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
 import '../utils/tab_label.dart';
+import 'tab_rename_dialog.dart';
 import '../utils/ui_scale.dart';
 
 /// 탭 높이: 첫 줄(폴더 이름)과 둘째 줄(실행 중인 명령 / 셸 이름).
@@ -121,7 +123,7 @@ class _TabBarRowState extends State<TabBarRow> {
             child: PopupMenuButton<Object>(
               iconSize: 18,
               tooltip: l10n.tabNew,
-              icon: const Icon(Icons.add_rounded),
+              icon: const PhosphorIcon(PhosphorIconsDuotone.plus),
               onSelected: (choice) => switch (choice) {
                 LocalShell() => controller.addLocal(choice),
                 'serial' => controller.addSerial(),
@@ -131,14 +133,14 @@ class _TabBarRowState extends State<TabBarRow> {
                 PopupMenuItem<Object>(
                   value: 'ssh',
                   child: _MenuRow(
-                    Icons.dns_outlined,
+                    PhosphorIconsDuotone.hardDrives,
                     l10n.newTabSsh,
                     AppShortcut.newTab.label,
                   ),
                 ),
                 PopupMenuItem<Object>(
                   value: 'serial',
-                  child: _MenuRow(Icons.usb_rounded, l10n.newTabSerial, null),
+                  child: _MenuRow(PhosphorIconsDuotone.usb, l10n.newTabSerial, null),
                 ),
                 const PopupMenuDivider(),
                 if (controller.shells.isEmpty)
@@ -152,7 +154,7 @@ class _TabBarRowState extends State<TabBarRow> {
                       value: shell,
                       // 첫 번째가 기본 셸이고, 단축키는 그 셸을 연다.
                       child: _MenuRow(
-                        Icons.terminal_rounded,
+                        PhosphorIconsDuotone.terminalWindow,
                         shell.name,
                         i == 0 ? AppShortcut.newLocalTab.label : null,
                       ),
@@ -244,6 +246,41 @@ class _Tab extends StatelessWidget {
     );
   }
 
+  /// 탭 이름을 묻고 정한다 (빈 값이면 자동 이름으로).
+  Future<void> _rename(BuildContext context) async {
+    final result = await showTabRenameDialog(
+      context,
+      initial: session.customTitle ?? label.primary,
+      hasCustom: session.customTitle != null,
+    );
+    if (result != null) session.setCustomTitle(result);
+  }
+
+  /// 오른쪽 클릭 메뉴: 이름 바꾸기, (이름을 지었으면) 자동 이름으로, 탭 닫기.
+  Future<void> _showMenu(BuildContext context, Offset at) async {
+    final l10n = AppLocalizations.of(context);
+    final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final choice = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(at & const Size(1, 1), Offset.zero & overlay.size),
+      items: [
+        PopupMenuItem(value: 'rename', child: Text(l10n.tabRename)),
+        if (session.customTitle != null) PopupMenuItem(value: 'auto', child: Text(l10n.tabRenameAuto)),
+        const PopupMenuDivider(),
+        PopupMenuItem(value: 'close', child: Text(l10n.tabClose)),
+      ],
+    );
+    if (!context.mounted) return;
+    switch (choice) {
+      case 'rename':
+        await _rename(context);
+      case 'auto':
+        session.setCustomTitle(null);
+      case 'close':
+        onClose();
+    }
+  }
+
   Widget _body(
     BuildContext context,
     ColorScheme scheme,
@@ -268,11 +305,11 @@ class _Tab extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // 아이콘 색이 탭마다 다르다 (옆 탭과 구분). 고른 탭이라고 색을 바꾸지 않는다 — 아래 밑줄이 알려 준다.
-          Icon(
+          PhosphorIcon(
             switch (session) {
-              LocalShellSession() => Icons.terminal_rounded,
-              SerialSession() => Icons.usb_rounded,
-              _ => Icons.dns_outlined,
+              LocalShellSession() => PhosphorIconsDuotone.terminalWindow,
+              SerialSession() => PhosphorIconsDuotone.usb,
+              _ => PhosphorIconsDuotone.hardDrives,
             },
             size: 16,
             color: TabLabels.colorFor(
@@ -351,16 +388,21 @@ class _Tab extends StatelessWidget {
             iconSize: 14,
             visualDensity: VisualDensity.compact,
             tooltip: '${l10n.tabClose} (${AppShortcut.closeTab.label})',
-            icon: const Icon(Icons.close_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.x),
             onPressed: onClose,
           ).help(HelpId.tabClose),
         ],
       ),
     );
-    final tab = InkWell(
-      splashFactory: NoSplash.splashFactory,
-      onTap: onSelect,
-      child: content,
+    // 더블클릭은 Listener로 직접 센다 (InkWell의 onDoubleTap을 쓰면 한 번 클릭으로 탭을 고르는 것이 늦어진다).
+    final tab = _DoubleClick(
+      onDoubleClick: () => _rename(context),
+      child: InkWell(
+        splashFactory: NoSplash.splashFactory,
+        onTap: onSelect,
+        onSecondaryTapUp: (d) => _showMenu(context, d.globalPosition),
+        child: content,
+      ),
     );
     final tip = label.tooltip;
     if (dragging || tip == null || tip.isEmpty) return tab;
@@ -370,6 +412,42 @@ class _Tab extends StatelessWidget {
       child: tab,
     );
   }
+}
+
+/// 같은 자리에서 [window] 안에 두 번 누르면 [onDoubleClick]을 부른다. 누름은 그대로 아래로 전달한다
+/// (한 번 클릭의 반응이 늦어지지 않는다).
+class _DoubleClick extends StatefulWidget {
+  const _DoubleClick({required this.onDoubleClick, required this.child});
+
+  final VoidCallback onDoubleClick;
+  final Widget child;
+
+  static const window = Duration(milliseconds: 400);
+
+  @override
+  State<_DoubleClick> createState() => _DoubleClickState();
+}
+
+class _DoubleClickState extends State<_DoubleClick> {
+  DateTime? _lastDown;
+  Offset? _lastAt;
+
+  void _onDown(PointerDownEvent e) {
+    if (e.buttons != kPrimaryButton) return;
+    final now = DateTime.now();
+    final last = _lastDown;
+    final at = _lastAt;
+    if (last != null && at != null && now.difference(last) <= _DoubleClick.window && (e.position - at).distance < 8) {
+      _lastDown = null;
+      widget.onDoubleClick();
+    } else {
+      _lastDown = now;
+      _lastAt = e.position;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(onPointerDown: _onDown, child: widget.child);
 }
 
 /// [active]가 되면(탭을 고르거나 새 탭이 열리면) 이 위젯을 가로 스크롤 안에서 보이는 곳으로 가져온다.
@@ -489,7 +567,7 @@ class _MenuRow extends StatelessWidget {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     return Row(
       children: [
-        Icon(icon, size: 18),
+        PhosphorIcon(icon, size: 18),
         const SizedBox(width: AppSpacing.sm),
         Expanded(child: Text(label)),
         if (shortcut != null) ...[

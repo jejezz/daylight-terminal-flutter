@@ -3,6 +3,7 @@ import 'package:daylight_terminal/l10n/app_localizations.dart';
 import 'package:daylight_terminal/theme/app_theme.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:daylight_terminal/theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -69,7 +70,7 @@ void main() {
 
   testWidgets('? 버튼으로 들어가 마우스를 올리면 설명이 나오고, 클릭하면 끝난다 (아래 버튼은 눌리지 않는다)', (tester) async {
     await pumpApp(tester);
-    await tester.tap(find.byIcon(Icons.help_outline_rounded));
+    await tester.tap(find.byIcon(PhosphorIconsDuotone.question));
     await tester.pump();
     expect(help.active, isTrue);
 

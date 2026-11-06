@@ -1,6 +1,7 @@
 import 'dart:ui' show AppExitType;
 
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart' show ServicesBinding;
 import 'package:provider/provider.dart';
 import 'package:xterm2/ui.dart' show TerminalTheme;
@@ -142,7 +143,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               if (Elevation.isElevated)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.verified_user_rounded),
+                  leading: const PhosphorIcon(PhosphorIconsDuotone.shieldCheck),
                   title: Text(l10n.adminRunning),
                   subtitle: Text(l10n.adminRunningHelp),
                 )
@@ -152,7 +153,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: OutlinedButton.icon(
-                    icon: const Icon(Icons.shield_outlined),
+                    icon: const PhosphorIcon(PhosphorIconsDuotone.shield),
                     label: Text(l10n.adminRestart),
                     onPressed: _restartAsAdmin,
                   ),

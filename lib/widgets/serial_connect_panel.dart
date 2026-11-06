@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -154,7 +155,7 @@ class _SerialConnectPanelState extends State<SerialConnectPanel> {
                   ),
                   IconButton(
                     tooltip: l10n.serialPortRefresh,
-                    icon: const Icon(Icons.refresh_rounded),
+                    icon: const PhosphorIcon(PhosphorIconsDuotone.arrowsClockwise),
                     onPressed: () => setState(() {
                       _ports = _list();
                       if (session.pendingPort != null && !_ports.contains(session.pendingPort)) {
@@ -190,7 +191,7 @@ class _SerialConnectPanelState extends State<SerialConnectPanel> {
                   ),
                   PopupMenuButton<int>(
                     tooltip: l10n.serialBaud,
-                    icon: const Icon(Icons.speed_rounded),
+                    icon: const PhosphorIcon(PhosphorIconsDuotone.gauge),
                     onSelected: _pickBaud,
                     itemBuilder: (context) => [
                       for (final b in SerialSettings.commonBaudRates) PopupMenuItem(value: b, child: Text('$b')),

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/gestures.dart' show kPrimaryButton;
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 
 import '../help/help_mode.dart';
@@ -64,7 +65,7 @@ class PaneHeader extends StatelessWidget {
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: l10n.sftpUp,
-            icon: const Icon(Icons.arrow_upward_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.arrowUp),
             onPressed: canGoUp ? () => _tap('up', onUp) : null,
           ).help(HelpId.paneUp),
           ...extraActions,
@@ -94,14 +95,14 @@ class PaneHeader extends StatelessWidget {
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: l10n.sftpRefresh,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.arrowsClockwise),
             onPressed: () => _tap('refresh', onRefresh),
           ).help(HelpId.paneRefresh),
           IconButton(
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: l10n.sftpNewFolder,
-            icon: const Icon(Icons.create_new_folder_outlined),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.folderPlus),
             onPressed: () => _tap('newFolder', onNewFolder),
           ).help(HelpId.paneNewFolder),
           if (onTerminalToHere != null || onExplorerToTerminal != null)
@@ -110,7 +111,7 @@ class PaneHeader extends StatelessWidget {
               child: PopupMenuButton<String>(
                 tooltip: l10n.pathMenuTooltip,
                 iconSize: 18,
-                icon: const Icon(Icons.sync_alt_rounded),
+                icon: const PhosphorIcon(PhosphorIconsDuotone.arrowsLeftRight),
                 onSelected: (v) {
                   DiagLog.log('ui.pane menu $v');
                   if (v == 'terminal') onTerminalToHere?.call();
@@ -184,8 +185,8 @@ class FileRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            entry.isDirectory ? Icons.folder_rounded : Icons.insert_drive_file_outlined,
+          PhosphorIcon(
+            entry.isDirectory ? PhosphorIconsDuotone.folder : PhosphorIconsDuotone.file,
             size: 18,
             color: entry.isDirectory ? scheme.primary : scheme.onSurfaceVariant,
           ),

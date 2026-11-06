@@ -4,6 +4,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:path/path.dart' as p;
@@ -390,7 +391,7 @@ class LineSenderState extends State<LineSender> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(_path == null ? Icons.edit_note_rounded : Icons.description_outlined, size: 15, color: color),
+          PhosphorIcon(_path == null ? PhosphorIconsDuotone.notePencil : PhosphorIconsDuotone.fileText, size: 15, color: color),
           const SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(
@@ -416,7 +417,7 @@ class LineSenderState extends State<LineSender> {
               Flexible(child: _path == null ? chip : Tooltip(message: _path!, child: chip)),
               if (_remoteCopy) ...[
                 const SizedBox(width: AppSpacing.sm),
-                Icon(Icons.warning_amber_rounded, size: 16, color: warn),
+                PhosphorIcon(PhosphorIconsDuotone.warning, size: 16, color: warn),
                 const SizedBox(width: AppSpacing.xs),
                 Flexible(
                   child: Text(
@@ -445,7 +446,7 @@ class LineSenderState extends State<LineSender> {
   Widget _fileButton(HelpId help, IconData icon, String tooltip, VoidCallback onPressed, {Color? color}) => IconButton(
     iconSize: 22,
     tooltip: tooltip,
-    icon: Icon(icon),
+    icon: PhosphorIcon(icon),
     color: color,
     onPressed: onPressed,
     style: IconButton.styleFrom(
@@ -470,16 +471,16 @@ class LineSenderState extends State<LineSender> {
       child: Row(
         children: [
           // 편집기의 새 파일 · 열기 · 저장 · 다른 이름으로 저장 순서.
-          _fileButton(HelpId.senderNew, Icons.note_add_outlined, l10n.senderNew, _new),
-          _fileButton(HelpId.senderOpen, Icons.folder_open_rounded, l10n.senderOpen('${_commandKey}O'), _open),
+          _fileButton(HelpId.senderNew, PhosphorIconsDuotone.filePlus, l10n.senderNew, _new),
+          _fileButton(HelpId.senderOpen, PhosphorIconsDuotone.folderOpen, l10n.senderOpen('${_commandKey}O'), _open),
           _fileButton(
             HelpId.senderSave,
-            Icons.save_outlined,
+            PhosphorIconsDuotone.floppyDisk,
             l10n.senderSave('${_commandKey}S'),
             _save,
             color: _modified ? scheme.primary : null,
           ),
-          _fileButton(HelpId.senderSaveAs, Icons.save_as_outlined, '${l10n.senderSaveAs} ($_saveAsKey)', _saveAs),
+          _fileButton(HelpId.senderSaveAs, PhosphorIconsDuotone.floppyDiskBack, '${l10n.senderSaveAs} ($_saveAsKey)', _saveAs),
           const Spacer(),
           HelpTarget(
             id: HelpId.senderLineEnding,
@@ -504,10 +505,10 @@ class LineSenderState extends State<LineSender> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.keyboard_return_rounded, size: 16, color: scheme.onSurfaceVariant),
+                    PhosphorIcon(PhosphorIconsDuotone.keyReturn, size: 16, color: scheme.onSurfaceVariant),
                     const SizedBox(width: AppSpacing.xs),
                     Text(ending, style: AppFonts.mono.copyWith(fontSize: 13, color: scheme.onSurface)),
-                    Icon(Icons.arrow_drop_down_rounded, size: 20, color: scheme.onSurfaceVariant),
+                    PhosphorIcon(PhosphorIconsDuotone.caretDown, size: 20, color: scheme.onSurfaceVariant),
                   ],
                 ),
               ),
@@ -526,7 +527,7 @@ class LineSenderState extends State<LineSender> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
             ),
-            icon: const Icon(Icons.send_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.paperPlaneTilt),
           ).help(HelpId.senderSend),
         ],
       ),

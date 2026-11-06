@@ -9,6 +9,7 @@
 //     새 앱에는 쓰지 않는다 — 기존 앱이 옮겨 갈 때까지만 남겨 둔다.
 
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
@@ -18,9 +19,9 @@ import 'app_settings.dart';
 const _languages = [(Locale('ko'), '한국어'), (Locale('en'), 'English')];
 
 IconData _themeIcon(ThemeMode mode) => switch (mode) {
-      ThemeMode.system => Icons.brightness_auto_rounded,
-      ThemeMode.light => Icons.light_mode_rounded,
-      ThemeMode.dark => Icons.dark_mode_rounded,
+      ThemeMode.system => PhosphorIconsDuotone.circleHalf,
+      ThemeMode.light => PhosphorIconsDuotone.sun,
+      ThemeMode.dark => PhosphorIconsDuotone.moon,
     };
 
 String _themeLabel(AppLocalizations l10n, ThemeMode mode) => switch (mode) {
@@ -38,7 +39,7 @@ class ThemeMenuButton extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return PopupMenuButton<ThemeMode>(
       tooltip: l10n.themeMenuTooltip,
-      icon: Icon(_themeIcon(settings.themeMode)),
+      icon: PhosphorIcon(_themeIcon(settings.themeMode)),
       initialValue: settings.themeMode,
       onSelected: settings.setThemeMode,
       itemBuilder: (_) => [
@@ -64,7 +65,7 @@ class LanguageMenuButton extends StatelessWidget {
     final current = settings.locale?.languageCode ?? '';
     return PopupMenuButton<String>(
       tooltip: l10n.languageMenuTooltip,
-      icon: const Icon(Icons.language_rounded),
+      icon: const PhosphorIcon(PhosphorIconsDuotone.translate),
       initialValue: current,
       onSelected: (code) => settings.setLocale(code.isEmpty ? null : Locale(code)),
       itemBuilder: (_) => [
@@ -92,7 +93,7 @@ class ThemeSegmentedButton extends StatelessWidget {
     return SegmentedButton<ThemeMode>(
       segments: [
         for (final mode in ThemeMode.values)
-          ButtonSegment(value: mode, icon: Icon(_themeIcon(mode)), label: Text(_themeLabel(l10n, mode))),
+          ButtonSegment(value: mode, icon: PhosphorIcon(_themeIcon(mode)), label: Text(_themeLabel(l10n, mode))),
       ],
       selected: {settings.themeMode},
       onSelectionChanged: (s) => settings.setThemeMode(s.single),
@@ -113,11 +114,11 @@ class ModeSegmentedButton extends StatelessWidget {
       segments: [
         ButtonSegment(
           value: ThemeMode.system,
-          icon: Icon(_themeIcon(ThemeMode.system), size: 16),
+          icon: PhosphorIcon(_themeIcon(ThemeMode.system), size: 16),
           label: Text(l10n.settingsModeSystem),
         ),
-        ButtonSegment(value: ThemeMode.light, icon: Icon(_themeIcon(ThemeMode.light), size: 16), label: Text(l10n.themeLight)),
-        ButtonSegment(value: ThemeMode.dark, icon: Icon(_themeIcon(ThemeMode.dark), size: 16), label: Text(l10n.themeDark)),
+        ButtonSegment(value: ThemeMode.light, icon: PhosphorIcon(_themeIcon(ThemeMode.light), size: 16), label: Text(l10n.themeLight)),
+        ButtonSegment(value: ThemeMode.dark, icon: PhosphorIcon(_themeIcon(ThemeMode.dark), size: 16), label: Text(l10n.themeDark)),
       ],
       selected: {settings.themeMode},
       onSelectionChanged: (s) => settings.setThemeMode(s.first),
@@ -153,7 +154,7 @@ class AccentPaletteChips extends StatelessWidget {
             selected: settings.accentPalette == p,
             showCheckmark: false,
             avatar: p == AccentPalette.highContrast
-                ? Icon(Icons.contrast_rounded, size: 14, color: Theme.of(context).colorScheme.onSurface)
+                ? PhosphorIcon(PhosphorIconsDuotone.circleHalf, size: 14, color: Theme.of(context).colorScheme.onSurface)
                 : Icon(Icons.circle, size: 14, color: p.primaryFor(brightness)),
             label: Text(_label(l10n, p)),
             onSelected: (_) => settings.setAccentPalette(p),

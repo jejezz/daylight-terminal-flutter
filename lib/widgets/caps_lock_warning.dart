@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/app_localizations.dart';
@@ -54,7 +55,7 @@ class _CapsLockWarningState extends State<CapsLockWarning> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.warning_amber_rounded, size: 16, color: Theme.of(context).colorScheme.error),
+                PhosphorIcon(PhosphorIconsDuotone.warning, size: 16, color: Theme.of(context).colorScheme.error),
                 const SizedBox(width: 4),
                 Text(
                   AppLocalizations.of(context).capsLockWarning,

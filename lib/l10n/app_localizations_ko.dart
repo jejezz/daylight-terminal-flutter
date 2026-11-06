@@ -198,6 +198,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tabClose => '탭 닫기';
 
   @override
+  String get tabRename => '탭 이름 바꾸기';
+
+  @override
+  String get tabRenameField => '탭 이름';
+
+  @override
+  String get tabRenameHelp => '비워 두면 자동 이름(폴더)을 씁니다.';
+
+  @override
+  String get tabRenameAuto => '자동 이름으로';
+
+  @override
   String get connectTitle => '서버에 연결';
 
   @override

@@ -38,6 +38,20 @@ abstract class TerminalSession extends ChangeNotifier {
 
   final Terminal terminal;
 
+  /// 사용자가 직접 지은 탭 이름. 있으면 탭 첫 줄의 폴더 이름 대신 이것을 보인다. 없으면(null) 자동 이름.
+  /// 저장된 탭 목록에 같이 저장되어 다시 켜도 남는다.
+  String? get customTitle => _customTitle;
+  String? _customTitle;
+
+  /// 탭 이름을 정한다. 앞뒤 공백을 떼고 비어 있으면 자동 이름으로 되돌린다.
+  void setCustomTitle(String? value) {
+    final v = value?.trim();
+    final next = v == null || v.isEmpty ? null : v;
+    if (next == _customTitle) return;
+    _customTitle = next;
+    notify();
+  }
+
   /// 탭 색 막대의 색 번호. 탭 줄이 처음 그릴 때 정해 주고(`TabLabels.assignColors`) 탭이 사는 동안 그대로다.
   int? tabColorIndex;
   final LogFileService _log = LogFileService();

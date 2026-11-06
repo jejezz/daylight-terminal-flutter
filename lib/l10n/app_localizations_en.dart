@@ -200,6 +200,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabClose => 'Close tab';
 
   @override
+  String get tabRename => 'Rename tab';
+
+  @override
+  String get tabRenameField => 'Tab name';
+
+  @override
+  String get tabRenameHelp =>
+      'Leave empty to use the automatic name (the folder).';
+
+  @override
+  String get tabRenameAuto => 'Use automatic name';
+
+  @override
   String get connectTitle => 'Connect to a server';
 
   @override
