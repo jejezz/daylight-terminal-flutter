@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -67,7 +68,7 @@ class StatusBar extends StatelessWidget {
           Text(session.statusLabel, style: small),
           if (Elevation.isElevated) ...[
             const SizedBox(width: AppSpacing.md),
-            Icon(Icons.shield_rounded, size: 14, color: AppColors.warning),
+            PhosphorIcon(PhosphorIconsDuotone.shield, size: 14, color: AppColors.warning),
             const SizedBox(width: AppSpacing.xs),
             Text(l10n.adminBadge, style: small?.copyWith(color: AppColors.warning)),
           ],
@@ -104,7 +105,7 @@ class StatusBar extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             tooltip: l10n.statusCopyBuffer,
             color: scheme.onSurfaceVariant,
-            icon: const Icon(Icons.content_copy_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.copy),
             onPressed: () => _copyBuffer(context, session),
           ).help(HelpId.statusCopyBuffer),
           IconButton(
@@ -112,7 +113,7 @@ class StatusBar extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             tooltip: l10n.statusSaveBuffer,
             color: scheme.onSurfaceVariant,
-            icon: const Icon(Icons.save_alt_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.fileArrowDown),
             onPressed: () => _saveBuffer(context, session),
           ).help(HelpId.statusSaveBuffer),
           IconButton(
@@ -120,7 +121,7 @@ class StatusBar extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             tooltip: session.isLogging ? l10n.statusStopRecording(key) : l10n.statusStartRecording(key),
             color: session.isLogging ? AppColors.danger : scheme.onSurfaceVariant,
-            icon: Icon(session.isLogging ? Icons.stop_circle_rounded : Icons.fiber_manual_record_rounded),
+            icon: PhosphorIcon(session.isLogging ? PhosphorIconsDuotone.stopCircle : PhosphorIconsDuotone.record),
             onPressed: session.connected || session.isLogging
                 ? () => session.toggleLogging(confirmButtonText: l10n.logSaveConfirm)
                 : null,
@@ -129,7 +130,7 @@ class StatusBar extends StatelessWidget {
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: session.logFilePath == null ? l10n.statusNoLogFile : l10n.statusRevealLog,
-            icon: const Icon(Icons.folder_open_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.folderOpen),
             onPressed: session.logFilePath == null ? null : () => FileRevealService.reveal(session.logFilePath!),
           ).help(HelpId.statusRevealLog),
         ],

@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -151,7 +152,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
                   Expanded(child: Text(l10n.connectTitle, style: Theme.of(context).textTheme.titleLarge)),
                   OutlinedButton.icon(
                     onPressed: () => showAddressBook(context),
-                    icon: const Icon(Icons.menu_book_rounded, size: 18),
+                    icon: const PhosphorIcon(PhosphorIconsDuotone.bookOpen, size: 18),
                     label: Text(l10n.addressBookOpen),
                   ),
                 ],
@@ -196,7 +197,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
                     IconButton(
                       tooltip: l10n.connectDeleteProfile,
                       onPressed: _profileId == null ? null : _deleteProfile,
-                      icon: const Icon(Icons.delete_outline_rounded),
+                      icon: const PhosphorIcon(PhosphorIconsDuotone.trash),
                     ),
                   ],
                 ),
@@ -317,7 +318,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(minimumSize: const Size(0, _buttonHeight)),
                     onPressed: connecting ? null : controller.openSerialHere,
-                    icon: const Icon(Icons.usb_rounded, size: 18),
+                    icon: const PhosphorIcon(PhosphorIconsDuotone.usb, size: 18),
                     label: Text(l10n.serialTitle),
                   ),
                 ),
@@ -347,7 +348,7 @@ class _ConnectPanelState extends State<ConnectPanel> {
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(minimumSize: const Size(0, _buttonHeight)),
                           onPressed: connecting ? null : () => controller.openLocalHere(shell),
-                          icon: const Icon(Icons.terminal_rounded, size: 18),
+                          icon: const PhosphorIcon(PhosphorIconsDuotone.terminalWindow, size: 18),
                           label: Text(shell.name),
                         ),
                     ],

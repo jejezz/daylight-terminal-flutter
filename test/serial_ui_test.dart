@@ -16,6 +16,7 @@ import 'package:daylight_terminal/widgets/local_folder_pane.dart';
 import 'package:daylight_terminal/widgets/serial_connect_panel.dart';
 import 'package:daylight_terminal/widgets/terminal_pane.dart';
 import 'package:flutter/material.dart';
+import 'package:daylight_terminal/theme/phosphor_icons.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -72,7 +73,7 @@ void main() {
     expect(sessions.current, isA<SerialSession>());
     expect(find.byType(SerialConnectPanel), findsOneWidget);
     expect(find.byType(TerminalPane), findsNothing);
-    expect(find.byIcon(Icons.usb_rounded), findsWidgets); // 탭 아이콘
+    expect(find.byIcon(PhosphorIconsDuotone.usb), findsWidgets); // 탭 아이콘
     expect(find.text('새 시리얼 연결'), findsOneWidget); // 이름 없는 탭은 종류를 알려 준다
   });
 
@@ -140,7 +141,7 @@ void main() {
     expect(find.byType(LineSender), findsOneWidget);
     expect(find.text('log.txt'), findsOneWidget);
     // 셸이 없으니 "터미널을 이 폴더로 이동" 메뉴는 없다.
-    expect(find.byIcon(Icons.sync_alt_rounded), findsNothing);
+    expect(find.byIcon(PhosphorIconsDuotone.arrowsLeftRight), findsNothing);
 
     serial.emitBytes([0x41, 0x42]);
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 10)));

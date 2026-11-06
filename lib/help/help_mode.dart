@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
@@ -214,7 +215,7 @@ class HelpModeButton extends StatelessWidget {
       id: HelpId.helpButton,
       child: IconButton(
         tooltip: l10n.helpModeTooltip,
-        icon: const Icon(Icons.help_outline_rounded),
+        icon: const PhosphorIcon(PhosphorIconsDuotone.question),
         onPressed: controller == null || !onTop ? null : controller.start,
       ),
     );

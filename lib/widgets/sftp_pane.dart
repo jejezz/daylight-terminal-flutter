@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:provider/provider.dart';
@@ -502,8 +503,8 @@ class _TransferTile extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    transfer.direction == TransferDirection.upload ? Icons.upload_rounded : Icons.download_rounded,
+                  PhosphorIcon(
+                    transfer.direction == TransferDirection.upload ? PhosphorIconsDuotone.uploadSimple : PhosphorIconsDuotone.downloadSimple,
                     size: 14,
                     color: transfer.status == TransferStatus.failed ? scheme.error : scheme.onSurfaceVariant,
                   ),
@@ -521,7 +522,7 @@ class _TransferTile extends StatelessWidget {
                   if (transfer.cancellable)
                     IconButton(
                       tooltip: l10n.transferCancel,
-                      icon: const Icon(Icons.close_rounded, size: 14),
+                      icon: const PhosphorIcon(PhosphorIconsDuotone.x, size: 14),
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints.tightFor(width: 24, height: 20),

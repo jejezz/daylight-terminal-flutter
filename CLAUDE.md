@@ -78,6 +78,17 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 글자가 들어가는 **고정 높이**는 `context.scaled(값)`(`utils/ui_scale.dart`)으로 같이 키운다: 탭 줄(48), 파일 목록 줄(30), 상태 줄(32).
   새로 고정 높이를 넣을 때는 이걸 써야 큰 배율에서 글자가 잘리지 않는다. LineSender 하단 줄(44)·이름 줄(36)은 아직 고정이다.
 
+## 앱 안 아이콘: Phosphor 듀오톤
+
+- 앱 안의 모든 UI 아이콘은 **Phosphor Icons 듀오톤**(MIT)이다 (규약 icons.md는 Material Icons / Icons8을 말하지만 Phosphor 듀오톤으로 바꾼 것은 사용자 요청).
+  `lib/theme/phosphor_icons.dart`의 `PhosphorIconsDuotone.이름`을 `PhosphorIcon(...)`으로 그린다. 새 아이콘은 Phosphor 이름 그대로 이 파일에 (주, 보조) 코드 포인트와 함께 더한다
+  (코드 포인트는 phosphor_flutter 2.1.0의 `phosphor_icons_duotone.dart`에 있다. 테스트가 보조 글리프 빠진 것을 잡는다).
+- **`phosphor_flutter` 패키지는 쓰지 않는다**: 2.1.0은 이 Flutter(3.47)에서 컴파일되지 않는다 (`IconData`가 final class라 상속 불가). 같은 글꼴
+  (`assets/fonts/phosphor_duotone.ttf`, 라이선스 `assets/licenses/phosphor-icons.txt`)과 코드 포인트를 직접 쓴다. 보조(흐린 겹) 글리프는 모두 `const`여야 한다 (아이콘 글꼴 줄이기).
+- 듀오톤은 글꼴 안에 두 겹이라 `PhosphorIcon`이 보조를 20% 불투명도로 깔고 주를 위에 그린다. 두 겹 모두 같은 색(`IconTheme`/`color`)이라 밝은/어두운 테마 모두 그대로 어울린다.
+- 점 모양(연결 상태 점 등)은 아이콘이 아니라 도형이라 `Icons.circle` 그대로다. 테스트에서 아이콘을 찾을 때는 `find.byIcon(PhosphorIconsDuotone.x)` 또는 `find.byType(PhosphorIcon)`
+  (`find.byType(Icon)`은 뒤 겹을 잡는다).
+
 ## 설정 창과 탐색기 자동 새로 고침
 
 - 툴바의 설정(톱니) 버튼 = `settings_dialog.dart`. 섹션: "새로 고침 옵션", "터미널 글꼴".

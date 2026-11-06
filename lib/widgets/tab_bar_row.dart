@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../help/help_mode.dart';
@@ -122,7 +123,7 @@ class _TabBarRowState extends State<TabBarRow> {
             child: PopupMenuButton<Object>(
               iconSize: 18,
               tooltip: l10n.tabNew,
-              icon: const Icon(Icons.add_rounded),
+              icon: const PhosphorIcon(PhosphorIconsDuotone.plus),
               onSelected: (choice) => switch (choice) {
                 LocalShell() => controller.addLocal(choice),
                 'serial' => controller.addSerial(),
@@ -132,14 +133,14 @@ class _TabBarRowState extends State<TabBarRow> {
                 PopupMenuItem<Object>(
                   value: 'ssh',
                   child: _MenuRow(
-                    Icons.dns_outlined,
+                    PhosphorIconsDuotone.hardDrives,
                     l10n.newTabSsh,
                     AppShortcut.newTab.label,
                   ),
                 ),
                 PopupMenuItem<Object>(
                   value: 'serial',
-                  child: _MenuRow(Icons.usb_rounded, l10n.newTabSerial, null),
+                  child: _MenuRow(PhosphorIconsDuotone.usb, l10n.newTabSerial, null),
                 ),
                 const PopupMenuDivider(),
                 if (controller.shells.isEmpty)
@@ -153,7 +154,7 @@ class _TabBarRowState extends State<TabBarRow> {
                       value: shell,
                       // 첫 번째가 기본 셸이고, 단축키는 그 셸을 연다.
                       child: _MenuRow(
-                        Icons.terminal_rounded,
+                        PhosphorIconsDuotone.terminalWindow,
                         shell.name,
                         i == 0 ? AppShortcut.newLocalTab.label : null,
                       ),
@@ -304,11 +305,11 @@ class _Tab extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // 아이콘 색이 탭마다 다르다 (옆 탭과 구분). 고른 탭이라고 색을 바꾸지 않는다 — 아래 밑줄이 알려 준다.
-          Icon(
+          PhosphorIcon(
             switch (session) {
-              LocalShellSession() => Icons.terminal_rounded,
-              SerialSession() => Icons.usb_rounded,
-              _ => Icons.dns_outlined,
+              LocalShellSession() => PhosphorIconsDuotone.terminalWindow,
+              SerialSession() => PhosphorIconsDuotone.usb,
+              _ => PhosphorIconsDuotone.hardDrives,
             },
             size: 16,
             color: TabLabels.colorFor(
@@ -387,7 +388,7 @@ class _Tab extends StatelessWidget {
             iconSize: 14,
             visualDensity: VisualDensity.compact,
             tooltip: '${l10n.tabClose} (${AppShortcut.closeTab.label})',
-            icon: const Icon(Icons.close_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.x),
             onPressed: onClose,
           ).help(HelpId.tabClose),
         ],
@@ -566,7 +567,7 @@ class _MenuRow extends StatelessWidget {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     return Row(
       children: [
-        Icon(icon, size: 18),
+        PhosphorIcon(icon, size: 18),
         const SizedBox(width: AppSpacing.sm),
         Expanded(child: Text(label)),
         if (shortcut != null) ...[
