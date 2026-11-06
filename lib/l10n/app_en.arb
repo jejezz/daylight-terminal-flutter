@@ -411,6 +411,8 @@
   "connectPromptHint": "The password is not saved",
   "settingsTooltip": "Settings",
   "settingsTitle": "Settings",
+  "uiTextScale": "Interface text size",
+  "uiTextScaleHelp": "Size of all text outside the terminal: menus, tabs, folder names, the status bar. Terminal text is set separately under ‘Terminal font’ below.",
   "settingsSectionAppearance": "Appearance",
   "settingsMode": "Mode",
   "settingsModeSystem": "System",

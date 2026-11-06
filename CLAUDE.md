@@ -70,6 +70,14 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 터미널 색상 구성표(`terminal_schemes.dart`, 설정 창 "터미널 색상" 섹션, 키 `terminal_color_scheme`): 기본(VS Code Dark), Solarized Dark/Light, Dracula, One Dark,
   Tokyo Night, Gruvbox Dark, Nord, Monokai, GitHub Light. 이름은 고유 이름이라 번역하지 않는다. 열린 탭에도 바로 적용된다. 모르는 id는 기본으로 돌아간다.
 
+## 화면 글자 크기
+
+- 설정 창 "외형"의 슬라이더 `화면 글자 크기`(80~150%, 5% 단위, 기본 100%, 키 `ui_text_scale`, `ui_prefs.dart`). 메뉴·탭·폴더/파일 이름·상태 줄·대화상자 등
+  터미널 밖의 **모든 글자**가 커진다. `main.dart`의 `MaterialApp.builder`에서 `MediaQuery.textScaler`에 (OS 배율 × 이 배율)을 넣는 방식이라 개별 `fontSize`도 같이 커진다.
+- 터미널은 이 배율을 받지 않는다: `TerminalView`에 `TextScaler.noScaling`을 주고 크기는 "터미널 글꼴"의 크기로만 정한다.
+- 글자가 들어가는 **고정 높이**는 `context.scaled(값)`(`utils/ui_scale.dart`)으로 같이 키운다: 탭 줄(48), 파일 목록 줄(30), 상태 줄(32).
+  새로 고정 높이를 넣을 때는 이걸 써야 큰 배율에서 글자가 잘리지 않는다. LineSender 하단 줄(44)·이름 줄(36)은 아직 고정이다.
+
 ## 설정 창과 탐색기 자동 새로 고침
 
 - 툴바의 설정(톱니) 버튼 = `settings_dialog.dart`. 섹션: "새로 고침 옵션", "터미널 글꼴".

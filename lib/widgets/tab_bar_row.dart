@@ -15,9 +15,10 @@ import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
 import '../utils/tab_label.dart';
+import '../utils/ui_scale.dart';
 
 /// 탭 높이: 첫 줄(폴더 이름)과 둘째 줄(실행 중인 명령 / 셸 이름).
-const double _tabHeight = 48;
+const double _tabBaseHeight = 48;
 
 /// 아직 이름이 없는 탭은 종류를 알려 준다. 처음 여는 탭(SSH·시리얼·셸 중 고르는 화면)은 그냥 "새 연결".
 String _fallbackTitle(TerminalSession session, AppLocalizations l10n) =>
@@ -67,7 +68,7 @@ class _TabBarRowState extends State<TabBarRow> {
     final controller = context.watch<SessionsController>();
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      height: _tabHeight,
+      height: context.scaled(_tabBaseHeight),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
@@ -250,7 +251,7 @@ class _Tab extends StatelessWidget {
     bool dragging = false,
   }) {
     final content = Container(
-      height: _tabHeight,
+      height: context.scaled(_tabBaseHeight),
       constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
       padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.xs),
       decoration: BoxDecoration(

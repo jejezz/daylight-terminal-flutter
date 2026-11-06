@@ -1088,6 +1088,18 @@ abstract class AppLocalizations {
   /// **'설정'**
   String get settingsTitle;
 
+  /// No description provided for @uiTextScale.
+  ///
+  /// In ko, this message translates to:
+  /// **'화면 글자 크기'**
+  String get uiTextScale;
+
+  /// No description provided for @uiTextScaleHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'메뉴, 탭, 폴더 이름, 상태 줄 등 터미널 밖의 모든 글자의 크기입니다. 터미널 글자는 아래 ‘터미널 글꼴’에서 따로 정합니다.'**
+  String get uiTextScaleHelp;
+
   /// No description provided for @settingsSectionAppearance.
   ///
   /// In ko, this message translates to:

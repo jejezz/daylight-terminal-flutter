@@ -4,6 +4,7 @@ import 'package:daylight_terminal/settings/app_settings.dart';
 import 'package:daylight_terminal/settings/refresh_prefs.dart';
 import 'package:daylight_terminal/settings/restore_prefs.dart';
 import 'package:daylight_terminal/settings/terminal_prefs.dart';
+import 'package:daylight_terminal/settings/ui_prefs.dart';
 import 'package:daylight_terminal/state/sessions_controller.dart';
 import 'package:daylight_terminal/theme/app_theme.dart';
 import 'package:daylight_terminal/widgets/settings_dialog.dart';
@@ -85,6 +86,7 @@ void main() {
     final prefs = await TerminalPrefs.load();
     final refresh = await RefreshPrefs.load();
     final restore = await RestorePrefs.load();
+    final ui = await UiPrefs.load();
     final settings = await AppSettings.load();
     await tester.pumpWidget(
       AppSettingsScope(
@@ -94,6 +96,7 @@ void main() {
             ChangeNotifierProvider<TerminalPrefs>.value(value: prefs),
             ChangeNotifierProvider<RefreshPrefs>.value(value: refresh),
             ChangeNotifierProvider<RestorePrefs>.value(value: restore),
+            ChangeNotifierProvider<UiPrefs>.value(value: ui),
           ],
           child: MaterialApp(
             theme: AppTheme.dark(),
@@ -143,10 +146,19 @@ void main() {
     expect(prefs.family, 'JetBrains Mono');
     expect(prefs.isPreset, isFalse);
 
-    // 크기
-    await tester.ensureVisible(find.byType(Slider));
+    // 화면 글자 크기 (첫 슬라이더): 터미널 글자 크기와 따로 움직인다
+    expect(ui.scale, 1.0);
+    await tester.ensureVisible(find.byType(Slider).first);
     await tester.pump();
-    await tester.drag(find.byType(Slider), const Offset(120, 0));
+    await tester.drag(find.byType(Slider).first, const Offset(60, 0));
+    await tester.pump();
+    expect(ui.scale, greaterThan(1.0));
+    expect(prefs.size, 13);
+
+    // 크기
+    await tester.ensureVisible(find.byType(Slider).last);
+    await tester.pump();
+    await tester.drag(find.byType(Slider).last, const Offset(120, 0));
     await tester.pump();
     expect(prefs.size, greaterThan(13));
 
@@ -172,6 +184,7 @@ void main() {
     await tester.pumpAndSettle();
     expect((prefs.family, prefs.size, prefs.scrollback), ('AgaveNerdFontMono', 13, 10000));
     expect(prefs.scheme.id, 'vscode-dark');
+    expect(ui.scale, 1.0);
     expect((refresh.local, refresh.ssh), (true, false));
     expect(tester.takeException(), isNull);
   });

@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../services/diag_log.dart';
 import '../theme/app_theme.dart';
+import '../utils/ui_scale.dart';
 
 /// 폴더 뷰 위쪽 줄: 위로, 현재 경로, 새로 고침, 새 폴더, (있으면) 경로 이동 메뉴와 추가 버튼.
 /// 경로 이동 메뉴 항목은 콜백을 주지 않으면 숨긴다 — 예: 현재 경로를 알려 줄 수 없는 셸.
@@ -171,7 +172,7 @@ class FileRow extends StatelessWidget {
     final small = Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
     final droppable = entry.isDirectory && canDropInto != null && onDropInto != null;
     Widget buildContent({required bool hovered}) => Container(
-      height: 30,
+      height: context.scaled(30),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: hovered

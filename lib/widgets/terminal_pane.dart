@@ -101,6 +101,8 @@ class _TerminalPaneState extends State<TerminalPane> {
           autofocus: true,
           theme: prefs.scheme.theme,
           textStyle: prefs.style,
+          // 터미널 글자는 "터미널 글꼴 크기"로만 정한다 (화면 글자 크기 배율을 받지 않는다).
+          textScaler: TextScaler.noScaling,
           padding: const EdgeInsets.all(AppSpacing.sm),
           // 앱 전역 단축키는 xterm이 제어 문자로 보내버리기 전에 상위 CallbackShortcuts로 넘긴다.
           onKeyEvent: (_, event) => AppShortcut.all.any((s) => s.activator.accepts(event, HardwareKeyboard.instance))

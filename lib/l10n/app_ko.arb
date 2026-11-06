@@ -428,6 +428,8 @@
   "connectPromptHint": "비밀번호는 저장되지 않습니다",
   "settingsTooltip": "설정",
   "settingsTitle": "설정",
+  "uiTextScale": "화면 글자 크기",
+  "uiTextScaleHelp": "메뉴, 탭, 폴더 이름, 상태 줄 등 터미널 밖의 모든 글자의 크기입니다. 터미널 글자는 아래 ‘터미널 글꼴’에서 따로 정합니다.",
   "settingsSectionAppearance": "외형",
   "settingsMode": "모드",
   "settingsModeSystem": "시스템",

@@ -29,6 +29,7 @@ import 'settings/refresh_prefs.dart';
 import 'settings/restore_prefs.dart';
 import 'services/tab_store.dart';
 import 'settings/terminal_prefs.dart';
+import 'settings/ui_prefs.dart';
 import 'state/sessions_controller.dart';
 import 'window/window_placement.dart';
 import 'theme/app_theme.dart';
@@ -56,6 +57,7 @@ Future<void> main() async {
 
   final settings = await AppSettings.load();
   final terminalPrefs = await TerminalPrefs.load();
+  final uiPrefs = await UiPrefs.load();
   final refreshPrefs = await RefreshPrefs.load();
   final restorePrefs = await RestorePrefs.load();
   final sessions = SessionsController(
@@ -78,6 +80,7 @@ Future<void> main() async {
         settings: settings,
         sessions: sessions,
         terminalPrefs: terminalPrefs,
+        uiPrefs: uiPrefs,
         refreshPrefs: refreshPrefs,
         restorePrefs: restorePrefs,
         placement: placement,
@@ -138,6 +141,7 @@ class App extends StatefulWidget {
     required this.settings,
     required this.sessions,
     required this.terminalPrefs,
+    required this.uiPrefs,
     required this.refreshPrefs,
     required this.restorePrefs,
     this.placement,
@@ -147,6 +151,7 @@ class App extends StatefulWidget {
   final AppSettings settings;
   final SessionsController sessions;
   final TerminalPrefs terminalPrefs;
+  final UiPrefs uiPrefs;
   final RefreshPrefs refreshPrefs;
   final RestorePrefs restorePrefs;
   final WindowPlacement? placement;
@@ -232,6 +237,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       providers: [
         ChangeNotifierProvider<SessionsController>.value(value: widget.sessions),
         ChangeNotifierProvider<TerminalPrefs>.value(value: widget.terminalPrefs),
+        ChangeNotifierProvider<UiPrefs>.value(value: widget.uiPrefs),
         ChangeNotifierProvider<RefreshPrefs>.value(value: widget.refreshPrefs),
         ChangeNotifierProvider<RestorePrefs>.value(value: widget.restorePrefs),
       ],
@@ -252,10 +258,17 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             localeResolutionCallback: AppSettings.resolveLocale,
             builder: (context, child) {
               _syncWindowTitle(AppLocalizations.of(context).adminBadge);
-              return AppMenuBar(
-                onAbout: _showAbout,
-                onCheckForUpdates: widget.updates == null ? null : _checkForUpdates,
-                child: child!,
+              // 화면 글자 크기: OS의 글자 배율에 설정의 배율을 곱해 모든 글자(터미널 제외)에 준다.
+              final media = MediaQuery.of(context);
+              return MediaQuery(
+                data: media.copyWith(
+                  textScaler: TextScaler.linear(media.textScaler.scale(1) * context.watch<UiPrefs>().scale),
+                ),
+                child: AppMenuBar(
+                  onAbout: _showAbout,
+                  onCheckForUpdates: widget.updates == null ? null : _checkForUpdates,
+                  child: child!,
+                ),
               );
             },
             home: HomeScreen(onAbout: _showAbout),

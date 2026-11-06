@@ -12,6 +12,7 @@ import '../services/file_reveal_service.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
+import '../utils/ui_scale.dart';
 
 /// 연결 상태, 기록(Recording) 토글, 기록 파일 위치 열기, 터미널 내용 전체를 클립보드/파일로.
 class StatusBar extends StatelessWidget {
@@ -53,7 +54,7 @@ class StatusBar extends StatelessWidget {
     final small = Theme.of(context).textTheme.bodySmall;
 
     return Container(
-      height: 32,
+      height: context.scaled(32),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
