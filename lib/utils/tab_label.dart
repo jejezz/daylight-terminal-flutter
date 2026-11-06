@@ -15,7 +15,7 @@ class TabLabel {
     this.running = false,
     this.tooltip,
     this.exitCode,
-    this.colorKey,
+    required this.colorIndex,
   });
 
   final String primary;
@@ -34,28 +34,64 @@ class TabLabel {
   /// 마지막으로 끝난 명령의 종료 코드. 모르면 null.
   final int? exitCode;
 
-  /// 탭 색 막대의 색을 정하는 값 (같은 값이면 같은 색). 색을 줄 수 없는 탭(폴더를 모르는 로컬 셸)은 null.
-  final String? colorKey;
+  /// 탭 색 막대의 색 번호 (0 이상 [TabLabels.colorCount] 미만). 탭이 사는 동안 바뀌지 않는다.
+  final int colorIndex;
 }
 
 abstract final class TabLabels {
   /// 막대 색의 가짓수. 색상환을 이만큼 나눠 쓴다.
-  static const colorCount = 12;
+  static const colorCount = 16;
 
-  /// [key]에서 정한 색 막대 색 (같은 [key]는 늘 같은 색). 실행마다 같도록 FNV-1a 해시를 쓴다.
-  /// 어두운 테마에서는 밝게, 밝은 테마에서는 어둡게 해서 둘 다 배경과 구분된다.
-  static Color colorFor(String key, Brightness brightness) {
-    var hash = 0x811c9dc5;
-    for (final unit in key.codeUnits) {
-      hash = ((hash ^ unit) * 0x01000193) & 0xffffffff;
-    }
-    final hue = (hash % colorCount) * (360 / colorCount);
+  /// 색 번호 [index]의 막대 색. 어두운 테마에서는 밝게, 밝은 테마에서는 어둡게 해서 둘 다 배경과 구분된다.
+  static Color colorFor(int index, Brightness brightness) {
+    final hue = (index % colorCount) * (360 / colorCount);
     return HSLColor.fromAHSL(
       1,
       hue,
-      0.62,
-      brightness == Brightness.dark ? 0.62 : 0.42,
+      0.85,
+      brightness == Brightness.dark ? 0.58 : 0.42,
     ).toColor();
+  }
+
+  /// 아직 색이 없는 탭에 색 번호를 준다. 폴더가 아니라 **탭마다** 다른 색이어야 하므로(같은 폴더의 셸 여러 개도
+  /// 구분되게), 가장 적게 쓰인 번호를 고르고, 같으면 양옆 탭의 색과 색상환에서 가장 먼 것을 고른다.
+  /// 한 번 받은 색은 다른 탭이 닫혀도 바뀌지 않는다.
+  static void assignColors(List<TerminalSession> sessions) {
+    final counts = List<int>.filled(colorCount, 0);
+    for (final s in sessions) {
+      final i = s.tabColorIndex;
+      if (i != null) counts[i % colorCount]++;
+    }
+    int distance(int a, int b) {
+      final d = (a - b).abs() % colorCount;
+      return d > colorCount - d ? colorCount - d : d;
+    }
+
+    for (var n = 0; n < sessions.length; n++) {
+      if (sessions[n].tabColorIndex != null) continue;
+      final neighbors = [
+        if (n > 0) sessions[n - 1].tabColorIndex,
+        if (n + 1 < sessions.length) sessions[n + 1].tabColorIndex,
+      ].whereType<int>();
+      var best = 0;
+      var bestCount = 1 << 30;
+      var bestDist = -1;
+      for (var c = 0; c < colorCount; c++) {
+        final dist = neighbors.isEmpty
+            ? 0
+            : neighbors
+                  .map((o) => distance(c, o))
+                  .reduce((a, b) => a < b ? a : b);
+        if (counts[c] < bestCount ||
+            (counts[c] == bestCount && dist > bestDist)) {
+          best = c;
+          bestCount = counts[c];
+          bestDist = dist;
+        }
+      }
+      sessions[n].tabColorIndex = best;
+      counts[best]++;
+    }
   }
 
   /// 탭에 붙이는 짧은 셸 이름. WSL은 배포판 이름.
@@ -93,6 +129,7 @@ abstract final class TabLabels {
     List<TerminalSession> sessions, {
     required String Function(TerminalSession) fallbackTitle,
   }) {
+    assignColors(sessions);
     final home = LocalShellSession.homeDirectory();
     final paths = <String?>[
       for (final s in sessions)
@@ -150,17 +187,13 @@ abstract final class TabLabels {
     final tip = lines.length == 1 && lines.first == fallback
         ? null
         : lines.join('\n');
-    // 폴더를 알면 그 경로(Windows는 대소문자 무시)로, SSH·시리얼은 접속 이름으로 색을 정한다.
-    final colorKey = path != null
-        ? path.toLowerCase()
-        : (s is LocalShellSession || s.tabTitle.isEmpty ? null : s.tabTitle);
     if (folder == null) {
       return TabLabel(
         primary: fallback,
         secondary: command,
         running: running,
         tooltip: tip,
-        colorKey: colorKey,
+        colorIndex: s.tabColorIndex ?? 0,
       );
     }
     return TabLabel(
@@ -171,7 +204,7 @@ abstract final class TabLabels {
       running: running,
       tooltip: tip,
       exitCode: s.lastExitCode,
-      colorKey: colorKey,
+      colorIndex: s.tabColorIndex ?? 0,
     );
   }
 }

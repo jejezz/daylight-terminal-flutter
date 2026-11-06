@@ -120,52 +120,69 @@ void main() {
       },
     );
 
-    test('tabs in the same folder share a color key (case-insensitive), others differ, unknown folder has none', () async {
-      await open('/C:/Work/App');
-      await open('/C:/work/app');
-      await open('/C:/Work/other');
+    test('every tab gets its own color even in the same folder, and keeps it across cd and other tabs closing', () async {
+      final a = await open('/C:/Users/me');
+      final b = await open('/C:/Users/me');
+      final c = await open('/C:/Users/me');
       await open(null);
-      final l = labels();
-      expect(l[0].colorKey, isNotNull);
-      expect(l[0].colorKey, l[1].colorKey);
-      expect(l[2].colorKey, isNot(l[0].colorKey));
-      expect(l[3].colorKey, isNull);
+      final first = labels();
+      expect({for (final l in first) l.colorIndex}.length, 4);
+      for (var i = 1; i < first.length; i++) {
+        expect(
+          first[i].colorIndex,
+          isNot(first[i - 1].colorIndex),
+          reason: 'neighbors $i',
+        );
+      }
+
+      // cd 해도, 다른 탭이 닫혀도 색은 그대로.
+      ptys.made[0].emit('\x1b]7;file://PC/C:/Work/elsewhere\x1b\\');
+      await pump();
+      sessions.remove(b);
+      b.dispose();
+      final second = labels();
+      expect(second[0].colorIndex, first[0].colorIndex);
+      expect(second[1].colorIndex, first[2].colorIndex);
+      expect(second[2].colorIndex, first[3].colorIndex);
+      expect(a.tabColorIndex, first[0].colorIndex);
+      expect(c.tabColorIndex, first[2].colorIndex);
     });
+
+    test(
+      'a new tab avoids colors already in use and its neighbor color',
+      () async {
+        for (var i = 0; i < 5; i++) {
+          await open('/C:/Users/me');
+        }
+        labels();
+        final used = sessions.map((s) => s.tabColorIndex).toSet();
+        await open('/C:/Users/me');
+        final l = labels();
+        expect(used.contains(l.last.colorIndex), isFalse);
+        expect(l.last.colorIndex, isNot(l[l.length - 2].colorIndex));
+      },
+    );
   });
 
   group('TabLabels.colorFor', () {
-    test('same key gives the same color every time, and dark/light differ in lightness', () {
-      final a = TabLabels.colorFor('c:\\work\\app', Brightness.dark);
-      expect(TabLabels.colorFor('c:\\work\\app', Brightness.dark), a);
-      expect(TabLabels.colorFor('c:\\work\\app', Brightness.light), isNot(a));
-      expect(
-        HSLColor.fromColor(a).lightness,
-        greaterThan(
-          HSLColor.fromColor(
-            TabLabels.colorFor('c:\\work\\app', Brightness.light),
-          ).lightness,
-        ),
-      );
+    test('palette is big enough and colors are distinct; dark and light themes differ in lightness', () {
+      expect(TabLabels.colorCount, greaterThanOrEqualTo(16));
+      final colors = {
+        for (var i = 0; i < TabLabels.colorCount; i++)
+          TabLabels.colorFor(i, Brightness.dark),
+      };
+      expect(colors.length, TabLabels.colorCount);
+      final dark = HSLColor.fromColor(TabLabels.colorFor(3, Brightness.dark));
+      final light = HSLColor.fromColor(TabLabels.colorFor(3, Brightness.light));
+      expect(dark.lightness, greaterThan(light.lightness));
+      expect(dark.saturation, greaterThan(0.7)); // 또렷하게
     });
 
-    test('a spread of folders uses several of the palette colors', () {
-      final colors = {
-        for (final name in [
-          'app',
-          'web',
-          'api',
-          'docs',
-          'infra',
-          'tools',
-          'src',
-          'test',
-          'build',
-          'lib',
-        ])
-          TabLabels.colorFor('c:\\work\\$name', Brightness.dark),
-      };
-      expect(colors.length, greaterThanOrEqualTo(5));
-      expect(colors.length, lessThanOrEqualTo(TabLabels.colorCount));
+    test('beyond the palette size colors are reused, never out of range', () {
+      expect(
+        TabLabels.colorFor(TabLabels.colorCount + 2, Brightness.dark),
+        TabLabels.colorFor(2, Brightness.dark),
+      );
     });
   });
 }

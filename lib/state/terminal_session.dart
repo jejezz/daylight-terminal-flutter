@@ -37,6 +37,9 @@ abstract class TerminalSession extends ChangeNotifier {
   }
 
   final Terminal terminal;
+
+  /// 탭 색 막대의 색 번호. 탭 줄이 처음 그릴 때 정해 주고(`TabLabels.assignColors`) 탭이 사는 동안 그대로다.
+  int? tabColorIndex;
   final LogFileService _log = LogFileService();
   late final ByteConversionSink _terminalSink = const Utf8Decoder(allowMalformed: true)
       .startChunkedConversion(FnSink((s) => terminal.write(s)));

@@ -182,9 +182,10 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 탭은 두 줄(높이 48)이다. 첫 줄 = `셸이름  폴더이름`(`TabLabels`, `lib/utils/tab_label.dart`; 셸 이름은 `pwsh`처럼 짧게 `primary` 색, 폴더는 집이면 `~`, 겹치면 부모를 붙여 `a/src`),
   둘째 줄 = 실행 중인 명령(`primary` 색) 또는 전체 경로. 폴더를 모르는 탭(SSH·시리얼·셸 통합 없는 셸)은 예전처럼 `tabTitle` 한 줄.
   툴팁에 전체 경로·셸·명령·종료 코드. 탭 앞 표시는 명령이 0.5초 넘게 돌면 스피너, 마지막 명령이 실패(종료 코드 ≠ 0)면 다음 명령까지 빨간 점.
-- 탭 윗변에 3px **색 막대**: 폴더(경로, 대소문자 무시) 또는 SSH·시리얼의 접속 이름에서 정한 색이라 같은 폴더의 탭은 같은 색이다
-  (`TabLabels.colorFor`, FNV-1a 해시로 색상환 12등분, 어두운/밝은 테마에서 명도를 따로). 고른 탭은 또렷하게, 나머지는 55%. 폴더를 모르는 로컬 셸은 막대 없음.
-  해시라서 서로 다른 폴더가 같은 색일 수 있다 (구분은 글자가 주고 색은 보조).
+- 탭 왼쪽 가장자리에 4px **색 막대**: **탭마다** 다른 색이다 (폴더가 아니라 — 같은 폴더의 셸 여러 개도, 옆 탭끼리도 구분되게). `TabLabels.assignColors`가
+  탭 줄이 그릴 때 아직 색이 없는 세션(`TerminalSession.tabColorIndex`)에 번호를 주는데, 가장 적게 쓰인 번호를 고르고 같으면 양옆 탭 색과 색상환에서
+  가장 먼 것을 고른다. 한 번 받은 색은 `cd`나 다른 탭이 닫혀도 안 바뀐다. 색상환 16등분, 채도 0.85, 어두운 테마 명도 0.58 / 밝은 테마 0.42
+  (`TabLabels.colorFor`). 고른 탭이라고 색을 바꾸지 않는다 (아래 밑줄이 알려 준다). 탭이 16개를 넘으면 색이 겹친다. 재시작하면 순서대로 다시 받는다.
 - 탭이 화면보다 많으면 탭 줄이 가로로 스크롤된다: 마우스 휠(세로 휠도 가로로 민다), 아래의 얇은 스크롤바, 그리고 탭을 고르거나 새 탭이 열리면
   그 탭이 보이는 곳으로 자동으로 온다(`_EnsureVisible`). 탭은 `ListView.builder`가 아니라 `Row`에 모두 만든다(안 만들어진 탭은 가져올 수 없어서).
 - 폴더·명령은 **셸 통합**(`lib/services/shell_integration.dart`)이 알려 준다: 로컬 PowerShell(pwsh·Windows PowerShell)을 띄울 때
@@ -199,7 +200,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   히스토리에 안 남아 직전 명령이 잠깐 보일 수 있다 (0.5초 안에 끝나 스피너는 안 뜬다).
 - **WSL**도 같은 bash 스크립트를 쓴다: `wsl.exe`는 `WSLENV`에 이름이 올라 있는 환경 변수만 리눅스로 넘기므로 `PROMPT_COMMAND`·`__DL_SI`를 `WSLENV`에 보탠다.
   폴더는 리눅스 경로(`/home/me`, `/mnt/c/…`) 그대로 탭에 보인다.
-- 아직: zsh·cmd는 셸 통합이 없다 (폴더 이름 대신 셸 이름), 탭 색 막대, 명령 숨기기 설정. zsh는 `ZDOTDIR`로 `.zshrc`를 감싸 `precmd`/`preexec`를 거는 방식이 될 텐데,
+- 아직: zsh·cmd는 셸 통합이 없다 (폴더 이름 대신 셸 이름), 명령 숨기기 설정. zsh는 `ZDOTDIR`로 `.zshrc`를 감싸 `precmd`/`preexec`를 거는 방식이 될 텐데,
   이 PC(Windows)에는 zsh가 없어 실제로 돌려 볼 수 없었다. PowerShell 7(pwsh)은 이 PC에 없어 실제로는 확인하지 못했다 (Windows PowerShell 5.1로만).
 
 ## 알려진 한계

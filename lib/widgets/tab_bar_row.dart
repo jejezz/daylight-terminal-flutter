@@ -348,29 +348,24 @@ class _Tab extends StatelessWidget {
         ],
       ),
     );
-    final key = label.colorKey;
-    final stripe = key == null
-        ? null
-        : TabLabels.colorFor(key, Theme.of(context).brightness);
+    final stripe = TabLabels.colorFor(
+      label.colorIndex,
+      Theme.of(context).brightness,
+    );
     final tab = InkWell(
       splashFactory: NoSplash.splashFactory,
       onTap: onSelect,
       child: Stack(
         children: [
           content,
-          // 윗변의 색 막대: 같은 폴더(같은 접속)의 탭은 같은 색. 고른 탭은 또렷하게, 나머지는 옅게.
-          if (stripe != null)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 3,
-              child: ColoredBox(
-                color: selected || dragging
-                    ? stripe
-                    : stripe.withValues(alpha: 0.55),
-              ),
-            ),
+          // 왼쪽 가장자리의 색 막대: 탭마다 다른 색 (옆 탭과 구분). 고른 탭이라고 색을 바꾸지 않는다 — 아래 밑줄이 알려 준다.
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: 0,
+            width: 4,
+            child: ColoredBox(color: stripe),
+          ),
         ],
       ),
     );
