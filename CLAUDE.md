@@ -182,6 +182,9 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 탭은 두 줄(높이 48)이다. 첫 줄 = `셸이름  폴더이름`(`TabLabels`, `lib/utils/tab_label.dart`; 셸 이름은 `pwsh`처럼 짧게 `primary` 색, 폴더는 집이면 `~`, 겹치면 부모를 붙여 `a/src`),
   둘째 줄 = 실행 중인 명령(`primary` 색) 또는 전체 경로. 폴더를 모르는 탭(SSH·시리얼·셸 통합 없는 셸)은 예전처럼 `tabTitle` 한 줄.
   툴팁에 전체 경로·셸·명령·종료 코드. 탭 앞 표시는 명령이 0.5초 넘게 돌면 스피너, 마지막 명령이 실패(종료 코드 ≠ 0)면 다음 명령까지 빨간 점.
+- 탭 윗변에 3px **색 막대**: 폴더(경로, 대소문자 무시) 또는 SSH·시리얼의 접속 이름에서 정한 색이라 같은 폴더의 탭은 같은 색이다
+  (`TabLabels.colorFor`, FNV-1a 해시로 색상환 12등분, 어두운/밝은 테마에서 명도를 따로). 고른 탭은 또렷하게, 나머지는 55%. 폴더를 모르는 로컬 셸은 막대 없음.
+  해시라서 서로 다른 폴더가 같은 색일 수 있다 (구분은 글자가 주고 색은 보조).
 - 탭이 화면보다 많으면 탭 줄이 가로로 스크롤된다: 마우스 휠(세로 휠도 가로로 민다), 아래의 얇은 스크롤바, 그리고 탭을 고르거나 새 탭이 열리면
   그 탭이 보이는 곳으로 자동으로 온다(`_EnsureVisible`). 탭은 `ListView.builder`가 아니라 `Row`에 모두 만든다(안 만들어진 탭은 가져올 수 없어서).
 - 폴더·명령은 **셸 통합**(`lib/services/shell_integration.dart`)이 알려 준다: 로컬 PowerShell(pwsh·Windows PowerShell)을 띄울 때

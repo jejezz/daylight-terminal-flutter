@@ -249,110 +249,129 @@ class _Tab extends StatelessWidget {
     AppLocalizations l10n, {
     bool dragging = false,
   }) {
+    final content = Container(
+      height: _tabHeight,
+      constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
+      padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: selected || dragging ? scheme.surface : null,
+        border: Border(
+          bottom: BorderSide(
+            color: selected ? scheme.primary : Colors.transparent,
+            width: 2,
+          ),
+          right: BorderSide(color: scheme.outlineVariant),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(switch (session) {
+            LocalShellSession() => Icons.terminal_rounded,
+            SerialSession() => Icons.usb_rounded,
+            _ => Icons.dns_outlined,
+          }, size: 13),
+          const SizedBox(width: AppSpacing.xs),
+          _StatusMark(
+            running: label.running,
+            color: switch (session.status) {
+              // 마지막 명령이 실패로 끝났으면 다음 명령이 시작될 때까지 빨간 점.
+              SessionStatus.connected when (label.exitCode ?? 0) != 0 =>
+                AppColors.danger,
+              SessionStatus.connected => AppColors.success,
+              SessionStatus.connecting => AppColors.warning,
+              SessionStatus.error => AppColors.danger,
+              SessionStatus.idle => scheme.outline,
+            },
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Flexible(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      // 셸 이름이 앞, 폴더 이름이 뒤. 좁으면 폴더 쪽이 먼저 잘린다.
+                      if (label.shell != null)
+                        TextSpan(
+                          text: '${label.shell}  ',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: scheme.primary,
+                          ),
+                        ),
+                      TextSpan(
+                        text: label.primary,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: selected
+                              ? scheme.onSurface
+                              : scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (label.secondary != null)
+                  Text(
+                    label.secondary!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: label.running
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: label.running
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            iconSize: 14,
+            visualDensity: VisualDensity.compact,
+            tooltip: '${l10n.tabClose} (${AppShortcut.closeTab.label})',
+            icon: const Icon(Icons.close_rounded),
+            onPressed: onClose,
+          ).help(HelpId.tabClose),
+        ],
+      ),
+    );
+    final key = label.colorKey;
+    final stripe = key == null
+        ? null
+        : TabLabels.colorFor(key, Theme.of(context).brightness);
     final tab = InkWell(
       splashFactory: NoSplash.splashFactory,
       onTap: onSelect,
-      child: Container(
-        height: _tabHeight,
-        constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
-        padding: const EdgeInsets.only(
-          left: AppSpacing.md,
-          right: AppSpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: selected || dragging ? scheme.surface : null,
-          border: Border(
-            bottom: BorderSide(
-              color: selected ? scheme.primary : Colors.transparent,
-              width: 2,
-            ),
-            right: BorderSide(color: scheme.outlineVariant),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(switch (session) {
-              LocalShellSession() => Icons.terminal_rounded,
-              SerialSession() => Icons.usb_rounded,
-              _ => Icons.dns_outlined,
-            }, size: 13),
-            const SizedBox(width: AppSpacing.xs),
-            _StatusMark(
-              running: label.running,
-              color: switch (session.status) {
-                // 마지막 명령이 실패로 끝났으면 다음 명령이 시작될 때까지 빨간 점.
-                SessionStatus.connected when (label.exitCode ?? 0) != 0 =>
-                  AppColors.danger,
-                SessionStatus.connected => AppColors.success,
-                SessionStatus.connecting => AppColors.warning,
-                SessionStatus.error => AppColors.danger,
-                SessionStatus.idle => scheme.outline,
-              },
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Flexible(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        // 셸 이름이 앞, 폴더 이름이 뒤. 좁으면 폴더 쪽이 먼저 잘린다.
-                        if (label.shell != null)
-                          TextSpan(
-                            text: '${label.shell}  ',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w500,
-                              color: scheme.primary,
-                            ),
-                          ),
-                        TextSpan(
-                          text: label.primary,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: selected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: selected
-                                ? scheme.onSurface
-                                : scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (label.secondary != null)
-                    Text(
-                      label.secondary!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: label.running
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                        color: label.running
-                            ? scheme.primary
-                            : scheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
+      child: Stack(
+        children: [
+          content,
+          // 윗변의 색 막대: 같은 폴더(같은 접속)의 탭은 같은 색. 고른 탭은 또렷하게, 나머지는 옅게.
+          if (stripe != null)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 3,
+              child: ColoredBox(
+                color: selected || dragging
+                    ? stripe
+                    : stripe.withValues(alpha: 0.55),
               ),
             ),
-            IconButton(
-              iconSize: 14,
-              visualDensity: VisualDensity.compact,
-              tooltip: '${l10n.tabClose} (${AppShortcut.closeTab.label})',
-              icon: const Icon(Icons.close_rounded),
-              onPressed: onClose,
-            ).help(HelpId.tabClose),
-          ],
-        ),
+        ],
       ),
     );
     final tip = label.tooltip;
