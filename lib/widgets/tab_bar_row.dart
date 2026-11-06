@@ -266,11 +266,19 @@ class _Tab extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(switch (session) {
-            LocalShellSession() => Icons.terminal_rounded,
-            SerialSession() => Icons.usb_rounded,
-            _ => Icons.dns_outlined,
-          }, size: 13),
+          // 아이콘 색이 탭마다 다르다 (옆 탭과 구분). 고른 탭이라고 색을 바꾸지 않는다 — 아래 밑줄이 알려 준다.
+          Icon(
+            switch (session) {
+              LocalShellSession() => Icons.terminal_rounded,
+              SerialSession() => Icons.usb_rounded,
+              _ => Icons.dns_outlined,
+            },
+            size: 16,
+            color: TabLabels.colorFor(
+              label.colorIndex,
+              Theme.of(context).brightness,
+            ),
+          ),
           const SizedBox(width: AppSpacing.xs),
           _StatusMark(
             running: label.running,
@@ -348,26 +356,10 @@ class _Tab extends StatelessWidget {
         ],
       ),
     );
-    final stripe = TabLabels.colorFor(
-      label.colorIndex,
-      Theme.of(context).brightness,
-    );
     final tab = InkWell(
       splashFactory: NoSplash.splashFactory,
       onTap: onSelect,
-      child: Stack(
-        children: [
-          content,
-          // 왼쪽 가장자리의 색 막대: 탭마다 다른 색 (옆 탭과 구분). 고른 탭이라고 색을 바꾸지 않는다 — 아래 밑줄이 알려 준다.
-          Positioned(
-            top: 0,
-            bottom: 0,
-            left: 0,
-            width: 4,
-            child: ColoredBox(color: stripe),
-          ),
-        ],
-      ),
+      child: content,
     );
     final tip = label.tooltip;
     if (dragging || tip == null || tip.isEmpty) return tab;
