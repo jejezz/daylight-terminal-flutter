@@ -191,6 +191,64 @@ void main() {
   );
 
   test(
+    'git bash: shell integration reports the folder (as a Windows path), the running command and its exit code',
+    () async {
+      final gb = find('git-bash');
+      if (gb == null) return;
+      final sub = Directory(p.join(tmp.path, 'sub dir'))..createSync();
+      final s = LocalShellSession(gb, startDirectory: tmp.path);
+      await s.start();
+      expect(s.connected, isTrue, reason: s.startError);
+      await waitFor(() => s.reportedCwd != null, reason: 'no cwd: ${screen(s)}');
+      expect(s.reportedCwd!.replaceAll('/', r'\').endsWith(p.basename(tmp.path)), isTrue, reason: s.reportedCwd);
+      expect(s.reportedCwd, matches(RegExp(r'^/[A-Za-z]:/')), reason: s.reportedCwd);
+
+      s.send("sleep 2; bash -c 'exit 7'");
+      await waitFor(() => s.runningCommand != null, reason: 'never running: ${screen(s)}');
+      expect(s.runningCommand, "sleep 2; bash -c 'exit 7'");
+      await waitFor(() => !s.commandRunning, reason: 'still running: ${screen(s)}');
+      expect(s.lastExitCode, 7);
+
+      s.send("cd '${sub.path.replaceAll(r'\', '/')}'");
+      await waitFor(() => (s.reportedCwd ?? '').endsWith('sub dir'), reason: '${s.reportedCwd} ${screen(s)}');
+      s.dispose();
+    },
+    skip: skip,
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
+
+  for (final id in ['powershell', 'pwsh']) {
+    test(
+      '$id: shell integration reports the folder, the running command and its exit code',
+      () async {
+        final ps = find(id);
+        if (ps == null) return;
+        final sub = Directory(p.join(tmp.path, '하위 폴더'))..createSync();
+        final s = LocalShellSession(ps, startDirectory: tmp.path);
+        await s.start();
+        expect(s.connected, isTrue, reason: s.startError);
+        // 첫 프롬프트에서 현재 폴더가 올라온다.
+        await waitFor(() => s.reportedCwd != null, reason: 'no cwd: ${screen(s)}');
+        expect(s.reportedCwd!.replaceAll('/', r'\').endsWith(p.basename(tmp.path)), isTrue, reason: s.reportedCwd);
+
+        // 실행 중인 명령이 보이고, 끝나면 사라지며 종료 코드가 남는다.
+        s.send('Start-Sleep -Seconds 2; cmd /c exit 7');
+        await waitFor(() => s.runningCommand != null, reason: 'never running: ${screen(s)}');
+        expect(s.runningCommand, 'Start-Sleep -Seconds 2; cmd /c exit 7');
+        await waitFor(() => !s.commandRunning, reason: 'still running: ${screen(s)}');
+        expect(s.lastExitCode, 7);
+
+        // cd 하면 폴더가 따라간다.
+        s.send("Set-Location -LiteralPath '${sub.path}'");
+        await waitFor(() => (s.reportedCwd ?? '').endsWith('하위 폴더'), reason: '${s.reportedCwd} ${screen(s)}');
+        s.dispose();
+      },
+      skip: skip,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
+  }
+
+  test(
     'closing the tab kills the real shell process',
     () async {
       final cmd = find('cmd') ?? shells.first;

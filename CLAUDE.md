@@ -177,6 +177,23 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   겹치면 가장 작은(안쪽) 영역이 이긴다. `IndexedStack`이 가린 탭의 컨트롤은 뺀다.
 - 다이얼로그가 떠 있으면(`ModalRoute.isCurrent == false`) `?` 버튼이 꺼져 진입할 수 없다. 오버레이는 메인 화면만 덮는다.
 
+## 탭 글(폴더·실행 중 명령)과 셸 통합
+
+- 탭은 두 줄(높이 48)이다. 첫 줄 = `셸이름  폴더이름`(`TabLabels`, `lib/utils/tab_label.dart`; 셸 이름은 `pwsh`처럼 짧게 `primary` 색, 폴더는 집이면 `~`, 겹치면 부모를 붙여 `a/src`),
+  둘째 줄 = 실행 중인 명령(`primary` 색) 또는 전체 경로. 폴더를 모르는 탭(SSH·시리얼·셸 통합 없는 셸)은 예전처럼 `tabTitle` 한 줄.
+  툴팁에 전체 경로·셸·명령·종료 코드. 탭 앞 표시는 명령이 0.5초 넘게 돌면 스피너, 마지막 명령이 실패(종료 코드 ≠ 0)면 다음 명령까지 빨간 점.
+- 폴더·명령은 **셸 통합**(`lib/services/shell_integration.dart`)이 알려 준다: 로컬 PowerShell(pwsh·Windows PowerShell)을 띄울 때
+  `-NoExit -EncodedCommand`로 스크립트를 넣어(파일 없이 — 실행 정책 회피) 프로필 뒤에 `prompt`와 `PSConsoleHostReadLine`을 감싼다.
+  프롬프트마다 OSC 7(폴더), 명령을 받으면 OSC 633;E(명령, `\\`·`\xHH` 이스케이프)와 133;C, 끝나면 133;D;종료코드.
+  `TerminalSession`이 `onPrivateOSC`로 받아 `reportedCwd`/`runningCommand`/`commandRunning`/`lastExitCode`로 노출한다 (바뀔 때만 알림).
+  명령은 300자까지만 보낸다. 비밀번호가 든 명령이 탭(스크린샷)에 보일 수 있다 — 설정으로 줄이는 것은 아직 없다.
+- **bash·Git Bash**도 셸 통합이 있다. 파일 없이 환경 변수로 넣는다: `PROMPT_COMMAND='eval "$__DL_SI"'`와 스크립트가 든 `__DL_SI`
+  (`ShellIntegration.environment`). `PROMPT_COMMAND`는 첫 프롬프트에서 불리므로 `.bashrc`/`.bash_profile`(로그인 셸 포함)을 다 읽은 뒤에 걸리고,
+  `PS0`(bash 4.4+)로 명령 시작을 알린다(`history 1`로 명령 줄). 프롬프트마다 종료 코드(133;D)·폴더(OSC 7, Git Bash는 `cygpath -m`)를 알리고
+  `$?`를 되돌려 놓는다. 기존 `PROMPT_COMMAND`는 이어서 부른다. macOS 기본 bash 3.2는 `PS0`가 없어 폴더만 알린다. 스페이스로 시작하는 명령(앱이 `cd`를 넣을 때)은
+  히스토리에 안 남아 직전 명령이 잠깐 보일 수 있다 (0.5초 안에 끝나 스피너는 안 뜬다).
+- 아직: zsh·WSL·cmd는 셸 통합이 없다 (폴더 이름 대신 셸 이름), 탭 색 막대, 명령 숨기기 설정. PowerShell 7(pwsh)은 이 PC에 없어 실제로는 확인하지 못했다 (Windows PowerShell 5.1로만).
+
 ## 알려진 한계
 
 - 실제 OS 끌기(Explorer/Finder로 놓기)는 자동 테스트로 확인하지 못했다 — 사람이 직접 눌러 봐야 한다.

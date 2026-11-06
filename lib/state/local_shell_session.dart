@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../models/local_shell.dart';
 import '../services/local_paths.dart';
 import '../services/pty_backend.dart';
+import '../services/shell_integration.dart';
 import 'local_folder_session.dart';
 import 'terminal_session.dart';
 
@@ -54,9 +55,14 @@ class LocalShellSession extends LocalFolderSession {
     _startError = null;
     try {
       final pty = _ptyFactory(
-        shell,
+        ShellIntegration.apply(shell),
         workingDirectory: folderPath,
-        environment: {...Platform.environment, 'TERM': 'xterm-256color', 'COLORTERM': 'truecolor'},
+        environment: {
+          ...Platform.environment,
+          'TERM': 'xterm-256color',
+          'COLORTERM': 'truecolor',
+          ...ShellIntegration.environment(shell, Platform.environment),
+        },
         rows: terminal.viewHeight,
         columns: terminal.viewWidth,
       );
@@ -95,6 +101,7 @@ class LocalShellSession extends LocalFolderSession {
     }
     if (isLogging) unawaited(stopLogging());
     cancelPendingCwd();
+    resetShellState();
   }
 
   /// 끝난 셸을 같은 폴더에서 다시 띄운다.

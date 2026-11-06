@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,6 +13,19 @@ import '../state/sessions_controller.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
+import '../utils/tab_label.dart';
+
+/// 탭 높이: 첫 줄(폴더 이름)과 둘째 줄(실행 중인 명령 / 셸 이름).
+const double _tabHeight = 48;
+
+/// 아직 이름이 없는 탭은 종류를 알려 준다. 처음 여는 탭(SSH·시리얼·셸 중 고르는 화면)은 그냥 "새 연결".
+String _fallbackTitle(TerminalSession session, AppLocalizations l10n) => session.tabTitle.isNotEmpty
+    ? session.tabTitle
+    : switch (session) {
+        SerialSession() => l10n.tabNewSerial,
+        SshSessionProvider(showAllOptions: false) => l10n.tabNewSsh,
+        _ => l10n.tabNew,
+      };
 
 /// 세션 탭 줄. 탭마다 SSH 연결 하나(터미널 + 탐색기).
 class TabBarRow extends StatelessWidget {
@@ -22,7 +37,7 @@ class TabBarRow extends StatelessWidget {
     final controller = context.watch<SessionsController>();
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      height: 36,
+      height: _tabHeight,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
@@ -30,18 +45,29 @@ class TabBarRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: controller.sessions.length,
-              itemBuilder: (context, i) => _Tab(
-                key: ObjectKey(controller.sessions[i]),
-                index: i,
-                session: controller.sessions[i],
-                selected: i == controller.selected,
-                onSelect: () => controller.select(i),
-                onClose: () => controller.closeAt(i),
-                onMove: controller.move,
-              ),
+            // 폴더 이름이 겹치는 탭을 구분하려면 모든 탭의 상태를 함께 봐야 한다.
+            child: ListenableBuilder(
+              listenable: Listenable.merge(controller.sessions),
+              builder: (context, _) {
+                final labels = TabLabels.compute(
+                  controller.sessions,
+                  fallbackTitle: (s) => _fallbackTitle(s, l10n),
+                );
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: controller.sessions.length,
+                  itemBuilder: (context, i) => _Tab(
+                    key: ObjectKey(controller.sessions[i]),
+                    index: i,
+                    session: controller.sessions[i],
+                    label: labels[i],
+                    selected: i == controller.selected,
+                    onSelect: () => controller.select(i),
+                    onClose: () => controller.closeAt(i),
+                    onMove: controller.move,
+                  ),
+                );
+              },
             ),
           ),
           HelpTarget(
@@ -99,6 +125,7 @@ class _Tab extends StatelessWidget {
     super.key,
     required this.index,
     required this.session,
+    required this.label,
     required this.selected,
     required this.onSelect,
     required this.onClose,
@@ -107,6 +134,7 @@ class _Tab extends StatelessWidget {
 
   final int index;
   final TerminalSession session;
+  final TabLabel label;
   final bool selected;
   final VoidCallback onSelect;
   final VoidCallback onClose;
@@ -121,15 +149,7 @@ class _Tab extends StatelessWidget {
     return ListenableBuilder(
       listenable: session,
       builder: (context, _) {
-        // 아직 이름이 없는 탭은 종류를 알려 준다. 처음 여는 탭(SSH·시리얼·셸 중 고르는 화면)은 그냥 "새 연결".
-        final title = session.tabTitle.isNotEmpty
-            ? session.tabTitle
-            : switch (session) {
-                SerialSession() => l10n.tabNewSerial,
-                SshSessionProvider(showAllOptions: false) => l10n.tabNewSsh,
-                _ => l10n.tabNew,
-              };
-        final body = _body(context, title, scheme, l10n);
+        final body = _body(context, scheme, l10n);
         return HelpTarget(
           id: HelpId.tabItem,
           child: DragTarget<int>(
@@ -152,7 +172,6 @@ class _Tab extends StatelessWidget {
                           listenable: session,
                           builder: (context, _) => _body(
                             context,
-                            title,
                             scheme,
                             l10n,
                             dragging: true,
@@ -182,16 +201,15 @@ class _Tab extends StatelessWidget {
 
   Widget _body(
     BuildContext context,
-    String title,
     ColorScheme scheme,
     AppLocalizations l10n, {
     bool dragging = false,
   }) {
-    return InkWell(
+    final tab = InkWell(
       splashFactory: NoSplash.splashFactory,
       onTap: onSelect,
       child: Container(
-        height: 36,
+        height: _tabHeight,
         constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
         padding: const EdgeInsets.only(
           left: AppSpacing.md,
@@ -219,10 +237,11 @@ class _Tab extends StatelessWidget {
               size: 13,
             ),
             const SizedBox(width: AppSpacing.xs),
-            Icon(
-              Icons.circle,
-              size: 8,
+            _StatusMark(
+              running: label.running,
               color: switch (session.status) {
+                // 마지막 명령이 실패로 끝났으면 다음 명령이 시작될 때까지 빨간 점.
+                SessionStatus.connected when (label.exitCode ?? 0) != 0 => AppColors.danger,
                 SessionStatus.connected => AppColors.success,
                 SessionStatus.connecting => AppColors.warning,
                 SessionStatus.error => AppColors.danger,
@@ -231,14 +250,48 @@ class _Tab extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Flexible(
-              child: Text(
-                title,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                  color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        // 셸 이름이 앞, 폴더 이름이 뒤. 좁으면 폴더 쪽이 먼저 잘린다.
+                        if (label.shell != null)
+                          TextSpan(
+                            text: '${label.shell}  ',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w500,
+                              color: scheme.primary,
+                            ),
+                          ),
+                        TextSpan(
+                          text: label.primary,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                            color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (label.secondary != null)
+                    Text(
+                      label.secondary!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: label.running ? FontWeight.w600 : FontWeight.w400,
+                        color: label.running ? scheme.primary : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
               ),
             ),
             IconButton(
@@ -251,6 +304,70 @@ class _Tab extends StatelessWidget {
           ],
         ),
       ),
+    );
+    final tip = label.tooltip;
+    if (dragging || tip == null || tip.isEmpty) return tab;
+    return Tooltip(message: tip, waitDuration: const Duration(milliseconds: 600), child: tab);
+  }
+}
+
+/// 탭 앞의 상태 표시: 명령이 실행 중이면 (조금 기다린 뒤) 돌아가는 표시, 아니면 연결 상태 점.
+/// 금방 끝나는 명령(`ls` 등)에는 깜빡이지 않게 [delay] 뒤에야 보인다.
+class _StatusMark extends StatefulWidget {
+  const _StatusMark({required this.running, required this.color});
+
+  final bool running;
+  final Color color;
+
+  @visibleForTesting
+  static Duration delay = const Duration(milliseconds: 500);
+
+  @override
+  State<_StatusMark> createState() => _StatusMarkState();
+}
+
+class _StatusMarkState extends State<_StatusMark> {
+  Timer? _timer;
+  bool _show = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_StatusMark old) {
+    super.didUpdateWidget(old);
+    if (old.running != widget.running) _sync();
+  }
+
+  void _sync() {
+    _timer?.cancel();
+    _timer = null;
+    if (!widget.running) {
+      _show = false;
+    } else if (!_show) {
+      _timer = Timer(_StatusMark.delay, () {
+        if (mounted) setState(() => _show = true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 10,
+      height: 10,
+      child: widget.running && _show
+          ? CircularProgressIndicator(strokeWidth: 1.6, color: Theme.of(context).colorScheme.primary)
+          : Icon(Icons.circle, size: 8, color: widget.color),
     );
   }
 }
