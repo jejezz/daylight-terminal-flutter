@@ -422,6 +422,30 @@ abstract class AppLocalizations {
   /// **'탭 닫기'**
   String get tabClose;
 
+  /// No description provided for @tabRename.
+  ///
+  /// In ko, this message translates to:
+  /// **'탭 이름 바꾸기'**
+  String get tabRename;
+
+  /// No description provided for @tabRenameField.
+  ///
+  /// In ko, this message translates to:
+  /// **'탭 이름'**
+  String get tabRenameField;
+
+  /// No description provided for @tabRenameHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'비워 두면 자동 이름(폴더)을 씁니다.'**
+  String get tabRenameHelp;
+
+  /// No description provided for @tabRenameAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 이름으로'**
+  String get tabRenameAuto;
+
   /// No description provided for @connectTitle.
   ///
   /// In ko, this message translates to:

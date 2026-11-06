@@ -173,6 +173,7 @@ abstract final class TabLabels {
     String? folder,
     String fallback,
   ) {
+    final custom = s.customTitle;
     final shellName = s is LocalShellSession ? s.shell.name : null;
     final shortName = s is LocalShellSession ? shortShellName(s.shell) : null;
     final command = s.runningCommand;
@@ -189,7 +190,7 @@ abstract final class TabLabels {
         : lines.join('\n');
     if (folder == null) {
       return TabLabel(
-        primary: fallback,
+        primary: custom ?? fallback,
         secondary: command,
         running: running,
         tooltip: tip,
@@ -197,7 +198,8 @@ abstract final class TabLabels {
       );
     }
     return TabLabel(
-      primary: folder,
+      // 사용자가 이름을 지었으면 폴더 이름 대신 그것을 보인다 (셸 이름·둘째 줄은 그대로).
+      primary: custom ?? folder,
       shell: shortName,
       // 실행 중이면 명령, 아니면 전체 경로.
       secondary: running ? command : path,

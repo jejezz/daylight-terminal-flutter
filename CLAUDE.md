@@ -194,6 +194,9 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   탭 줄이 그릴 때 아직 색이 없는 세션(`TerminalSession.tabColorIndex`)에 번호를 주는데, 가장 적게 쓰인 번호를 고르고 같으면 양옆 탭 색과 색상환에서
   가장 먼 것을 고른다. 한 번 받은 색은 `cd`나 다른 탭이 닫혀도 안 바뀐다. 색상환 16등분, 채도 0.85, 어두운 테마 명도 0.58 / 밝은 테마 0.42
   (`TabLabels.colorFor`). 고른 탭이라고 색을 바꾸지 않는다 (아래 밑줄이 알려 준다). 탭이 16개를 넘으면 색이 겹친다. 재시작하면 순서대로 다시 받는다.
+- **탭 이름 직접 짓기**: 탭을 더블클릭하거나 오른쪽 클릭 → "탭 이름 바꾸기". 지은 이름(`TerminalSession.customTitle`)은 첫 줄의 폴더 이름 자리에 보이고(셸 이름·둘째 줄은 그대로),
+  비워서 확인하거나 "자동 이름으로"를 고르면 자동 이름(폴더)으로 돌아간다. 저장된 탭 목록에 `title`로 같이 저장되어 다시 켜도 남는다(`SavedTab.title`).
+  더블클릭은 `Listener`로 직접 센다 — `InkWell.onDoubleTap`을 쓰면 한 번 클릭으로 탭을 고르는 것이 늦어진다.
 - 탭이 화면보다 많으면 탭 줄이 가로로 스크롤된다: 마우스 휠(세로 휠도 가로로 민다), 아래의 얇은 스크롤바, 그리고 탭을 고르거나 새 탭이 열리면
   그 탭이 보이는 곳으로 자동으로 온다(`_EnsureVisible`). 탭은 `ListView.builder`가 아니라 `Row`에 모두 만든다(안 만들어진 탭은 가져올 수 없어서).
 - 폴더·명령은 **셸 통합**(`lib/services/shell_integration.dart`)이 알려 준다: 로컬 PowerShell(pwsh·Windows PowerShell)을 띄울 때
