@@ -204,11 +204,12 @@ class SessionsController extends ChangeNotifier {
     for (var i = 0; i < sessions.length; i++) {
       final s = sessions[i];
       final tab = switch (s) {
-        final SshSessionProvider ssh when ssh.profile != null => SavedSshTab(ssh.profile!),
-        final LocalShellSession local => SavedLocalTab(local.shell.id, local.folderPath),
+        final SshSessionProvider ssh when ssh.profile != null => SavedSshTab(ssh.profile!, title: ssh.customTitle),
+        final LocalShellSession local => SavedLocalTab(local.shell.id, local.folderPath, title: local.customTitle),
         final SerialSession serial when (serial.activeSettings ?? serial.pendingSettings) != null => SavedSerialTab(
           (serial.activeSettings ?? serial.pendingSettings)!,
           serial.folderPath,
+          title: serial.customTitle,
         ),
         _ => null,
       };
@@ -302,7 +303,9 @@ class SessionsController extends ChangeNotifier {
     }
   }
 
-  TerminalSession? _restoreOne(SavedTab tab) {
+  TerminalSession? _restoreOne(SavedTab tab) => _openSaved(tab)?..setCustomTitle(tab.title);
+
+  TerminalSession? _openSaved(SavedTab tab) {
     final lines = scrollback?.call() ?? 10000;
     String? existing(String folder) => Directory(folder).existsSync() ? folder : null;
     switch (tab) {

@@ -198,6 +198,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tabClose => '탭 닫기';
 
   @override
+  String get tabRename => '탭 이름 바꾸기';
+
+  @override
+  String get tabRenameField => '탭 이름';
+
+  @override
+  String get tabRenameHelp => '비워 두면 자동 이름(폴더)을 씁니다.';
+
+  @override
+  String get tabRenameAuto => '자동 이름으로';
+
+  @override
   String get connectTitle => '서버에 연결';
 
   @override
@@ -581,6 +593,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsTitle => '설정';
+
+  @override
+  String get uiTextScale => '화면 글자 크기';
+
+  @override
+  String get uiTextScaleHelp =>
+      '메뉴, 탭, 폴더 이름, 상태 줄 등 터미널 밖의 모든 글자의 크기입니다. 터미널 글자는 아래 ‘터미널 글꼴’에서 따로 정합니다.';
 
   @override
   String get settingsSectionAppearance => '외형';

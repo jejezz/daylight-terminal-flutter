@@ -9,6 +9,7 @@ import 'package:daylight_terminal/theme/app_theme.dart';
 import 'package:daylight_terminal/widgets/line_sender.dart';
 import 'package:file_selector_platform_interface/file_selector_platform_interface.dart';
 import 'package:flutter/material.dart';
+import 'package:daylight_terminal/theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
@@ -119,12 +120,12 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
   }
 
-  Future<void> tapOpen(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.folder_open_rounded)));
-  Future<void> tapSave(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.save_outlined)));
+  Future<void> tapOpen(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(PhosphorIconsDuotone.folderOpen)));
+  Future<void> tapSave(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(PhosphorIconsDuotone.floppyDisk)));
 
-  Future<void> tapSaveAs(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.save_as_outlined)));
+  Future<void> tapSaveAs(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(PhosphorIconsDuotone.floppyDiskBack)));
 
-  Future<void> tapNew(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(Icons.note_add_outlined)));
+  Future<void> tapNew(WidgetTester tester) => act(tester, () => tester.tap(find.byIcon(PhosphorIconsDuotone.filePlus)));
 
   Future<void> pressCommand(WidgetTester tester, LogicalKeyboardKey key, {bool shift = false}) async {
     await tester.runAsync(() async {
@@ -366,15 +367,15 @@ void main() {
     dialogs.openAnswers.add(file(longName));
     await pumpSender(tester);
     final before = [
-      tester.getRect(find.byIcon(Icons.folder_open_rounded)),
-      tester.getRect(find.byIcon(Icons.save_as_outlined)),
+      tester.getRect(find.byIcon(PhosphorIconsDuotone.folderOpen)),
+      tester.getRect(find.byIcon(PhosphorIconsDuotone.floppyDiskBack)),
     ];
 
     await tapOpen(tester);
     expect(tester.takeException(), isNull);
     final after = [
-      tester.getRect(find.byIcon(Icons.folder_open_rounded)),
-      tester.getRect(find.byIcon(Icons.save_as_outlined)),
+      tester.getRect(find.byIcon(PhosphorIconsDuotone.folderOpen)),
+      tester.getRect(find.byIcon(PhosphorIconsDuotone.floppyDiskBack)),
     ];
     expect(after, before, reason: '긴 이름이 버튼을 밀어냈다');
     expect(find.text(longName), findsOneWidget); // 줄임표(...)로 잘려 보이지만 글은 그대로 하나

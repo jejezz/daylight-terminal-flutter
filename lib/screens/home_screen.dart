@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../app_identity.dart';
@@ -98,8 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (context, _) => current.connected
                     ? IconButton(
                         tooltip: current is LocalShellSession ? l10n.shellTerminate : l10n.connectDisconnect,
-                        icon: Icon(
-                          current is LocalShellSession ? Icons.power_settings_new_rounded : Icons.link_off_rounded,
+                        icon: PhosphorIcon(
+                          current is LocalShellSession ? PhosphorIconsDuotone.power : PhosphorIconsDuotone.linkBreak,
                         ),
                         onPressed: current.disconnect,
                       ).help(HelpId.disconnect)
@@ -107,17 +108,17 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             IconButton(
               tooltip: l10n.addressBookTooltip(AppShortcut.addressBook.label),
-              icon: const Icon(Icons.menu_book_rounded),
+              icon: const PhosphorIcon(PhosphorIconsDuotone.bookOpen),
               onPressed: () => showAddressBook(context),
             ).help(HelpId.addressBook),
             IconButton(
               tooltip: l10n.settingsTooltip,
-              icon: const Icon(Icons.settings_rounded),
+              icon: const PhosphorIcon(PhosphorIconsDuotone.gear),
               onPressed: () => showSettingsDialog(context),
             ).help(HelpId.settings),
             IconButton(
               tooltip: l10n.aboutTooltip,
-              icon: const Icon(Icons.info_outline_rounded),
+              icon: const PhosphorIcon(PhosphorIconsDuotone.info),
               onPressed: widget.onAbout,
             ).help(HelpId.about),
             const SizedBox(width: AppSpacing.sm),
@@ -423,12 +424,12 @@ class _SerialBar extends StatelessWidget {
                   ButtonSegment(
                     value: SerialViewMode.terminal,
                     tooltip: l10n.serialViewTerminal,
-                    icon: const Icon(Icons.terminal_rounded, size: 18),
+                    icon: const PhosphorIcon(PhosphorIconsDuotone.terminalWindow, size: 18),
                   ),
                   ButtonSegment(
                     value: SerialViewMode.hex,
                     tooltip: l10n.serialViewHex,
-                    icon: const Icon(Icons.grid_view_rounded, size: 18),
+                    icon: const PhosphorIcon(PhosphorIconsDuotone.squaresFour, size: 18),
                   ),
                 ],
                 selected: {session.viewMode},

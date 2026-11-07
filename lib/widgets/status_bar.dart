@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -12,6 +13,7 @@ import '../services/file_reveal_service.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
+import '../utils/ui_scale.dart';
 
 /// 연결 상태, 기록(Recording) 토글, 기록 파일 위치 열기, 터미널 내용 전체를 클립보드/파일로.
 class StatusBar extends StatelessWidget {
@@ -53,7 +55,7 @@ class StatusBar extends StatelessWidget {
     final small = Theme.of(context).textTheme.bodySmall;
 
     return Container(
-      height: 32,
+      height: context.scaled(32),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
@@ -66,7 +68,7 @@ class StatusBar extends StatelessWidget {
           Text(session.statusLabel, style: small),
           if (Elevation.isElevated) ...[
             const SizedBox(width: AppSpacing.md),
-            Icon(Icons.shield_rounded, size: 14, color: AppColors.warning),
+            PhosphorIcon(PhosphorIconsDuotone.shield, size: 14, color: AppColors.warning),
             const SizedBox(width: AppSpacing.xs),
             Text(l10n.adminBadge, style: small?.copyWith(color: AppColors.warning)),
           ],
@@ -103,7 +105,7 @@ class StatusBar extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             tooltip: l10n.statusCopyBuffer,
             color: scheme.onSurfaceVariant,
-            icon: const Icon(Icons.content_copy_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.copy),
             onPressed: () => _copyBuffer(context, session),
           ).help(HelpId.statusCopyBuffer),
           IconButton(
@@ -111,7 +113,7 @@ class StatusBar extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             tooltip: l10n.statusSaveBuffer,
             color: scheme.onSurfaceVariant,
-            icon: const Icon(Icons.save_alt_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.fileArrowDown),
             onPressed: () => _saveBuffer(context, session),
           ).help(HelpId.statusSaveBuffer),
           IconButton(
@@ -119,7 +121,7 @@ class StatusBar extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             tooltip: session.isLogging ? l10n.statusStopRecording(key) : l10n.statusStartRecording(key),
             color: session.isLogging ? AppColors.danger : scheme.onSurfaceVariant,
-            icon: Icon(session.isLogging ? Icons.stop_circle_rounded : Icons.fiber_manual_record_rounded),
+            icon: PhosphorIcon(session.isLogging ? PhosphorIconsDuotone.stopCircle : PhosphorIconsDuotone.record),
             onPressed: session.connected || session.isLogging
                 ? () => session.toggleLogging(confirmButtonText: l10n.logSaveConfirm)
                 : null,
@@ -128,7 +130,7 @@ class StatusBar extends StatelessWidget {
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: session.logFilePath == null ? l10n.statusNoLogFile : l10n.statusRevealLog,
-            icon: const Icon(Icons.folder_open_rounded),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.folderOpen),
             onPressed: session.logFilePath == null ? null : () => FileRevealService.reveal(session.logFilePath!),
           ).help(HelpId.statusRevealLog),
         ],

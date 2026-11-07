@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:path/path.dart' as p;
@@ -263,7 +264,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                         iconSize: 18,
                         visualDensity: VisualDensity.compact,
                         tooltip: l10n.localPlaces,
-                        icon: const Icon(Icons.home_outlined),
+                        icon: const PhosphorIcon(PhosphorIconsDuotone.house),
                         onPressed: () => _showPlaces(session, buttonContext),
                       ).help(HelpId.panePlaces);
                     },
@@ -356,7 +357,7 @@ class _FolderErrorBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.error_outline, size: 18, color: scheme.onErrorContainer),
+          PhosphorIcon(PhosphorIconsDuotone.warningCircle, size: 18, color: scheme.onErrorContainer),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: SelectionArea(
@@ -380,13 +381,13 @@ class _FolderErrorBanner extends StatelessWidget {
                           if (Platform.isWindows)
                             OutlinedButton.icon(
                               style: buttonStyle,
-                              icon: const Icon(Icons.open_in_new, size: 14),
+                              icon: const PhosphorIcon(PhosphorIconsDuotone.arrowSquareOut, size: 14),
                               label: Text(l10n.localFolderErrorOpenExplorer),
                               onPressed: () => unawaited(FileRevealService.open(path).catchError((_) {})),
                             ),
                           OutlinedButton.icon(
                             style: buttonStyle,
-                            icon: const Icon(Icons.refresh, size: 14),
+                            icon: const PhosphorIcon(PhosphorIconsDuotone.arrowsClockwise, size: 14),
                             label: Text(l10n.localFolderErrorRetry),
                             onPressed: () => unawaited(session.loadFolder(path)),
                           ),
@@ -402,7 +403,7 @@ class _FolderErrorBanner extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             tooltip: l10n.localFolderErrorDismiss,
             color: scheme.onErrorContainer,
-            icon: const Icon(Icons.close),
+            icon: const PhosphorIcon(PhosphorIconsDuotone.x),
             onPressed: session.dismissFolderError,
           ),
         ],

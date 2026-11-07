@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -146,7 +147,7 @@ class _AddressBookDialogState extends State<_AddressBookDialog> {
                   const Spacer(),
                   IconButton(
                     tooltip: l10n.commonClose,
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const PhosphorIcon(PhosphorIconsDuotone.x),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -157,7 +158,7 @@ class _AddressBookDialogState extends State<_AddressBookDialog> {
                 autofocus: true,
                 decoration: InputDecoration(
                   isDense: true,
-                  prefixIcon: const Icon(Icons.search_rounded),
+                  prefixIcon: const PhosphorIcon(PhosphorIconsDuotone.magnifyingGlass),
                   hintText: l10n.addressBookSearch,
                 ),
                 onChanged: (_) => setState(() {}),
@@ -188,7 +189,7 @@ class _AddressBookDialogState extends State<_AddressBookDialog> {
                             for (final p in entry.value)
                               ListTile(
                                 dense: true,
-                                leading: const Icon(Icons.dns_outlined),
+                                leading: const PhosphorIcon(PhosphorIconsDuotone.hardDrives),
                                 title: Text(p.label, style: AppFonts.userContent),
                                 subtitle: Text(
                                   p.note.isEmpty ? p.address : '${p.address} · ${p.note}',
@@ -202,17 +203,17 @@ class _AddressBookDialogState extends State<_AddressBookDialog> {
                                   children: [
                                     IconButton(
                                       tooltip: l10n.addressBookConnect,
-                                      icon: const Icon(Icons.play_arrow_rounded),
+                                      icon: const PhosphorIcon(PhosphorIconsDuotone.play),
                                       onPressed: () => _connect(p),
                                     ),
                                     IconButton(
                                       tooltip: l10n.addressBookEdit,
-                                      icon: const Icon(Icons.edit_outlined),
+                                      icon: const PhosphorIcon(PhosphorIconsDuotone.pencilSimple),
                                       onPressed: () => _edit(p),
                                     ),
                                     IconButton(
                                       tooltip: l10n.addressBookDelete,
-                                      icon: const Icon(Icons.delete_outline_rounded),
+                                      icon: const PhosphorIcon(PhosphorIconsDuotone.trash),
                                       onPressed: () => _delete(p),
                                     ),
                                   ],
@@ -227,7 +228,7 @@ class _AddressBookDialogState extends State<_AddressBookDialog> {
                 alignment: Alignment.centerRight,
                 child: FilledButton.icon(
                   onPressed: _edit,
-                  icon: const Icon(Icons.add_rounded),
+                  icon: const PhosphorIcon(PhosphorIconsDuotone.plus),
                   label: Text(l10n.addressBookNew),
                 ),
               ),

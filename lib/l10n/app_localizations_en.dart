@@ -200,6 +200,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabClose => 'Close tab';
 
   @override
+  String get tabRename => 'Rename tab';
+
+  @override
+  String get tabRenameField => 'Tab name';
+
+  @override
+  String get tabRenameHelp =>
+      'Leave empty to use the automatic name (the folder).';
+
+  @override
+  String get tabRenameAuto => 'Use automatic name';
+
+  @override
   String get connectTitle => 'Connect to a server';
 
   @override
@@ -590,6 +603,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTitle => 'Settings';
+
+  @override
+  String get uiTextScale => 'Interface text size';
+
+  @override
+  String get uiTextScaleHelp =>
+      'Size of all text outside the terminal: menus, tabs, folder names, the status bar. Terminal text is set separately under ‘Terminal font’ below.';
 
   @override
   String get settingsSectionAppearance => 'Appearance';

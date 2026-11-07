@@ -1,6 +1,7 @@
 import 'dart:ui' show AppExitType;
 
 import 'package:flutter/material.dart';
+import '../theme/phosphor_icons.dart';
 import 'package:flutter/services.dart' show ServicesBinding;
 import 'package:provider/provider.dart';
 import 'package:xterm2/ui.dart' show TerminalTheme;
@@ -13,6 +14,7 @@ import '../state/sessions_controller.dart';
 import '../settings/restore_prefs.dart';
 import '../settings/terminal_prefs.dart';
 import '../settings/terminal_schemes.dart';
+import '../settings/ui_prefs.dart';
 import '../theme/app_theme.dart';
 
 /// 설정 창: 새로 고침 옵션, 시작할 때 탭 복원, 터미널 글꼴·크기·스크롤백·색상 구성표. 바꾸는 즉시 적용되고 저장된다.
@@ -69,6 +71,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     final prefs = context.watch<TerminalPrefs>();
     final refresh = context.watch<RefreshPrefs>();
     final restore = context.watch<RestorePrefs>();
+    final ui = context.watch<UiPrefs>();
     final preview = prefs.style;
 
     return AlertDialog(
@@ -91,6 +94,24 @@ class _SettingsDialogState extends State<_SettingsDialog> {
             Text(l10n.languageMenuTooltip, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: AppSpacing.xs),
             const LanguageSegmentedButton(),
+            const SizedBox(height: AppSpacing.md),
+            Text(l10n.uiTextScale, style: Theme.of(context).textTheme.bodySmall),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: ui.scale,
+                    min: UiPrefs.minScale,
+                    max: UiPrefs.maxScale,
+                    divisions: ((UiPrefs.maxScale - UiPrefs.minScale) / UiPrefs.step).round(),
+                    label: '${(ui.scale * 100).round()}%',
+                    onChanged: ui.setScale,
+                  ),
+                ),
+                SizedBox(width: 48, child: Text('${(ui.scale * 100).round()}%', textAlign: TextAlign.end)),
+              ],
+            ),
+            Text(l10n.uiTextScaleHelp, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: AppSpacing.lg),
             _SectionHeader(l10n.settingsSectionRefresh),
             SwitchListTile(
@@ -122,7 +143,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               if (Elevation.isElevated)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.verified_user_rounded),
+                  leading: const PhosphorIcon(PhosphorIconsDuotone.shieldCheck),
                   title: Text(l10n.adminRunning),
                   subtitle: Text(l10n.adminRunningHelp),
                 )
@@ -132,7 +153,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: OutlinedButton.icon(
-                    icon: const Icon(Icons.shield_outlined),
+                    icon: const PhosphorIcon(PhosphorIconsDuotone.shield),
                     label: Text(l10n.adminRestart),
                     onPressed: _restartAsAdmin,
                   ),
@@ -257,6 +278,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
             await prefs.reset();
             await refresh.reset();
             await restore.reset();
+            await ui.reset();
             setState(() {
               _customMode = false;
               _custom.clear();

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.7.4+29
+version: 0.8.1+31
 
 environment:
   sdk: ^3.13.1
@@ -64,7 +64,6 @@ dependencies:
   # Windows 결함을 고친 복사본 (packages/flutter_pty/PATCHES.md)
   flutter_pty:
     path: packages/flutter_pty
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -101,3 +100,7 @@ flutter:
       fonts:
         - { asset: assets/fonts/agave_nerd_font_mono_regular.ttf, weight: 400 }
         - { asset: assets/fonts/agave_nerd_font_mono_bold.ttf, weight: 700 }
+    # 앱 안 아이콘: Phosphor Icons 듀오톤 (MIT). 라이선스: assets/licenses/phosphor-icons.txt, 사용법은 lib/theme/phosphor_icons.dart
+    - family: PhosphorDuotone
+      fonts:
+        - { asset: assets/fonts/phosphor_duotone.ttf }

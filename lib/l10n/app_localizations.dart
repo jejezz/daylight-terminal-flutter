@@ -422,6 +422,30 @@ abstract class AppLocalizations {
   /// **'탭 닫기'**
   String get tabClose;
 
+  /// No description provided for @tabRename.
+  ///
+  /// In ko, this message translates to:
+  /// **'탭 이름 바꾸기'**
+  String get tabRename;
+
+  /// No description provided for @tabRenameField.
+  ///
+  /// In ko, this message translates to:
+  /// **'탭 이름'**
+  String get tabRenameField;
+
+  /// No description provided for @tabRenameHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'비워 두면 자동 이름(폴더)을 씁니다.'**
+  String get tabRenameHelp;
+
+  /// No description provided for @tabRenameAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 이름으로'**
+  String get tabRenameAuto;
+
   /// No description provided for @connectTitle.
   ///
   /// In ko, this message translates to:
@@ -1087,6 +1111,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'설정'**
   String get settingsTitle;
+
+  /// No description provided for @uiTextScale.
+  ///
+  /// In ko, this message translates to:
+  /// **'화면 글자 크기'**
+  String get uiTextScale;
+
+  /// No description provided for @uiTextScaleHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'메뉴, 탭, 폴더 이름, 상태 줄 등 터미널 밖의 모든 글자의 크기입니다. 터미널 글자는 아래 ‘터미널 글꼴’에서 따로 정합니다.'**
+  String get uiTextScaleHelp;
 
   /// No description provided for @settingsSectionAppearance.
   ///

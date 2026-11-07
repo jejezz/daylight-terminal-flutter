@@ -7,20 +7,28 @@ import '../models/ssh_profile.dart';
 
 /// 다시 열 탭 하나. 비밀번호·키 암호는 어디에도 없다 (SSH는 접속 정보만 채운 접속 화면으로 다시 연다).
 sealed class SavedTab {
-  const SavedTab();
+  const SavedTab({this.title});
+
+  /// 사용자가 지은 탭 이름 (없으면 자동 이름).
+  final String? title;
 
   Map<String, Object?> toJson();
 
+  /// [toJson]의 결과에 이름을 덧붙인다.
+  Map<String, Object?> withTitle(Map<String, Object?> json) => title == null ? json : {...json, 'title': title};
+
   static SavedTab? fromJson(Object? json) {
     if (json is! Map) return null;
+    final rawTitle = json['title'];
+    final title = rawTitle is String && rawTitle.trim().isNotEmpty ? rawTitle.trim() : null;
     try {
       switch (json['type']) {
         case 'ssh':
           final profile = SshProfile.fromJson(json['profile']);
-          return profile == null ? null : SavedSshTab(profile);
+          return profile == null ? null : SavedSshTab(profile, title: title);
         case 'local':
           final shell = json['shell'], folder = json['folder'];
-          return shell is String && folder is String ? SavedLocalTab(shell, folder) : null;
+          return shell is String && folder is String ? SavedLocalTab(shell, folder, title: title) : null;
         case 'serial':
           final folder = json['folder'], s = json['settings'];
           if (folder is! String || s is! Map || s['port'] is! String) return null;
@@ -34,6 +42,7 @@ sealed class SavedTab {
               flow: SerialFlow.values.asNameMap()[s['flow']] ?? SerialFlow.none,
             ),
             folder,
+            title: title,
           );
       }
     } catch (_) {}
@@ -42,29 +51,29 @@ sealed class SavedTab {
 }
 
 class SavedSshTab extends SavedTab {
-  const SavedSshTab(this.profile);
+  const SavedSshTab(this.profile, {super.title});
   final SshProfile profile;
 
   @override
-  Map<String, Object?> toJson() => {'type': 'ssh', 'profile': profile.toJson()};
+  Map<String, Object?> toJson() => withTitle({'type': 'ssh', 'profile': profile.toJson()});
 }
 
 class SavedLocalTab extends SavedTab {
-  const SavedLocalTab(this.shellId, this.folder);
+  const SavedLocalTab(this.shellId, this.folder, {super.title});
   final String shellId;
   final String folder;
 
   @override
-  Map<String, Object?> toJson() => {'type': 'local', 'shell': shellId, 'folder': folder};
+  Map<String, Object?> toJson() => withTitle({'type': 'local', 'shell': shellId, 'folder': folder});
 }
 
 class SavedSerialTab extends SavedTab {
-  const SavedSerialTab(this.settings, this.folder);
+  const SavedSerialTab(this.settings, this.folder, {super.title});
   final SerialSettings settings;
   final String folder;
 
   @override
-  Map<String, Object?> toJson() => {
+  Map<String, Object?> toJson() => withTitle({
     'type': 'serial',
     'folder': folder,
     'settings': {
@@ -75,7 +84,7 @@ class SavedSerialTab extends SavedTab {
       'stopBits': settings.stopBits,
       'flow': settings.flow.name,
     },
-  };
+  });
 }
 
 /// 열려 있던 탭 목록과 선택된 탭.
