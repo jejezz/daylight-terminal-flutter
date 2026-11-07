@@ -37,32 +37,62 @@ import 'update/update_service.dart';
 
 final bool _isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
 
+/// 시작 구간별 시간 기록. DiagLog는 init 뒤에야 쓸 수 있어서 그 전 것은 모아 두었다가 init 뒤에 함께 남긴다.
+/// `startup <구간> +ms`는 main() 진입부터의 경과 시간이다.
+final Stopwatch _boot = Stopwatch();
+final List<String> _pendingMarks = [];
+
+void _mark(String step) {
+  final line = 'startup $step +${_boot.elapsedMilliseconds}ms';
+  if (DiagLog.enabled) {
+    _pendingMarks.forEach(DiagLog.log);
+    _pendingMarks.clear();
+    DiagLog.log(line);
+  } else {
+    _pendingMarks.add(line);
+  }
+}
+
 Future<void> main() async {
+  _boot.start();
   WidgetsFlutterBinding.ensureInitialized();
+  _mark('binding');
   registerExtraLicenses();
   if (_isDesktop) {
     // 가끔만 나타나는 문제(버튼이 안 눌림 등)를 나중에 가려내기 위한 기록 (services/diag_log.dart).
     final info = await PackageInfo.fromPlatform();
+    _mark('packageInfo');
     await DiagLog.init(version: '${info.version}+${info.buildNumber}');
     DiagLog.watch();
+    _mark('diagLog');
   }
 
   WindowPlacement? placement;
   Future<void> Function()? showWindow;
   if (_isDesktop) {
     await windowManager.ensureInitialized();
+    _mark('windowManager.ensureInitialized');
     (placement, showWindow) = await _prepareWindow();
+    _mark('prepareWindow');
   }
 
   final settings = await AppSettings.load();
+  _mark('AppSettings');
   final terminalPrefs = await TerminalPrefs.load();
+  _mark('TerminalPrefs');
   final refreshPrefs = await RefreshPrefs.load();
+  _mark('RefreshPrefs');
   final restorePrefs = await RestorePrefs.load();
+  _mark('RestorePrefs');
+  final profiles = await ProfileStore.load();
+  _mark('ProfileStore');
+  final tabStore = await TabStore.load();
+  _mark('TabStore');
   final sessions = SessionsController(
-    await ProfileStore.load(),
+    profiles,
     scrollback: () => terminalPrefs.scrollback,
     refreshPrefs: refreshPrefs,
-    tabStore: await TabStore.load(),
+    tabStore: tabStore,
     restorePrefs: restorePrefs,
   );
   // 새 탭 메뉴에 보일 로컬 셸 목록 (Windows는 WSL 배포판을 묻느라 잠깐 걸린다). 셸 목록이 있어야 지난번 탭을 다시 열 수 있다.
@@ -70,7 +100,10 @@ Future<void> main() async {
   DiagLog.log('startup ready');
   // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
   final updates = await UpdateService.create();
+  _mark('UpdateService');
   // UpdateScope 는 MaterialApp 위에 둔다 — 정보 창이 이것을 읽어 "업데이트 확인" 단추를 붙인다.
+  _mark('runApp');
+  WidgetsBinding.instance.addPostFrameCallback((_) => _mark('first frame'));
   runApp(
     UpdateScope(
       service: updates,
@@ -124,7 +157,9 @@ Future<(WindowPlacement?, Future<void> Function())> _prepareWindow() async {
   Future<void> show() async {
     await placed.future;
     await _nextFrame();
+    _mark('before show');
     await windowManager.show();
+    _mark('window shown');
     await windowManager.focus();
     placement?.attach();
   }
