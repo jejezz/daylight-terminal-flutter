@@ -19,7 +19,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   flutter::DartProject project(L"data");
 
-  // Impeller(Vulkan) 초기화가 시작을 약 1.3초 늦춰서(빈 앱 기준 1.8초 → 0.47초) 끈다.
+  // Impeller (Vulkan) init delayed startup by ~1.3s (empty app: 1.8s -> 0.47s), so disable it.
   project.set_impeller_switch(flutter::ImpellerSwitch::Disabled);
 
   std::vector<std::string> command_line_arguments =
