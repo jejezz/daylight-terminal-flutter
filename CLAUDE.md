@@ -225,6 +225,12 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 아직: zsh·cmd는 셸 통합이 없다 (폴더 이름 대신 셸 이름), 명령 숨기기 설정. zsh는 `ZDOTDIR`로 `.zshrc`를 감싸 `precmd`/`preexec`를 거는 방식이 될 텐데,
   이 PC(Windows)에는 zsh가 없어 실제로 돌려 볼 수 없었다. PowerShell 7(pwsh)은 이 PC에 없어 실제로는 확인하지 못했다 (Windows PowerShell 5.1로만).
 
+## Impeller (렌더링 엔진)
+
+- 기본은 **꺼짐**(앱 초기화가 켰을 때보다 1/3 시간). 환경 변수 `DAYLIGHT_IMPELLER=1`(또는 true/on/yes)로 켠다.
+- Windows(`windows/runner/main.cpp`)·Linux(`linux/runner/main.cc`)의 `main` 맨 앞에서 엔진 생성 전에 `FLUTTER_ENGINE_SWITCHES`/`FLUTTER_ENGINE_SWITCH_1=enable-impeller=true|false`를 설정한다.
+  macOS는 아직 처리하지 않았다(Info.plist `FLTEnableImpeller`가 기본값을 정한다).
+
 ## 알려진 한계
 
 - 실제 OS 끌기(Explorer/Finder로 놓기)는 자동 테스트로 확인하지 못했다 — 사람이 직접 눌러 봐야 한다.
