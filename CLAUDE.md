@@ -229,7 +229,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 
 - 기본은 **꺼짐**(앱 초기화가 켰을 때보다 1/3 시간). 환경 변수 `DAYLIGHT_IMPELLER=1`(또는 true/on/yes)로 켠다.
 - Windows(`windows/runner/main.cpp`)·Linux(`linux/runner/main.cc`)의 `main` 맨 앞에서 엔진 생성 전에 `FLUTTER_ENGINE_SWITCHES`/`FLUTTER_ENGINE_SWITCH_1=enable-impeller=true|false`를 설정한다.
-  macOS는 아직 처리하지 않았다(Info.plist `FLTEnableImpeller`가 기본값을 정한다).
+  macOS는 `MainFlutterWindow.swift`에서 `FlutterDartProject.engineSwitches`로 같은 값을 넘긴다(실제 Mac에서는 확인하지 못했다).
 
 ## 알려진 한계
 
