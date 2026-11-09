@@ -228,8 +228,8 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 ## Impeller (렌더링 엔진)
 
 - 기본은 **꺼짐**(앱 초기화가 켰을 때보다 1/3 시간). 환경 변수 `DAYLIGHT_IMPELLER=1`(또는 true/on/yes)로 켠다.
-- Windows(`windows/runner/main.cpp`)·Linux(`linux/runner/main.cc`)의 `main` 맨 앞에서 엔진 생성 전에 `FLUTTER_ENGINE_SWITCHES`/`FLUTTER_ENGINE_SWITCH_1=enable-impeller=true|false`를 설정한다.
-  macOS는 `MainFlutterWindow.swift`에서 `FLUTTER_ENGINE_SWITCHES` 환경 변수로 같은 값을 넘긴다(실제 Mac에서는 확인하지 못했다).
+- Windows(`windows/runner/main.cpp`)는 `DartProject::set_impeller_switch`, Linux(`linux/runner/main.cc`)의 `main` 맨 앞에서 엔진 생성 전에 `FLUTTER_ENGINE_SWITCHES`/`FLUTTER_ENGINE_SWITCH_1=enable-impeller=true|false`를 설정한다.
+  macOS는 Info.plist `FLTEnableImpeller=false`가 기본이고 `MainFlutterWindow.swift`가 같은 환경 변수 방식으로 덮어쓴다(켜는 쪽은 실제 Mac에서 확인하지 못했다).
 
 ## 알려진 한계
 
