@@ -1088,4 +1088,63 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tabNewSerial => '새 시리얼 연결';
+
+  @override
+  String get editorEdit => '편집';
+
+  @override
+  String editorSave(String shortcut) {
+    return '저장 ($shortcut)';
+  }
+
+  @override
+  String get editorClose => '파일 닫기';
+
+  @override
+  String get editorHide => '편집기 접기';
+
+  @override
+  String get editorModified => '변경됨';
+
+  @override
+  String editorSaved(String name) {
+    return '$name을(를) 저장했습니다';
+  }
+
+  @override
+  String get editorErrNotFile => '일반 파일이 아니라서 열 수 없습니다 (폴더·장치 등)';
+
+  @override
+  String get editorErrNotFound => '서버에 이 파일이 없습니다';
+
+  @override
+  String editorErrTooLarge(int mb) {
+    return '파일이 너무 큽니다 (최대 ${mb}MB)';
+  }
+
+  @override
+  String get editorErrBinary => '바이너리 파일은 편집할 수 없습니다';
+
+  @override
+  String editorErrIo(String detail) {
+    return '파일을 읽거나 쓰지 못했습니다: $detail';
+  }
+
+  @override
+  String get editorConflictTitle => '서버에서 파일이 바뀌었습니다';
+
+  @override
+  String editorConflictBody(String name) {
+    return '$name이(가) 열어 본 뒤에 서버에서 바뀌었거나 지워졌습니다. 덮어쓰면 서버의 그 변경이 사라지고, 서버 버전을 불러오면 지금 고친 내용이 사라집니다.';
+  }
+
+  @override
+  String get editorConflictOverwrite => '덮어쓰기';
+
+  @override
+  String get editorConflictReload => '서버 버전 불러오기';
+
+  @override
+  String get helpEditor =>
+      '원격 편집기\n서버의 텍스트 파일을 SFTP로 열어 고치고 저장합니다. 서버에 아무것도 설치하지 않습니다. 저장할 때 서버에서 그사이 바뀌었는지 먼저 확인합니다. 탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 엽니다.';
 }

@@ -99,7 +99,7 @@ class LineSenderState extends State<LineSender> {
     if (e is SenderFileException) {
       return switch (e.kind) {
         SenderFileError.tooLarge => l10n.senderFileTooLarge(SenderFile.maxBytes ~/ (1024 * 1024)),
-        SenderFileError.notUtf8 => l10n.senderFileNotUtf8,
+        SenderFileError.notUtf8 || SenderFileError.binary => l10n.senderFileNotUtf8,
         SenderFileError.io => l10n.senderFileError(e.detail),
       };
     }

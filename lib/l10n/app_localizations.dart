@@ -1981,6 +1981,102 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'새 시리얼 연결'**
   String get tabNewSerial;
+
+  /// No description provided for @editorEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'편집'**
+  String get editorEdit;
+
+  /// No description provided for @editorSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 ({shortcut})'**
+  String editorSave(String shortcut);
+
+  /// No description provided for @editorClose.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 닫기'**
+  String get editorClose;
+
+  /// No description provided for @editorHide.
+  ///
+  /// In ko, this message translates to:
+  /// **'편집기 접기'**
+  String get editorHide;
+
+  /// No description provided for @editorModified.
+  ///
+  /// In ko, this message translates to:
+  /// **'변경됨'**
+  String get editorModified;
+
+  /// No description provided for @editorSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name}을(를) 저장했습니다'**
+  String editorSaved(String name);
+
+  /// No description provided for @editorErrNotFile.
+  ///
+  /// In ko, this message translates to:
+  /// **'일반 파일이 아니라서 열 수 없습니다 (폴더·장치 등)'**
+  String get editorErrNotFile;
+
+  /// No description provided for @editorErrNotFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버에 이 파일이 없습니다'**
+  String get editorErrNotFound;
+
+  /// No description provided for @editorErrTooLarge.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일이 너무 큽니다 (최대 {mb}MB)'**
+  String editorErrTooLarge(int mb);
+
+  /// No description provided for @editorErrBinary.
+  ///
+  /// In ko, this message translates to:
+  /// **'바이너리 파일은 편집할 수 없습니다'**
+  String get editorErrBinary;
+
+  /// No description provided for @editorErrIo.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일을 읽거나 쓰지 못했습니다: {detail}'**
+  String editorErrIo(String detail);
+
+  /// No description provided for @editorConflictTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버에서 파일이 바뀌었습니다'**
+  String get editorConflictTitle;
+
+  /// No description provided for @editorConflictBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name}이(가) 열어 본 뒤에 서버에서 바뀌었거나 지워졌습니다. 덮어쓰면 서버의 그 변경이 사라지고, 서버 버전을 불러오면 지금 고친 내용이 사라집니다.'**
+  String editorConflictBody(String name);
+
+  /// No description provided for @editorConflictOverwrite.
+  ///
+  /// In ko, this message translates to:
+  /// **'덮어쓰기'**
+  String get editorConflictOverwrite;
+
+  /// No description provided for @editorConflictReload.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버 버전 불러오기'**
+  String get editorConflictReload;
+
+  /// No description provided for @helpEditor.
+  ///
+  /// In ko, this message translates to:
+  /// **'원격 편집기\n서버의 텍스트 파일을 SFTP로 열어 고치고 저장합니다. 서버에 아무것도 설치하지 않습니다. 저장할 때 서버에서 그사이 바뀌었는지 먼저 확인합니다. 탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 엽니다.'**
+  String get helpEditor;
 }
 
 class _AppLocalizationsDelegate

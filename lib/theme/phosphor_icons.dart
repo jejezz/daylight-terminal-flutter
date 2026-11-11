@@ -20,6 +20,7 @@ abstract final class PhosphorIconsDuotone {
   static const arrowsLeftRight = IconData(0xe0a1, fontFamily: _family, matchTextDirection: true);
   static const bookOpen = IconData(0xe0e7, fontFamily: _family, matchTextDirection: true);
   static const caretDown = IconData(0xe137, fontFamily: _family, matchTextDirection: true);
+  static const caretRight = IconData(0xe13b, fontFamily: _family, matchTextDirection: true);
   static const circleHalf = IconData(0xe18d, fontFamily: _family, matchTextDirection: true);
   static const copy = IconData(0xe1cb, fontFamily: _family, matchTextDirection: true);
   static const downloadSimple = IconData(0xe20d, fontFamily: _family, matchTextDirection: true);
@@ -72,6 +73,7 @@ const _secondary = <int, IconData>{
   0xe0a1: IconData(0xe0a0, fontFamily: _family, matchTextDirection: true), // arrowsLeftRight
   0xe0e7: IconData(0xe0e6, fontFamily: _family, matchTextDirection: true), // bookOpen
   0xe137: IconData(0xe136, fontFamily: _family, matchTextDirection: true), // caretDown
+  0xe13b: IconData(0xe13a, fontFamily: _family, matchTextDirection: true), // caretRight
   0xe18d: IconData(0xe18c, fontFamily: _family, matchTextDirection: true), // circleHalf
   0xe1cb: IconData(0xe1ca, fontFamily: _family, matchTextDirection: true), // copy
   0xe20d: IconData(0xe20c, fontFamily: _family, matchTextDirection: true), // downloadSimple

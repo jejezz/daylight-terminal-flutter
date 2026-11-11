@@ -231,6 +231,21 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - Windows(`windows/runner/main.cpp`)는 `DartProject::set_impeller_switch`, Linux(`linux/runner/main.cc`)의 `main` 맨 앞에서 엔진 생성 전에 `FLUTTER_ENGINE_SWITCHES`/`FLUTTER_ENGINE_SWITCH_1=enable-impeller=true|false`를 설정한다.
   macOS는 Info.plist `FLTEnableImpeller=false`가 기본이고 `MainFlutterWindow.swift`가 같은 환경 변수 방식으로 덮어쓴다(켜는 쪽은 실제 Mac에서 확인하지 못했다).
 
+## 원격 편집기 (SFTP, 오른쪽 도킹)
+
+- SSH 탭에서 파일을 우클릭 → "편집" 또는 F4로 연다. 서버에 아무것도 설치하지 않고 SFTP로만 읽고 쓴다. 탭 오른쪽에 도킹되는 칸이고
+  (`remote_editor_pane.dart`, `home_screen.dart`의 세 번째 칸), 안에 파일 탭이 있다. 접으면 오른쪽에 좁은 손잡이만 남고 열린 파일은 유지된다.
+  더블클릭은 아직 다운로드 그대로다 (편집으로 바꾸는 설정은 다음 단계).
+- 규칙: UTF-8 텍스트만, 2MB 초과·NUL 바이트(바이너리)·폴더·장치는 거부 (`SenderFile.decode(rejectBinary: true)`, LineSender와 같은 규칙).
+  줄바꿈(CRLF)과 BOM은 저장할 때 원래대로 되돌린다. 심볼릭 링크는 실제 경로를 편집한다.
+- 저장(`services/remote_text_file.dart`): 저장 직전에 서버 파일의 크기·수정 시각을 다시 확인해 열 때와 다르면 쓰지 않고 충돌로 알린다
+  (덮어쓰기 / 서버 버전 불러오기 / 취소). 임시 이름에 쓴 뒤 `rename`하고 권한을 이어받는다 (소유자는 가능할 때만). 폴더에 쓸 수 없으면 파일에 바로 쓴다.
+  테스트는 메모리 가짜 `RemoteFs`(`test/helpers/fake_remote_fs.dart`)로 한다.
+- 상태는 탭마다 `SshSessionProvider.editor`(`RemoteEditorController`). 연결이 끊겨도 열린 파일은 남기고, 다른 서버에 접속할 때만 비운다.
+  저장하지 않은 변경이 있으면 파일 탭·서버 탭을 닫을 때 묻는다.
+- 아직: 설정 창 "편집기" 섹션(더블클릭 동작, `.bak` 백업), 좁은 화면에서 아래로 옮기기, 읽기 전용 파일의 sudo 안내, 구문 강조. 실제 SFTP 서버로 확인하지 못했다
+  (`SftpRemoteFs`는 e2e 테스트 없음).
+
 ## 알려진 한계
 
 - 실제 OS 끌기(Explorer/Finder로 놓기)는 자동 테스트로 확인하지 못했다 — 사람이 직접 눌러 봐야 한다.
