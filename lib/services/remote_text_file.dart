@@ -127,7 +127,7 @@ class SftpRemoteFs implements RemoteFs {
   }
 }
 
-enum RemoteEditError { notRegular, notFound, tooLarge, notUtf8, binary, io }
+enum RemoteEditError { notRegular, notFound, tooLarge, notUtf8, binary, alreadyOpen, io }
 
 class RemoteEditException implements Exception {
   const RemoteEditException(this.kind, [this.detail = '']);
@@ -221,6 +221,37 @@ abstract final class RemoteText {
       if (!overwrite && !current.sameAs(file.stat)) return const RemoteSaveResult.conflict();
       if (backup) await fs.write('$path.bak', await fs.read(path));
       return RemoteSaveResult.saved(await _writeFresh(fs, path, SenderFile.encode(doc), current));
+    } on RemoteEditException {
+      rethrow;
+    } catch (e) {
+      throw RemoteEditException(RemoteEditError.io, '$e');
+    }
+  }
+
+  /// [doc]을 서버의 [path]에 새로 저장한다 (새 파일의 첫 저장, 또는 다른 이름으로 저장). [path]에 이미 파일이 있으면
+  /// [overwrite]가 아닌 한 쓰지 않고 [RemoteSaveStatus.conflict]를 돌려준다. 그 자리가 폴더 등 일반 파일이 아니면 던진다.
+  /// 폴더가 없거나 쓸 수 없으면 [RemoteEditException] (io).
+  static Future<RemoteSaveResult> saveNew(
+    RemoteFs fs,
+    String path,
+    SenderDocument doc, {
+    bool overwrite = false,
+  }) async {
+    try {
+      RemoteStat? existing;
+      try {
+        existing = await fs.stat(path);
+      } on RemoteNotFound {
+        existing = null;
+      }
+      final data = SenderFile.encode(doc);
+      if (existing == null) {
+        await fs.write(path, data);
+        return RemoteSaveResult.saved(await fs.stat(path));
+      }
+      if (existing.type != RemoteFileType.regular) throw RemoteEditException(RemoteEditError.notRegular, path);
+      if (!overwrite) return const RemoteSaveResult.conflict();
+      return RemoteSaveResult.saved(await _writeFresh(fs, path, data, existing));
     } on RemoteEditException {
       rethrow;
     } catch (e) {

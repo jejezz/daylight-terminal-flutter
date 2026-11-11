@@ -1145,6 +1145,44 @@ class AppLocalizationsKo extends AppLocalizations {
   String get editorConflictReload => '서버 버전 불러오기';
 
   @override
+  String get editorNewFile => '새 파일';
+
+  @override
+  String editorUntitled(int n) {
+    return '제목 없음 $n';
+  }
+
+  @override
+  String get editorEmptyTitle => '열린 파일이 없습니다';
+
+  @override
+  String get editorEmptyBody =>
+      '탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 열거나, 새 파일을 만들어 서버에 저장하세요.';
+
+  @override
+  String get editorNotSavedYet => '서버에 아직 저장하지 않음';
+
+  @override
+  String get editorSaveAs => '다른 이름으로 저장';
+
+  @override
+  String get editorSaveToServerTitle => '서버에 저장';
+
+  @override
+  String get editorSavePathLabel => '서버 경로';
+
+  @override
+  String get editorExistsTitle => '이미 있는 파일';
+
+  @override
+  String editorExistsBody(String path) {
+    return '$path이(가) 서버에 이미 있습니다. 덮어쓸까요?';
+  }
+
+  @override
+  String get editorErrAlreadyOpen => '그 파일은 이미 편집기에 열려 있습니다';
+
+  @override
   String get helpEditor =>
-      '원격 편집기\n서버의 텍스트 파일을 SFTP로 열어 고치고 저장합니다. 서버에 아무것도 설치하지 않습니다. 저장할 때 서버에서 그사이 바뀌었는지 먼저 확인합니다. 탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 엽니다.';
+      '원격 편집기\n서버의 텍스트 파일을 SFTP로 열어 고치고 저장합니다. 서버에 아무것도 설치하지 않습니다. 저장할 때 서버에서 그사이 바뀌었는지 먼저 확인합니다. 탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 열거나, + 버튼으로 새 파일을 만들어 서버에 저장할 수 있습니다. 셸 스크립트와 설정 파일은 색으로 구분해 보여 줍니다.';
 }

@@ -13,6 +13,7 @@ import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/phosphor_icons.dart';
 import '../utils/ui_scale.dart';
+import 'highlight_controller.dart';
 
 String _errorText(AppLocalizations l10n, Object e) {
   if (e is RemoteEditException) {
@@ -22,11 +23,16 @@ String _errorText(AppLocalizations l10n, Object e) {
       RemoteEditError.tooLarge => l10n.editorErrTooLarge(SenderFile.maxBytes ~/ (1024 * 1024)),
       RemoteEditError.notUtf8 => l10n.senderFileNotUtf8,
       RemoteEditError.binary => l10n.editorErrBinary,
+      RemoteEditError.alreadyOpen => l10n.editorErrAlreadyOpen,
       RemoteEditError.io => l10n.editorErrIo(e.detail),
     };
   }
   return l10n.editorErrIo('$e');
 }
+
+/// 탭·대화상자에 보이는 파일 이름 (서버 경로의 파일 이름, 새 파일은 "제목 없음 N").
+String editorDocumentName(AppLocalizations l10n, EditorDocument doc) =>
+    doc.path == null ? l10n.editorUntitled(doc.number) : p.posix.basename(doc.path!);
 
 /// 서버 파일 [path]를 편집기 칸에 연다. 열 수 없으면 이유를 알린다.
 Future<void> openRemoteFile(BuildContext context, SshSessionProvider session, String path) async {
@@ -41,8 +47,10 @@ Future<void> openRemoteFile(BuildContext context, SshSessionProvider session, St
   }
 }
 
-/// [doc]을 저장한다. 서버에서 그사이 바뀌었으면 덮어쓸지·서버 버전을 불러올지 묻는다. 저장되었으면 true.
+/// [doc]을 저장한다. 서버 경로가 아직 없는 새 파일은 경로를 물어 저장한다. 서버에서 그사이 바뀌었으면 덮어쓸지·서버 버전을
+/// 불러올지 묻는다. 저장되었으면 true.
 Future<bool> saveEditorDocument(BuildContext context, RemoteEditorController controller, EditorDocument doc) async {
+  if (doc.isNew) return saveEditorDocumentAs(context, controller, doc);
   final l10n = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
   void say(String message) => messenger
@@ -56,7 +64,7 @@ Future<bool> saveEditorDocument(BuildContext context, RemoteEditorController con
         context: context,
         builder: (context) => AlertDialog(
           title: Text(l10n.editorConflictTitle),
-          content: Text(l10n.editorConflictBody(p.posix.basename(doc.path))),
+          content: Text(l10n.editorConflictBody(p.posix.basename(doc.path!))),
           actions: [
             TextButton(
               autofocus: true,
@@ -79,7 +87,78 @@ Future<bool> saveEditorDocument(BuildContext context, RemoteEditorController con
       if (choice != 'overwrite') return false;
       result = await controller.save(doc, overwrite: true);
     }
-    say(l10n.editorSaved(p.posix.basename(doc.path)));
+    say(l10n.editorSaved(p.posix.basename(doc.path!)));
+    return true;
+  } catch (e) {
+    say(_errorText(l10n, e));
+    return false;
+  }
+}
+
+/// 서버 경로를 묻는다 ("서버에 저장" / "다른 이름으로 저장"). 파일 이름 부분이 미리 선택되어 있다. 취소하면 null.
+Future<String?> _askServerPath(BuildContext context, String initial) {
+  final l10n = AppLocalizations.of(context);
+  final input = TextEditingController(text: initial);
+  input.selection = TextSelection(baseOffset: initial.lastIndexOf('/') + 1, extentOffset: initial.length);
+  return showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.editorSaveToServerTitle),
+      content: SizedBox(
+        width: 420,
+        child: TextField(
+          controller: input,
+          autofocus: true,
+          decoration: InputDecoration(labelText: l10n.editorSavePathLabel),
+          onSubmitted: (v) => Navigator.pop(context, v.trim()),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: () => Navigator.pop(context, input.text.trim()), child: Text(l10n.commonOk)),
+      ],
+    ),
+  );
+}
+
+/// [doc]을 서버의 다른 경로에 저장한다 (새 파일의 첫 저장, 또는 다른 이름으로 저장). 이미 있는 파일이면 덮어쓸지 묻는다.
+/// 저장되었으면 true.
+Future<bool> saveEditorDocumentAs(BuildContext context, RemoteEditorController controller, EditorDocument doc) async {
+  final l10n = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  void say(String message) => messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 4)));
+  final dir = controller.suggestedDirectory;
+  final entered = await _askServerPath(context, doc.path ?? p.posix.join(dir, 'untitled.txt'));
+  if (entered == null || entered.isEmpty) return false;
+  final path = p.posix.normalize(entered.startsWith('/') ? entered : p.posix.join(dir, entered));
+  if (!context.mounted) return false;
+  // 같은 이름으로 저장하면 보통 저장과 같다 (그사이 서버에서 바뀌었는지도 확인한다).
+  if (path == doc.path) return saveEditorDocument(context, controller, doc);
+  try {
+    var result = await controller.saveAs(doc, path);
+    if (result.status == RemoteSaveStatus.conflict) {
+      if (!context.mounted) return false;
+      final overwrite = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.editorExistsTitle),
+          content: Text(l10n.editorExistsBody(path)),
+          actions: [
+            TextButton(autofocus: true, onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonCancel)),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.editorConflictOverwrite),
+            ),
+          ],
+        ),
+      );
+      if (overwrite != true) return false;
+      result = await controller.saveAs(doc, path, overwrite: true);
+    }
+    say(l10n.editorSaved(p.posix.basename(path)));
     return true;
   } catch (e) {
     say(_errorText(l10n, e));
@@ -100,7 +179,7 @@ Future<bool> confirmEditorClose(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.senderUnsavedTitle),
-        content: Text(l10n.senderUnsavedBody(p.posix.basename(doc.path))),
+        content: Text(l10n.senderUnsavedBody(editorDocumentName(l10n, doc))),
         actions: [
           TextButton(
             autofocus: true,
@@ -127,7 +206,8 @@ Future<bool> confirmCloseSessionEditor(BuildContext context, Object session) {
   return confirmEditorClose(context, session.editor, session.editor.documents);
 }
 
-/// 서버 탭 오른쪽에 붙는 편집기: 위에 열린 파일 탭, 가운데 본문, 아래에 경로와 저장 버튼.
+/// 서버 탭 오른쪽에 붙는 편집기: 위에 열린 파일 탭, 가운데 본문, 아래에 경로와 저장 버튼. 열린 파일이 없으면 안내와
+/// "새 파일" 버튼이 보인다.
 class RemoteEditorPane extends StatelessWidget {
   const RemoteEditorPane({super.key, required this.controller});
 
@@ -147,24 +227,63 @@ class RemoteEditorPane extends StatelessWidget {
             children: [
               _TabStrip(controller: controller),
               Expanded(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // 파일을 바꿔도 각 파일의 스크롤·실행 취소 기록이 남도록 모두 살려 두고 현재 것만 보인다.
-                    for (final doc in controller.documents)
-                      Offstage(
-                        key: ObjectKey(doc),
-                        offstage: doc != current,
-                        child: _EditorField(controller: controller, doc: doc, active: doc == current),
+                child: controller.documents.isEmpty
+                    ? _EmptyEditor(controller: controller)
+                    : Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // 파일을 바꿔도 각 파일의 스크롤·실행 취소 기록이 남도록 모두 살려 두고 현재 것만 보인다.
+                          for (final doc in controller.documents)
+                            Offstage(
+                              key: ObjectKey(doc),
+                              offstage: doc != current,
+                              child: _EditorField(controller: controller, doc: doc, active: doc == current),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
               ),
               if (current != null) _StatusRow(controller: controller, doc: current),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _EmptyEditor extends StatelessWidget {
+  const _EmptyEditor({required this.controller});
+
+  final RemoteEditorController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PhosphorIcon(PhosphorIconsDuotone.notePencil, size: 40, color: scheme.onSurfaceVariant),
+            const SizedBox(height: AppSpacing.md),
+            Text(l10n.editorEmptyTitle, style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l10n.editorEmptyBody,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            FilledButton.icon(
+              icon: const PhosphorIcon(PhosphorIconsDuotone.filePlus, size: 18),
+              label: Text(l10n.editorNewFile),
+              onPressed: controller.newDocument,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -198,8 +317,9 @@ class _TabStrip extends StatelessWidget {
                     builder: (context, _) {
                       final selected = doc == controller.current;
                       final color = doc.modified ? warn : (selected ? scheme.primary : scheme.onSurfaceVariant);
+                      final name = editorDocumentName(l10n, doc);
                       return Tooltip(
-                        message: doc.path,
+                        message: doc.path ?? l10n.editorNotSavedYet,
                         child: InkWell(
                           onTap: () => controller.select(doc),
                           child: Container(
@@ -212,10 +332,14 @@ class _TabStrip extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                PhosphorIcon(PhosphorIconsDuotone.fileText, size: 15, color: color),
+                                PhosphorIcon(
+                                  doc.isNew ? PhosphorIconsDuotone.notePencil : PhosphorIconsDuotone.fileText,
+                                  size: 15,
+                                  color: color,
+                                ),
                                 const SizedBox(width: AppSpacing.xs),
                                 Text(
-                                  doc.modified ? '● ${p.posix.basename(doc.path)}' : p.posix.basename(doc.path),
+                                  doc.modified ? '● $name' : name,
                                   style: AppFonts.userContent.copyWith(
                                     fontSize: 12.5,
                                     color: color,
@@ -240,6 +364,13 @@ class _TabStrip extends StatelessWidget {
                       );
                     },
                   ),
+                IconButton(
+                  tooltip: l10n.editorNewFile,
+                  iconSize: 18,
+                  visualDensity: VisualDensity.compact,
+                  icon: const PhosphorIcon(PhosphorIconsDuotone.filePlus),
+                  onPressed: controller.newDocument,
+                ),
               ],
             ),
           ),
@@ -337,7 +468,11 @@ class _EditorFieldState extends State<_EditorField> {
     final kb = HardwareKeyboard.instance;
     final command = defaultTargetPlatform == TargetPlatform.macOS ? kb.isMetaPressed : kb.isControlPressed;
     if (command && event.logicalKey == LogicalKeyboardKey.keyS) {
-      saveEditorDocument(context, widget.controller, widget.doc);
+      if (kb.isShiftPressed) {
+        saveEditorDocumentAs(context, widget.controller, widget.doc);
+      } else {
+        saveEditorDocument(context, widget.controller, widget.doc);
+      }
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
@@ -351,10 +486,8 @@ class _EditorFieldState extends State<_EditorField> {
     final key = '${style.fontFamily}/${style.fontSize}';
     if (_measuredFor == key) return;
     _measuredFor = key;
-    final painter = TextPainter(
-      text: TextSpan(text: '0' * 20, style: style),
-      textDirection: TextDirection.ltr,
-    )..layout();
+    final painter = TextPainter(text: TextSpan(text: '0' * 20, style: style), textDirection: TextDirection.ltr)
+      ..layout();
     _charWidth = painter.width / 20;
     painter.dispose();
   }
@@ -408,6 +541,7 @@ class _EditorFieldState extends State<_EditorField> {
       forceStrutHeight: true,
     );
     _measure(style);
+    widget.doc.text.palette = SyntaxPalette.of(scheme.brightness);
     // 편집기 글자는 터미널과 같은 글꼴·크기를 쓴다 ("화면 글자 크기" 배율은 받지 않는다).
     // 줄은 넘기지 않고 가로로 스크롤한다 — 한 줄이 화면 한 줄이라 줄 번호가 정확하다.
     return MediaQuery.withNoTextScaling(
@@ -511,40 +645,47 @@ class _StatusRow extends StatelessWidget {
     final warn = scheme.brightness == Brightness.dark ? AppColors.warning : AppColors.warningTextLight;
     return ListenableBuilder(
       listenable: doc,
-      builder: (context, _) => Container(
-        height: context.scaled(36),
-        padding: const EdgeInsets.only(left: AppSpacing.sm),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: scheme.outlineVariant)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Tooltip(
-                message: doc.path,
-                child: Text(
-                  doc.modified ? '${doc.path}  (${l10n.editorModified})' : doc.path,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, color: doc.modified ? warn : scheme.onSurfaceVariant),
+      builder: (context, _) {
+        final where = doc.path ?? l10n.editorNotSavedYet;
+        return Container(
+          height: context.scaled(36),
+          padding: const EdgeInsets.only(left: AppSpacing.sm),
+          decoration: BoxDecoration(border: Border(top: BorderSide(color: scheme.outlineVariant))),
+          child: Row(
+            children: [
+              Expanded(
+                child: Tooltip(
+                  message: where,
+                  child: Text(
+                    doc.modified && !doc.isNew ? '$where  (${l10n.editorModified})' : where,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: doc.modified ? warn : scheme.onSurfaceVariant),
+                  ),
                 ),
               ),
-            ),
-            if (doc.saving)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+              if (doc.saving)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                ),
+              IconButton(
+                tooltip: l10n.editorSaveAs,
+                iconSize: 20,
+                icon: const PhosphorIcon(PhosphorIconsDuotone.floppyDiskBack),
+                onPressed: doc.saving ? null : () => saveEditorDocumentAs(context, controller, doc),
               ),
-            IconButton(
-              tooltip: l10n.editorSave(_command),
-              iconSize: 20,
-              color: doc.modified ? scheme.primary : null,
-              icon: const PhosphorIcon(PhosphorIconsDuotone.floppyDisk),
-              onPressed: doc.saving ? null : () => saveEditorDocument(context, controller, doc),
-            ),
-          ],
-        ),
-      ),
+              IconButton(
+                tooltip: l10n.editorSave(_command),
+                iconSize: 20,
+                color: doc.modified ? scheme.primary : null,
+                icon: const PhosphorIcon(PhosphorIconsDuotone.floppyDisk),
+                onPressed: doc.saving ? null : () => saveEditorDocument(context, controller, doc),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

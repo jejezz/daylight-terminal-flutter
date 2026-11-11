@@ -238,6 +238,11 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   더블클릭은 아직 다운로드 그대로다 (편집으로 바꾸는 설정은 다음 단계).
   F4는 탐색기(`SftpPane`)가 자기 `FocusNode`를 가지고 있어야 받는다 — 터미널이 포커스를 쥐고 있어서, 행을 고를 때(`_select`) 탐색기가 포커스를 가져온다 (`test/sftp_pane_keys_test.dart`).
   왼쪽에 줄 번호가 있고, 본문은 줄을 넘기지 않고 가로로 스크롤한다 (줄 번호와 줄이 1:1이 되도록; 둘 다 같은 고정 줄 높이 strut).
+- 편집기 칸은 서버에 접속한 SSH 탭에서 **열린 파일이 없어도 늘 펼쳐져 있다** (안내와 "새 파일" 버튼). 사용자가 접었을 때만 오른쪽에 좁은 손잡이만 남는다.
+  탭 줄의 + 버튼이나 "새 파일"로 **서버에 아직 없는 새 파일**("제목 없음 N")을 만들어 쓰고, 저장(Ctrl+S)하면 서버 경로를 묻는다 (탐색기가 보는 폴더에 `untitled.txt`를 제안, 상대 경로는 그 폴더 기준).
+  이미 있는 경로면 덮어쓸지 묻고, 다른 탭에 열려 있는 경로는 거부한다. "다른 이름으로 저장"(Ctrl+Shift+S)은 열린 파일의 복사본을 서버에 만들고 그 탭이 복사본을 편집한다 (`RemoteText.saveNew`, `RemoteEditorController.saveAs`).
+- 구문 강조(`services/syntax_highlight.dart`, `widgets/highlight_controller.dart`): 셸(.sh/.bash/.zshrc 등, 또는 첫 줄 `#!`)과 설정 파일(.conf/.ini/.yaml/.env/.service 등)만 vim처럼 색을 입힌다. 이름이 바뀌면(새 파일을 foo.sh로 저장) 바로 켜진다.
+  글은 그대로이고 색만 입히며(`buildTextSpan`), 한글 조합 중 밑줄도 유지한다. 40만 자를 넘으면 강조하지 않는다 (키마다 글 전체를 다시 훑기 때문). 팔레트는 밝은/어두운 테마별로 따로 있다.
 - 규칙: UTF-8 텍스트만, 2MB 초과·NUL 바이트(바이너리)·폴더·장치는 거부 (`SenderFile.decode(rejectBinary: true)`, LineSender와 같은 규칙).
   줄바꿈(CRLF)과 BOM은 저장할 때 원래대로 되돌린다. 심볼릭 링크는 실제 경로를 편집한다.
 - 저장(`services/remote_text_file.dart`): 저장 직전에 서버 파일의 크기·수정 시각을 다시 확인해 열 때와 다르면 쓰지 않고 충돌로 알린다
@@ -245,8 +250,11 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   테스트는 메모리 가짜 `RemoteFs`(`test/helpers/fake_remote_fs.dart`)로 한다.
 - 상태는 탭마다 `SshSessionProvider.editor`(`RemoteEditorController`). 연결이 끊겨도 열린 파일은 남기고, 다른 서버에 접속할 때만 비운다.
   저장하지 않은 변경이 있으면 파일 탭·서버 탭을 닫을 때 묻는다.
-- 아직: 설정 창 "편집기" 섹션(더블클릭 동작, `.bak` 백업), 좁은 화면에서 아래로 옮기기, 읽기 전용 파일의 sudo 안내, 구문 강조. 실제 SFTP 서버로 확인하지 못했다
+- 아직: 설정 창 "편집기" 섹션(더블클릭 동작, `.bak` 백업), 좁은 화면에서 아래로 옮기기, 읽기 전용 파일의 sudo 안내, 그 밖의 언어 강조. 실제 SFTP 서버로 확인하지 못했다
   (`SftpRemoteFs`는 e2e 테스트 없음).
+
+- **구분선 끌기**(`widgets/pane_divider.dart`, `PaneDivider`; 탐색기·편집기·LineSender 칸 공통)는 이벤트마다 움직인 양을 더하지 않고 **누른 자리에서의 누적 거리**로 크기를 정한다 (`onDragStart`에서 크기를 기억).
+  화면이 다시 그려지기 전에 이벤트가 여러 번 오거나 최소·최대 크기에 걸렸다 풀릴 때 구분선이 마우스를 못 따라가던 문제를 없앤다 (`test/pane_divider_test.dart`).
 
 ## 알려진 한계
 

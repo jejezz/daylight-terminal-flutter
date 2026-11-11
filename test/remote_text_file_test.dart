@@ -176,7 +176,7 @@ void main() {
 
       c.close(doc);
       expect(c.documents, isEmpty);
-      expect(c.visible, isFalse);
+      expect(c.visible, isTrue);
       c.dispose();
     });
 

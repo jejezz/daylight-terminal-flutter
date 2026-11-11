@@ -675,5 +675,18 @@
   "@editorConflictBody": {"placeholders": {"name": {"type": "String"}}},
   "editorConflictOverwrite": "Overwrite",
   "editorConflictReload": "Load server version",
-  "helpEditor": "Remote editor\nOpens a text file from the server over SFTP so you can edit and save it. Nothing is installed on the server. Before saving, it checks whether the file changed on the server in the meantime. Open a file with right-click → Edit (or F4) in the explorer."
+  "editorNewFile": "New file",
+  "editorUntitled": "Untitled {n}",
+  "@editorUntitled": {"placeholders": {"n": {"type": "int"}}},
+  "editorEmptyTitle": "No file is open",
+  "editorEmptyBody": "Open a file with right-click → Edit (or F4) in the explorer, or create a new file and save it to the server.",
+  "editorNotSavedYet": "Not saved to the server yet",
+  "editorSaveAs": "Save as…",
+  "editorSaveToServerTitle": "Save to server",
+  "editorSavePathLabel": "Path on the server",
+  "editorExistsTitle": "File already exists",
+  "editorExistsBody": "{path} already exists on the server. Overwrite it?",
+  "@editorExistsBody": {"placeholders": {"path": {"type": "String"}}},
+  "editorErrAlreadyOpen": "That file is already open in the editor",
+  "helpEditor": "Remote editor\nOpens a text file from the server over SFTP so you can edit and save it. Nothing is installed on the server. Before saving, it checks whether the file changed on the server in the meantime. Open a file with right-click → Edit (or F4) in the explorer, or use the + button to write a new file and save it to the server. Shell scripts and config files are colored."
 }

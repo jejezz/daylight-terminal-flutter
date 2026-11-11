@@ -19,6 +19,7 @@ import '../widgets/connect_panel.dart';
 import '../widgets/line_sender.dart';
 import '../widgets/hex_view.dart';
 import '../widgets/local_folder_pane.dart';
+import '../widgets/pane_divider.dart';
 import '../widgets/remote_editor_pane.dart';
 import '../widgets/serial_connect_panel.dart';
 import '../widgets/sftp_pane.dart';
@@ -213,6 +214,9 @@ class _SessionViewState extends State<_SessionView> {
   double _senderHeight = 160;
   double _editorWidth = 460;
 
+  /// 구분선을 누른 순간의 칸 크기 (끄는 동안 이 값에 움직인 거리를 더해 크기를 정한다).
+  double _dragBase = 0;
+
   static const _minExplorer = 220.0;
   static const _minTerminal = 360.0;
   static const _minEditor = 260.0;
@@ -314,7 +318,7 @@ class _SessionViewState extends State<_SessionView> {
             builder: (context, box) {
               final editor = _editor;
               final editorOpen = editor != null && editor.visible;
-              final editorHandle = editor != null && editor.documents.isNotEmpty && !editor.visible;
+              final editorHandle = editor != null && !editor.visible;
               final maxEditor = (box.maxWidth - _minExplorer - _minTerminal - 6).clamp(_minEditor, 1200.0);
               final editorWidth = _editorWidth.clamp(_minEditor, maxEditor);
               final editorSpace = editorOpen ? editorWidth + 6 : (editorHandle ? _editorHandleWidth : 0.0);
@@ -331,10 +335,11 @@ class _SessionViewState extends State<_SessionView> {
                         ? const LocalFolderPane().help(HelpId.explorerLocal)
                         : const SftpPane().help(HelpId.explorerSftp),
                   ),
-                  _Divider(
+                  PaneDivider(
                     axis: Axis.vertical,
                     color: scheme.outlineVariant,
-                    onDrag: (d) => setState(() => _explorerWidth = (explorer + d).clamp(_minExplorer, maxExplorer)),
+                    onDragStart: () => _dragBase = explorer,
+                    onDrag: (d) => setState(() => _explorerWidth = (_dragBase + d).clamp(_minExplorer, maxExplorer)),
                   ),
                   Expanded(
                     child: Column(
@@ -346,10 +351,11 @@ class _SessionViewState extends State<_SessionView> {
                               ? _SerialBody(session: widget.session as SerialSession)
                               : const TerminalPane().help(HelpId.terminal),
                         ),
-                        _Divider(
+                        PaneDivider(
                           axis: Axis.horizontal,
                           color: scheme.outlineVariant,
-                          onDrag: (d) => setState(() => _senderHeight = (sender - d).clamp(_minSender, maxSender)),
+                          onDragStart: () => _dragBase = sender,
+                          onDrag: (d) => setState(() => _senderHeight = (_dragBase - d).clamp(_minSender, maxSender)),
                         ),
                         SizedBox(
                           height: sender,
@@ -359,11 +365,12 @@ class _SessionViewState extends State<_SessionView> {
                     ),
                   ),
                   if (editor != null && editorOpen) ...[
-                    _Divider(
+                    PaneDivider(
                       axis: Axis.vertical,
                       color: scheme.outlineVariant,
+                      onDragStart: () => _dragBase = editorWidth,
                       // 오른쪽 칸이라 왼쪽으로 끌면 넓어진다.
-                      onDrag: (d) => setState(() => _editorWidth = (editorWidth - d).clamp(_minEditor, maxEditor)),
+                      onDrag: (d) => setState(() => _editorWidth = (_dragBase - d).clamp(_minEditor, maxEditor)),
                     ),
                     SizedBox(width: editorWidth, child: RemoteEditorPane(controller: editor).help(HelpId.editor)),
                   ],
@@ -375,34 +382,6 @@ class _SessionViewState extends State<_SessionView> {
         ),
         const StatusBar().help(HelpId.statusBar),
       ],
-    );
-  }
-}
-
-/// 드래그로 영역 크기를 조절하는 구분선.
-class _Divider extends StatelessWidget {
-  const _Divider({required this.axis, required this.color, required this.onDrag});
-
-  final Axis axis;
-  final Color color;
-  final void Function(double delta) onDrag;
-
-  @override
-  Widget build(BuildContext context) {
-    final vertical = axis == Axis.vertical;
-    return MouseRegion(
-      cursor: vertical ? SystemMouseCursors.resizeColumn : SystemMouseCursors.resizeRow,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onHorizontalDragUpdate: vertical ? (d) => onDrag(d.delta.dx) : null,
-        onVerticalDragUpdate: vertical ? null : (d) => onDrag(d.delta.dy),
-        child: Container(
-          width: vertical ? 6 : null,
-          height: vertical ? null : 6,
-          alignment: Alignment.center,
-          child: Container(width: vertical ? 1 : null, height: vertical ? null : 1, color: color),
-        ),
-      ),
     );
   }
 }

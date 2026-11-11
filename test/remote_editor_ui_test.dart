@@ -193,4 +193,110 @@ void main() {
     expect(textScroll.offset, greaterThan(0));
     expect(numbersScroll.offset, textScroll.offset);
   });
+
+  Finder dialogField() => find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextField));
+
+  testWidgets('with no file open the editor shows a hint and a New file button', (tester) async {
+    await pumpPane(tester);
+    expect(find.text('No file is open'), findsOneWidget);
+    expect(find.text('New file'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+
+    await tester.tap(find.text('New file'));
+    await tester.pump();
+    expect(find.text('No file is open'), findsNothing);
+    expect(find.text('Untitled 1'), findsOneWidget);
+    expect(find.text('Not saved to the server yet'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+  });
+
+  testWidgets('the + button adds another new file', (tester) async {
+    await pumpPane(tester);
+    await tester.tap(find.text('New file'));
+    await tester.pump();
+    await tester.tap(find.byTooltip('New file'));
+    await tester.pump();
+    expect(find.text('Untitled 1'), findsOneWidget);
+    expect(find.text('Untitled 2'), findsOneWidget);
+  });
+
+  testWidgets('write a new file, Ctrl+S asks for a server path and creates it there', (tester) async {
+    await pumpPane(tester);
+    await tester.tap(find.text('New file'));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), '#!/bin/bash\necho hi\n');
+    await tester.pump();
+    expect(find.textContaining('● Untitled 1'), findsOneWidget);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+    expect(find.text('Save to server'), findsOneWidget);
+    expect(tester.widget<TextField>(dialogField()).controller!.text, '/untitled.txt');
+
+    await tester.enterText(dialogField(), '/etc/hello.sh');
+    await tester.tap(find.text('OK'));
+    await settle(tester);
+
+    expect(utf8.decode(fs.files['/etc/hello.sh']!), '#!/bin/bash\necho hi\n');
+    expect(controller.current!.path, '/etc/hello.sh');
+    expect(find.text('hello.sh'), findsWidgets);
+    expect(find.text('Untitled 1'), findsNothing);
+    expect(find.textContaining('●'), findsNothing);
+  });
+
+  testWidgets('a relative name is saved in the suggested folder; an existing file asks before overwriting', (tester) async {
+    fs.put('/home/me/exists.txt', utf8.encode('theirs'));
+    controller.dispose();
+    controller = RemoteEditorController(() => fs, directory: () => '/home/me');
+    await pumpPane(tester);
+    await tester.tap(find.text('New file'));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'mine');
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Save as…'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(dialogField()).controller!.text, '/home/me/untitled.txt');
+    await tester.enterText(dialogField(), 'exists.txt');
+    await tester.tap(find.text('OK'));
+    await settle(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('File already exists'), findsOneWidget);
+    expect(utf8.decode(fs.files['/home/me/exists.txt']!), 'theirs');
+    await tester.tap(find.text('Overwrite'));
+    await settle(tester);
+    expect(utf8.decode(fs.files['/home/me/exists.txt']!), 'mine');
+  });
+
+  testWidgets('cancelling the path dialog saves nothing and keeps the text', (tester) async {
+    await pumpPane(tester);
+    await tester.tap(find.text('New file'));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'keep me');
+    await tester.tap(find.byTooltip('Save (Ctrl+S)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(fs.files.keys.where((k) => k.contains('untitled')), isEmpty);
+    expect(controller.current!.isNew, isTrue);
+    expect(controller.current!.text.text, 'keep me');
+  });
+
+  testWidgets('closing an unsaved new file asks; Discard drops it', (tester) async {
+    await pumpPane(tester);
+    await tester.tap(find.text('New file'));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'draft');
+    await tester.pump();
+    await tester.tap(find.byTooltip('Close file'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unsaved changes'), findsOneWidget);
+    await tester.tap(find.text('Discard'));
+    await tester.pumpAndSettle();
+    expect(controller.documents, isEmpty);
+    expect(find.text('No file is open'), findsOneWidget);
+  });
 }

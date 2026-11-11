@@ -61,7 +61,7 @@ class SshSessionProvider extends TerminalSession {
     if (debugRemoteFs != null) return debugRemoteFs;
     final sftp = _sftp;
     return sftp == null ? null : SftpRemoteFs(sftp);
-  });
+  }, directory: () => _remotePath);
 
   /// 테스트에서 서버 없이 편집기를 쓰려고 끼워 넣는 가짜 서버 파일 계층.
   @visibleForTesting

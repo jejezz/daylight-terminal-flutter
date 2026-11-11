@@ -15,6 +15,9 @@ class FakeRemoteFs implements RemoteFs {
   /// true면 폴더에 새 파일을 만들 수 없다 (임시 파일 쓰기가 막힌 경우).
   bool dirReadOnly = false;
 
+  /// true면 폴더가 [dirs]에 있어야 새 파일을 만들 수 있다 (없는 폴더에 저장하는 경우).
+  bool strictDirs = false;
+
   /// 설정하면 다음 [write]가 이 오류로 실패한다.
   Object? failNextWrite;
 
@@ -64,6 +67,13 @@ class FakeRemoteFs implements RemoteFs {
       throw fail;
     }
     final existing = stats[path];
+    if (existing == null &&
+        strictDirs &&
+        !dirs.contains(
+          path.substring(0, path.lastIndexOf('/')).isEmpty ? '/' : path.substring(0, path.lastIndexOf('/')),
+        )) {
+      throw StateError('no such directory');
+    }
     if (existing == null && dirReadOnly) throw StateError('permission denied');
     put(path, data, mode: existing?.mode ?? 420, uid: existing?.uid ?? 1000, gid: existing?.gid ?? 1000);
   }

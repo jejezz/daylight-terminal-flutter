@@ -1180,6 +1180,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editorConflictReload => 'Load server version';
 
   @override
+  String get editorNewFile => 'New file';
+
+  @override
+  String editorUntitled(int n) {
+    return 'Untitled $n';
+  }
+
+  @override
+  String get editorEmptyTitle => 'No file is open';
+
+  @override
+  String get editorEmptyBody =>
+      'Open a file with right-click → Edit (or F4) in the explorer, or create a new file and save it to the server.';
+
+  @override
+  String get editorNotSavedYet => 'Not saved to the server yet';
+
+  @override
+  String get editorSaveAs => 'Save as…';
+
+  @override
+  String get editorSaveToServerTitle => 'Save to server';
+
+  @override
+  String get editorSavePathLabel => 'Path on the server';
+
+  @override
+  String get editorExistsTitle => 'File already exists';
+
+  @override
+  String editorExistsBody(String path) {
+    return '$path already exists on the server. Overwrite it?';
+  }
+
+  @override
+  String get editorErrAlreadyOpen => 'That file is already open in the editor';
+
+  @override
   String get helpEditor =>
-      'Remote editor\nOpens a text file from the server over SFTP so you can edit and save it. Nothing is installed on the server. Before saving, it checks whether the file changed on the server in the meantime. Open a file with right-click → Edit (or F4) in the explorer.';
+      'Remote editor\nOpens a text file from the server over SFTP so you can edit and save it. Nothing is installed on the server. Before saving, it checks whether the file changed on the server in the meantime. Open a file with right-click → Edit (or F4) in the explorer, or use the + button to write a new file and save it to the server. Shell scripts and config files are colored.';
 }

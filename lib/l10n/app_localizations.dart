@@ -2072,10 +2072,76 @@ abstract class AppLocalizations {
   /// **'서버 버전 불러오기'**
   String get editorConflictReload;
 
+  /// No description provided for @editorNewFile.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 파일'**
+  String get editorNewFile;
+
+  /// No description provided for @editorUntitled.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목 없음 {n}'**
+  String editorUntitled(int n);
+
+  /// No description provided for @editorEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'열린 파일이 없습니다'**
+  String get editorEmptyTitle;
+
+  /// No description provided for @editorEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 열거나, 새 파일을 만들어 서버에 저장하세요.'**
+  String get editorEmptyBody;
+
+  /// No description provided for @editorNotSavedYet.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버에 아직 저장하지 않음'**
+  String get editorNotSavedYet;
+
+  /// No description provided for @editorSaveAs.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 이름으로 저장'**
+  String get editorSaveAs;
+
+  /// No description provided for @editorSaveToServerTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버에 저장'**
+  String get editorSaveToServerTitle;
+
+  /// No description provided for @editorSavePathLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버 경로'**
+  String get editorSavePathLabel;
+
+  /// No description provided for @editorExistsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 있는 파일'**
+  String get editorExistsTitle;
+
+  /// No description provided for @editorExistsBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{path}이(가) 서버에 이미 있습니다. 덮어쓸까요?'**
+  String editorExistsBody(String path);
+
+  /// No description provided for @editorErrAlreadyOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'그 파일은 이미 편집기에 열려 있습니다'**
+  String get editorErrAlreadyOpen;
+
   /// No description provided for @helpEditor.
   ///
   /// In ko, this message translates to:
-  /// **'원격 편집기\n서버의 텍스트 파일을 SFTP로 열어 고치고 저장합니다. 서버에 아무것도 설치하지 않습니다. 저장할 때 서버에서 그사이 바뀌었는지 먼저 확인합니다. 탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 엽니다.'**
+  /// **'원격 편집기\n서버의 텍스트 파일을 SFTP로 열어 고치고 저장합니다. 서버에 아무것도 설치하지 않습니다. 저장할 때 서버에서 그사이 바뀌었는지 먼저 확인합니다. 탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 열거나, + 버튼으로 새 파일을 만들어 서버에 저장할 수 있습니다. 셸 스크립트와 설정 파일은 색으로 구분해 보여 줍니다.'**
   String get helpEditor;
 }
 
