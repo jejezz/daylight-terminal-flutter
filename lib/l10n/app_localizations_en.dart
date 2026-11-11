@@ -1122,4 +1122,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabNewSerial => 'New serial connection';
+
+  @override
+  String get editorEdit => 'Edit';
+
+  @override
+  String editorSave(String shortcut) {
+    return 'Save ($shortcut)';
+  }
+
+  @override
+  String get editorClose => 'Close file';
+
+  @override
+  String get editorHide => 'Hide editor';
+
+  @override
+  String get editorModified => 'modified';
+
+  @override
+  String editorSaved(String name) {
+    return 'Saved $name';
+  }
+
+  @override
+  String get editorErrNotFile =>
+      'Not a regular file, so it cannot be opened (folder, device, etc.)';
+
+  @override
+  String get editorErrNotFound => 'This file does not exist on the server';
+
+  @override
+  String editorErrTooLarge(int mb) {
+    return 'The file is too large (max $mb MB)';
+  }
+
+  @override
+  String get editorErrBinary => 'Binary files cannot be edited';
+
+  @override
+  String editorErrIo(String detail) {
+    return 'Could not read or write the file: $detail';
+  }
+
+  @override
+  String get editorConflictTitle => 'The file changed on the server';
+
+  @override
+  String editorConflictBody(String name) {
+    return '$name was changed or deleted on the server after you opened it. Overwriting discards that change; loading the server version discards your edits.';
+  }
+
+  @override
+  String get editorConflictOverwrite => 'Overwrite';
+
+  @override
+  String get editorConflictReload => 'Load server version';
+
+  @override
+  String get editorNewFile => 'New file';
+
+  @override
+  String editorUntitled(int n) {
+    return 'Untitled $n';
+  }
+
+  @override
+  String get editorEmptyTitle => 'No file is open';
+
+  @override
+  String get editorEmptyBody =>
+      'Open a file with right-click → Edit (or F4) in the explorer, or create a new file and save it to the server.';
+
+  @override
+  String get editorNotSavedYet => 'Not saved to the server yet';
+
+  @override
+  String get editorSaveAs => 'Save as…';
+
+  @override
+  String get editorSaveToServerTitle => 'Save to server';
+
+  @override
+  String get editorSavePathLabel => 'Path on the server';
+
+  @override
+  String get editorExistsTitle => 'File already exists';
+
+  @override
+  String editorExistsBody(String path) {
+    return '$path already exists on the server. Overwrite it?';
+  }
+
+  @override
+  String get editorErrAlreadyOpen => 'That file is already open in the editor';
+
+  @override
+  String get helpEditor =>
+      'Remote editor\nOpens a text file from the server over SFTP so you can edit and save it. Nothing is installed on the server. Before saving, it checks whether the file changed on the server in the meantime. Open a file with right-click → Edit (or F4) in the explorer, or use the + button to write a new file and save it to the server. Shell scripts and config files are colored.';
 }

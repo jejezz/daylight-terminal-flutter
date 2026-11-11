@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../state/sessions_controller.dart';
 import '../state/local_folder_session.dart';
 import '../state/local_shell_session.dart';
+import '../state/remote_editor_controller.dart';
 import '../state/serial_session.dart';
 import '../state/ssh_session_provider.dart';
 import '../state/terminal_session.dart';
@@ -18,6 +19,8 @@ import '../widgets/connect_panel.dart';
 import '../widgets/line_sender.dart';
 import '../widgets/hex_view.dart';
 import '../widgets/local_folder_pane.dart';
+import '../widgets/pane_divider.dart';
+import '../widgets/remote_editor_pane.dart';
 import '../widgets/serial_connect_panel.dart';
 import '../widgets/sftp_pane.dart';
 import '../widgets/status_bar.dart';
@@ -55,7 +58,12 @@ class _HomeScreenState extends State<HomeScreen> {
       bindings: {
         AppShortcut.newTab.activator: controller.add,
         AppShortcut.newLocalTab.activator: controller.addLocal,
-        AppShortcut.closeTab.activator: controller.closeCurrent,
+        AppShortcut.closeTab.activator: () async {
+          // 편집기에 저장하지 않은 파일이 있으면 닫기 전에 묻는다.
+          final session = current;
+          if (session != null && !await confirmCloseSessionEditor(context, session)) return;
+          controller.closeCurrent();
+        },
         AppShortcut.toggleLogging.activator: () {
           current?.toggleLogging(confirmButtonText: l10n.logSaveConfirm);
         },
@@ -204,9 +212,37 @@ class _SessionView extends StatefulWidget {
 class _SessionViewState extends State<_SessionView> {
   double _explorerWidth = 320;
   double _senderHeight = 160;
+  double _editorWidth = 460;
+
+  /// 구분선을 누른 순간의 칸 크기 (끄는 동안 이 값에 움직인 거리를 더해 크기를 정한다).
+  double _dragBase = 0;
 
   static const _minExplorer = 220.0;
   static const _minTerminal = 360.0;
+  static const _minEditor = 260.0;
+  static const _editorHandleWidth = 36.0;
+
+  /// SSH 탭의 오른쪽 편집기 칸 (다른 탭 종류에는 없다). 열린 파일이 없으면 자리를 차지하지 않고, 접혀 있으면 가는 손잡이만 남는다.
+  RemoteEditorController? get _editor {
+    final s = widget.session;
+    return s is SshSessionProvider ? s.editor : null;
+  }
+
+  void _onEditorChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _editor?.addListener(_onEditorChanged);
+  }
+
+  @override
+  void dispose() {
+    _editor?.removeListener(_onEditorChanged);
+    super.dispose();
+  }
   // 입력 칸(이름 줄 36 + 글 영역이 최소한 보일 높이) + 하단 줄(44) + 여백. LineSender의 버튼 줄이 가려지지 않게 그 아래로는 못 줄인다.
   static const _minSender = 144.0;
 
@@ -280,7 +316,13 @@ class _SessionViewState extends State<_SessionView> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, box) {
-              final maxExplorer = (box.maxWidth - _minTerminal).clamp(_minExplorer, 800.0);
+              final editor = _editor;
+              final editorOpen = editor != null && editor.visible;
+              final editorHandle = editor != null && !editor.visible;
+              final maxEditor = (box.maxWidth - _minExplorer - _minTerminal - 6).clamp(_minEditor, 1200.0);
+              final editorWidth = _editorWidth.clamp(_minEditor, maxEditor);
+              final editorSpace = editorOpen ? editorWidth + 6 : (editorHandle ? _editorHandleWidth : 0.0);
+              final maxExplorer = (box.maxWidth - _minTerminal - editorSpace).clamp(_minExplorer, 800.0);
               final explorer = _explorerWidth.clamp(_minExplorer, maxExplorer);
               final maxSender = (box.maxHeight - 120).clamp(_minSender, 600.0);
               final sender = _senderHeight.clamp(_minSender, maxSender);
@@ -293,10 +335,11 @@ class _SessionViewState extends State<_SessionView> {
                         ? const LocalFolderPane().help(HelpId.explorerLocal)
                         : const SftpPane().help(HelpId.explorerSftp),
                   ),
-                  _Divider(
+                  PaneDivider(
                     axis: Axis.vertical,
                     color: scheme.outlineVariant,
-                    onDrag: (d) => setState(() => _explorerWidth = (explorer + d).clamp(_minExplorer, maxExplorer)),
+                    onDragStart: () => _dragBase = explorer,
+                    onDrag: (d) => setState(() => _explorerWidth = (_dragBase + d).clamp(_minExplorer, maxExplorer)),
                   ),
                   Expanded(
                     child: Column(
@@ -308,10 +351,11 @@ class _SessionViewState extends State<_SessionView> {
                               ? _SerialBody(session: widget.session as SerialSession)
                               : const TerminalPane().help(HelpId.terminal),
                         ),
-                        _Divider(
+                        PaneDivider(
                           axis: Axis.horizontal,
                           color: scheme.outlineVariant,
-                          onDrag: (d) => setState(() => _senderHeight = (sender - d).clamp(_minSender, maxSender)),
+                          onDragStart: () => _dragBase = sender,
+                          onDrag: (d) => setState(() => _senderHeight = (_dragBase - d).clamp(_minSender, maxSender)),
                         ),
                         SizedBox(
                           height: sender,
@@ -320,6 +364,17 @@ class _SessionViewState extends State<_SessionView> {
                       ],
                     ),
                   ),
+                  if (editor != null && editorOpen) ...[
+                    PaneDivider(
+                      axis: Axis.vertical,
+                      color: scheme.outlineVariant,
+                      onDragStart: () => _dragBase = editorWidth,
+                      // 오른쪽 칸이라 왼쪽으로 끌면 넓어진다.
+                      onDrag: (d) => setState(() => _editorWidth = (_dragBase - d).clamp(_minEditor, maxEditor)),
+                    ),
+                    SizedBox(width: editorWidth, child: RemoteEditorPane(controller: editor).help(HelpId.editor)),
+                  ],
+                  if (editor != null && editorHandle) RemoteEditorHandle(controller: editor),
                 ],
               );
             },
@@ -327,34 +382,6 @@ class _SessionViewState extends State<_SessionView> {
         ),
         const StatusBar().help(HelpId.statusBar),
       ],
-    );
-  }
-}
-
-/// 드래그로 영역 크기를 조절하는 구분선.
-class _Divider extends StatelessWidget {
-  const _Divider({required this.axis, required this.color, required this.onDrag});
-
-  final Axis axis;
-  final Color color;
-  final void Function(double delta) onDrag;
-
-  @override
-  Widget build(BuildContext context) {
-    final vertical = axis == Axis.vertical;
-    return MouseRegion(
-      cursor: vertical ? SystemMouseCursors.resizeColumn : SystemMouseCursors.resizeRow,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onHorizontalDragUpdate: vertical ? (d) => onDrag(d.delta.dx) : null,
-        onVerticalDragUpdate: vertical ? null : (d) => onDrag(d.delta.dy),
-        child: Container(
-          width: vertical ? 6 : null,
-          height: vertical ? null : 6,
-          alignment: Alignment.center,
-          child: Container(width: vertical ? 1 : null, height: vertical ? null : 1, color: color),
-        ),
-      ),
     );
   }
 }

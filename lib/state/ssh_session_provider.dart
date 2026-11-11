@@ -12,6 +12,8 @@ import '../models/ssh_profile.dart';
 import '../models/transfer.dart';
 import '../services/drag_staging.dart';
 import '../services/profile_store.dart';
+import '../services/remote_text_file.dart';
+import 'remote_editor_controller.dart';
 import '../services/sftp_upload_worker.dart';
 import '../services/shell_commands.dart';
 import '../services/ssh_connection.dart';
@@ -52,6 +54,27 @@ class SshSessionProvider extends TerminalSession {
   bool _sftpLoading = false;
   String? _sftpError;
   final List<Transfer> _transfers = [];
+
+  /// 오른쪽에 도킹되는 원격 편집기 (SFTP로 파일을 읽고 쓴다 — 서버에 아무것도 설치하지 않는다). 연결이 끊겨도 열린 파일은
+  /// 남겨 두어서, 저장하지 못한 글을 잃지 않는다. 다른 서버에 접속할 때만 비운다 ([_connect]).
+  late final RemoteEditorController editor = RemoteEditorController(() {
+    if (debugRemoteFs != null) return debugRemoteFs;
+    final sftp = _sftp;
+    return sftp == null ? null : SftpRemoteFs(sftp);
+  }, directory: () => _remotePath);
+
+  /// 테스트에서 서버 없이 편집기를 쓰려고 끼워 넣는 가짜 서버 파일 계층.
+  @visibleForTesting
+  RemoteFs? debugRemoteFs;
+
+  /// 테스트에서 서버 없이 탐색기 목록을 채운다.
+  @visibleForTesting
+  void debugSetListing(String path, List<FileItem> entries) {
+    _remotePath = path;
+    _entries = entries;
+    notify();
+  }
+  String? _editorServer;
 
   /// 연결하지 않고 접속 정보만 채워 둔다 (지난번 탭을 다시 열 때). 접속 화면이 이 값으로 채워진다.
   void prefill(SshProfile profile) => _profile = profile;
@@ -118,6 +141,9 @@ class SshSessionProvider extends TerminalSession {
   Future<void> _connect(SshProfile profile, {String? password, String? keyPassphrase}) async {
     if (status == SessionStatus.connecting || connected) return;
     _profile = profile;
+    final server = '${profile.username}@${profile.host}:${profile.port}';
+    if (_editorServer != null && _editorServer != server) editor.closeAll();
+    _editorServer = server;
     _password = password;
     _keyPassphrase = keyPassphrase;
     setStatus(SessionStatus.connecting);
@@ -613,6 +639,7 @@ class SshSessionProvider extends TerminalSession {
   @override
   void dispose() {
     _teardown();
+    editor.dispose();
     super.dispose();
   }
 }

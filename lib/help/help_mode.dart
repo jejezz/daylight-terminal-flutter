@@ -45,6 +45,7 @@ enum HelpId {
   senderSend,
   emptyAction,
   serialBar,
+  editor,
 }
 
 /// 도움말 글: 첫 줄은 이름, 나머지는 설명 (arb의 한 문자열에 `\n`으로 나눠 둔다).
@@ -87,6 +88,7 @@ enum HelpId {
     HelpId.senderSend => l.helpSenderSend,
     HelpId.emptyAction => l.helpEmptyAction,
     HelpId.serialBar => l.helpSerialBar,
+    HelpId.editor => l.helpEditor,
   };
   final i = raw.indexOf('\n');
   return i < 0 ? (title: raw, body: '') : (title: raw.substring(0, i), body: raw.substring(i + 1));

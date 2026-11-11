@@ -1088,4 +1088,101 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tabNewSerial => '새 시리얼 연결';
+
+  @override
+  String get editorEdit => '편집';
+
+  @override
+  String editorSave(String shortcut) {
+    return '저장 ($shortcut)';
+  }
+
+  @override
+  String get editorClose => '파일 닫기';
+
+  @override
+  String get editorHide => '편집기 접기';
+
+  @override
+  String get editorModified => '변경됨';
+
+  @override
+  String editorSaved(String name) {
+    return '$name을(를) 저장했습니다';
+  }
+
+  @override
+  String get editorErrNotFile => '일반 파일이 아니라서 열 수 없습니다 (폴더·장치 등)';
+
+  @override
+  String get editorErrNotFound => '서버에 이 파일이 없습니다';
+
+  @override
+  String editorErrTooLarge(int mb) {
+    return '파일이 너무 큽니다 (최대 ${mb}MB)';
+  }
+
+  @override
+  String get editorErrBinary => '바이너리 파일은 편집할 수 없습니다';
+
+  @override
+  String editorErrIo(String detail) {
+    return '파일을 읽거나 쓰지 못했습니다: $detail';
+  }
+
+  @override
+  String get editorConflictTitle => '서버에서 파일이 바뀌었습니다';
+
+  @override
+  String editorConflictBody(String name) {
+    return '$name이(가) 열어 본 뒤에 서버에서 바뀌었거나 지워졌습니다. 덮어쓰면 서버의 그 변경이 사라지고, 서버 버전을 불러오면 지금 고친 내용이 사라집니다.';
+  }
+
+  @override
+  String get editorConflictOverwrite => '덮어쓰기';
+
+  @override
+  String get editorConflictReload => '서버 버전 불러오기';
+
+  @override
+  String get editorNewFile => '새 파일';
+
+  @override
+  String editorUntitled(int n) {
+    return '제목 없음 $n';
+  }
+
+  @override
+  String get editorEmptyTitle => '열린 파일이 없습니다';
+
+  @override
+  String get editorEmptyBody =>
+      '탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 열거나, 새 파일을 만들어 서버에 저장하세요.';
+
+  @override
+  String get editorNotSavedYet => '서버에 아직 저장하지 않음';
+
+  @override
+  String get editorSaveAs => '다른 이름으로 저장';
+
+  @override
+  String get editorSaveToServerTitle => '서버에 저장';
+
+  @override
+  String get editorSavePathLabel => '서버 경로';
+
+  @override
+  String get editorExistsTitle => '이미 있는 파일';
+
+  @override
+  String editorExistsBody(String path) {
+    return '$path이(가) 서버에 이미 있습니다. 덮어쓸까요?';
+  }
+
+  @override
+  String get editorErrAlreadyOpen => '그 파일은 이미 편집기에 열려 있습니다';
+
+  @override
+  String get helpEditor =>
+      '원격 편집기\n서버의 텍스트 파일을 SFTP로 열어 고치고 저장합니다. 서버에 아무것도 설치하지 않습니다. 저장할 때 서버에서 그사이 바뀌었는지 먼저 확인합니다. 탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 열거나, + 버튼으로 새 파일을 만들어 서버에 저장할 수 있습니다. 셸 스크립트와 설정 파일은 색으로 구분해 보여 줍니다.';
 }

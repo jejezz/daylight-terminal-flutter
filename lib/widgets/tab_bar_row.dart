@@ -16,6 +16,7 @@ import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_shortcuts.dart';
 import '../utils/tab_label.dart';
+import 'remote_editor_pane.dart';
 import 'tab_rename_dialog.dart';
 import '../utils/ui_scale.dart';
 
@@ -107,7 +108,11 @@ class _TabBarRowState extends State<TabBarRow> {
                               label: labels[i],
                               selected: i == controller.selected,
                               onSelect: () => controller.select(i),
-                              onClose: () => controller.closeAt(i),
+                              onClose: () async {
+                                // 편집기에 저장하지 않은 파일이 있으면 닫기 전에 묻는다.
+                                if (!await confirmCloseSessionEditor(context, session)) return;
+                                controller.closeAt(controller.sessions.indexOf(session));
+                              },
                               onMove: controller.move,
                             ),
                         ],

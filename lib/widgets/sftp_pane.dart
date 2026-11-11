@@ -17,6 +17,7 @@ import '../state/ssh_session_provider.dart';
 import '../theme/app_theme.dart';
 import 'file_pane_parts.dart';
 import 'list_selection.dart';
+import 'remote_editor_pane.dart';
 
 /// 진행 중인 끌어내기 한 번의 상태.
 class _Drag {
@@ -51,6 +52,16 @@ class _SftpPaneState extends State<SftpPane> {
   final _selection = ListSelection();
   _Drag? _drag;
 
+  /// 탐색기가 키보드 포커스를 가지는 자리. 터미널이 포커스를 쥐고 있으면 F4 같은 키가 여기까지 오지 않으므로,
+  /// 행을 고르면 이 노드가 포커스를 가져온다.
+  final _focus = FocusNode(debugLabel: 'sftp pane');
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
   void _toast(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -68,8 +79,10 @@ class _SftpPaneState extends State<SftpPane> {
 
   // ───────────────────────── 선택 ─────────────────────────
 
-  void _select(int index, List<FileItem> entries) =>
-      setState(() => _selection.click(index, entries, HardwareKeyboard.instance));
+  void _select(int index, List<FileItem> entries) {
+    _focus.requestFocus();
+    setState(() => _selection.click(index, entries, HardwareKeyboard.instance));
+  }
 
   /// 우클릭/끌기를 시작한 항목이 선택에 없으면 그 항목만 선택한다. 있으면 선택 전체가 대상이다.
   List<FileItem> _targetsFor(SshSessionProvider session, FileItem e) {
@@ -170,6 +183,31 @@ class _SftpPaneState extends State<SftpPane> {
     await _guard(() => session.download(items, dir));
   }
 
+  /// 고른 파일(폴더는 뺀다)을 오른쪽 편집기 칸에 연다.
+  Future<void> _edit(List<FileItem> items) async {
+    final session = context.read<SshSessionProvider>();
+    for (final e in items) {
+      if (e.isDirectory) continue;
+      await openRemoteFile(context, session, session.pathOf(e));
+      if (!mounted) return;
+    }
+  }
+
+  /// F4: 선택한 파일을 편집한다 (FileZilla·Midnight Commander와 같은 관례).
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.f4) {
+      final session = context.read<SshSessionProvider>();
+      final selected = [
+        for (final e in session.entries)
+          if (_selection.contains(e.name) && !e.isDirectory) e,
+      ];
+      if (selected.isEmpty) return KeyEventResult.ignored;
+      _edit(selected);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   Future<void> _delete(List<FileItem> items) async {
     final session = context.read<SshSessionProvider>();
     final l10n = AppLocalizations.of(context);
@@ -232,6 +270,7 @@ class _SftpPaneState extends State<SftpPane> {
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
       items: [
+        if (targets.any((t) => !t.isDirectory)) PopupMenuItem(value: 'edit', child: Text(l10n.editorEdit)),
         PopupMenuItem(value: 'download', child: Text(l10n.sftpDownload)),
         if (single && e.isDirectory) PopupMenuItem(value: 'terminal', child: Text(l10n.pathMenuTerminalToHere)),
         if (single) PopupMenuItem(value: 'rename', child: Text(l10n.sftpRename)),
@@ -239,6 +278,8 @@ class _SftpPaneState extends State<SftpPane> {
       ],
     );
     switch (choice) {
+      case 'edit':
+        await _edit(targets);
       case 'download':
         await _download(targets);
       case 'terminal':
@@ -319,7 +360,9 @@ class _SftpPaneState extends State<SftpPane> {
   // ───────────────────────── 화면 ─────────────────────────
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Focus(focusNode: _focus, onKeyEvent: _onKey, child: _buildBody(context));
+
+  Widget _buildBody(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final session = context.watch<SshSessionProvider>();
     final scheme = Theme.of(context).colorScheme;
