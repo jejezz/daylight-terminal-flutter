@@ -70,7 +70,7 @@ void main() {
       expect(await openFailure('/bin'), RemoteEditError.binary);
       fs.put('/big', List.filled(SenderFile.maxBytes + 1, 0x61));
       expect(await openFailure('/big'), RemoteEditError.tooLarge);
-      fs.put('/latin', [0xE9, 0xE8]);
+      fs.put('/latin', [0xE9, 0x20, 0x61]); // Latin-1 'é': UTF-8도 CP949도 아니다 (0xE9 0xE8은 CP949의 한 글자다)
       expect(await openFailure('/latin'), RemoteEditError.notUtf8);
     });
 

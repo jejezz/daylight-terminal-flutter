@@ -141,7 +141,7 @@ class SftpRemoteFs implements RemoteFs {
   }
 }
 
-enum RemoteEditError { notRegular, notFound, tooLarge, notUtf8, binary, alreadyOpen, io }
+enum RemoteEditError { notRegular, notFound, tooLarge, notUtf8, binary, unencodable, alreadyOpen, io }
 
 class RemoteEditException implements Exception {
   const RemoteEditException(this.kind, [this.detail = '']);
@@ -200,12 +200,13 @@ abstract final class RemoteText {
   /// 편집기에서 열 수 있는 텍스트인지 확인하고 문서로 바꾼다 (UTF-8, 2MB 이하, 바이너리 아님). 아니면 [RemoteEditException].
   static SenderDocument decodeText(Uint8List bytes) {
     try {
-      return SenderFile.decode(bytes, rejectBinary: true);
+      return SenderFile.decode(bytes, rejectBinary: true, allowLegacy: true);
     } on SenderFileException catch (e) {
       throw RemoteEditException(switch (e.kind) {
         SenderFileError.tooLarge => RemoteEditError.tooLarge,
         SenderFileError.notUtf8 => RemoteEditError.notUtf8,
         SenderFileError.binary => RemoteEditError.binary,
+        SenderFileError.unencodable => RemoteEditError.unencodable,
         SenderFileError.io => RemoteEditError.io,
       });
     }
@@ -232,11 +233,11 @@ abstract final class RemoteText {
         current = await fs.stat(path);
       } on RemoteNotFound {
         if (!overwrite) return const RemoteSaveResult.conflict();
-        return RemoteSaveResult.saved(await _writeFresh(fs, path, SenderFile.encode(doc), null));
+        return RemoteSaveResult.saved(await _writeFresh(fs, path, _encode(doc), null));
       }
       if (!overwrite && !current.sameAs(file.stat)) return const RemoteSaveResult.conflict();
       if (backup) await fs.write('$path.bak', await fs.read(path));
-      return RemoteSaveResult.saved(await _writeFresh(fs, path, SenderFile.encode(doc), current));
+      return RemoteSaveResult.saved(await _writeFresh(fs, path, _encode(doc), current));
     } on RemoteEditException {
       rethrow;
     } catch (e) {
@@ -260,7 +261,7 @@ abstract final class RemoteText {
       } on RemoteNotFound {
         existing = null;
       }
-      final data = SenderFile.encode(doc);
+      final data = _encode(doc);
       if (existing == null) {
         await fs.write(path, data);
         return RemoteSaveResult.saved(await fs.stat(path));
@@ -272,6 +273,18 @@ abstract final class RemoteText {
       rethrow;
     } catch (e) {
       throw RemoteEditException(RemoteEditError.io, '$e');
+    }
+  }
+
+  /// [doc]을 파일의 인코딩으로 바이트로 만든다. 그 인코딩에 없는 글자가 있으면 [RemoteEditError.unencodable] (detail = 그 글자).
+  static Uint8List _encode(SenderDocument doc) {
+    try {
+      return SenderFile.encode(doc);
+    } on SenderFileException catch (e) {
+      throw RemoteEditException(
+        e.kind == SenderFileError.unencodable ? RemoteEditError.unencodable : RemoteEditError.io,
+        e.detail,
+      );
     }
   }
 

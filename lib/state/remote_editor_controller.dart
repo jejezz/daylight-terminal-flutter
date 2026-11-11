@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 
 import '../services/remote_text_file.dart';
 import '../services/sender_file.dart';
+import '../services/text_encoding.dart';
 import '../widgets/highlight_controller.dart';
 
 /// 편집기 칸에 열려 있는 파일 하나. 이미 있는 파일(서버 또는 이 PC)이거나, 아직 저장하지 않은 새 파일([isNew])이다.
@@ -16,7 +17,9 @@ class EditorDocument extends ChangeNotifier {
       pathContext = context ?? p.posix,
       _newBase = const SenderDocument('', '\n'),
       text = HighlightController(text: file.document.text),
-      _savedText = file.document.text {
+      _savedText = file.document.text,
+      _encoding = file.document.encoding,
+      _savedEncoding = file.document.encoding {
     text.fileName = pathContext.basename(file.path);
     text.addListener(_onText);
   }
@@ -28,9 +31,11 @@ class EditorDocument extends ChangeNotifier {
       pathContext = context ?? p.posix,
       _newBase = initial ?? const SenderDocument('', '\n'),
       text = HighlightController(text: initial?.text ?? ''),
-      _savedText = '' {
+      _savedText = '',
+      _encoding = initial?.encoding ?? TextEncoding.utf8,
+      _savedEncoding = TextEncoding.utf8 {
     text.fileName = suggestedName;
-    _modified = text.text != _savedText;
+    _modified = _isModified();
     text.addListener(_onText);
   }
 
@@ -47,8 +52,24 @@ class EditorDocument extends ChangeNotifier {
   final SenderDocument _newBase;
   final HighlightController text;
   String _savedText;
+
+  /// 지금 저장할 때 쓸 글자 인코딩과, 마지막으로 저장하거나 연 때의 인코딩. 둘이 다르면(인코딩을 바꿨으면) 변경된 것이다.
+  TextEncoding _encoding;
+  TextEncoding _savedEncoding;
   bool _saving = false;
   bool _modified = false;
+
+  bool _isModified() => text.text != _savedText || _encoding != _savedEncoding;
+
+  TextEncoding get encoding => _encoding;
+
+  /// 저장할 때 쓸 인코딩을 바꾼다 (예: 옛 CP949 파일을 UTF-8로 바꿔 저장). 글은 그대로이고, 저장하면 파일이 그 인코딩으로 바뀐다.
+  void setEncoding(TextEncoding value) {
+    if (value == _encoding) return;
+    _encoding = value;
+    _modified = _isModified();
+    notifyListeners();
+  }
 
   /// 서버에서 이 파일이 바뀐 것이 확인되어 사용자의 결정을 기다리는 중.
   bool conflict = false;
@@ -62,7 +83,7 @@ class EditorDocument extends ChangeNotifier {
   bool get modified => _modified;
 
   void _onText() {
-    final m = text.text != _savedText;
+    final m = _isModified();
     if (m != _modified) {
       _modified = m;
       notifyListeners();
@@ -79,11 +100,16 @@ class EditorDocument extends ChangeNotifier {
   void _markSaved(String savedText, RemoteStat stat, {String? path}) {
     final target = path ?? _file!.path;
     final base = baseDocument;
-    _file = RemoteTextFile(target, SenderDocument(savedText, base.eol, bom: base.bom), stat);
+    _file = RemoteTextFile(
+      target,
+      SenderDocument(savedText, base.eol, bom: base.bom, encoding: _encoding),
+      stat,
+    );
     text.fileName = pathContext.basename(target); // 이름이 바뀌면 강조 종류도 바뀔 수 있다
     _savedText = savedText;
+    _savedEncoding = _encoding;
     conflict = false;
-    _modified = text.text != _savedText;
+    _modified = _isModified();
     notifyListeners();
   }
 
@@ -91,6 +117,7 @@ class EditorDocument extends ChangeNotifier {
   void _replaceWith(RemoteTextFile file) {
     _file = file;
     _savedText = file.document.text;
+    _encoding = _savedEncoding = file.document.encoding;
     conflict = false;
     text.value = TextEditingValue(text: file.document.text);
     _modified = false;
@@ -227,7 +254,7 @@ class RemoteEditorController extends ChangeNotifier {
       final result = await RemoteText.save(
         fs,
         file,
-        SenderDocument(_normalized(doc), base.eol, bom: base.bom),
+        SenderDocument(_normalized(doc), base.eol, bom: base.bom, encoding: doc.encoding),
         overwrite: overwrite,
         backup: backup,
       );
@@ -257,7 +284,7 @@ class RemoteEditorController extends ChangeNotifier {
       final result = await RemoteText.saveNew(
         fs,
         path,
-        SenderDocument(_normalized(doc), base.eol, bom: base.bom),
+        SenderDocument(_normalized(doc), base.eol, bom: base.bom, encoding: doc.encoding),
         overwrite: overwrite,
       );
       if (result.status == RemoteSaveStatus.saved) doc._markSaved(doc.text.text, result.stat!, path: path);

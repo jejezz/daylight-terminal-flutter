@@ -249,9 +249,14 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   테스트: 화면 테스트는 디스크 대신 메모리 파일 시스템(`session.editorFs` 훅)을 쓴다 — 위젯 테스트의 가짜 시계 안에서는 실제 파일 입출력이 끝나지 않는다. 디스크 동작은 `LocalFs` 단위 테스트가 본다 (`test/local_editor_test.dart`).
 - **끌어놓기로 열기** (`RemoteEditorPane`의 `DropTarget` + `DragTarget<PaneDragData>`, `openDroppedPaths`): 이 앱의 탐색기 행을 끌어놓으면 그 파일을 연다 (서버 탭은 서버 경로를 SFTP로 바로 읽고, 로컬 탭은 이 PC 경로). 폴더는 여러 개 중에 섞여 있으면 건너뛰고, 한 개만 끌었는데 못 열면 이유를 알린다.
   OS 탐색기/Finder에서 끌어온 **이 PC의 파일**은 로컬 탭에서는 바로 열고, **서버 탭에서는 내용을 새 파일("제목 없음")로 열어** 저장할 때 서버 경로를 묻는다 (제안 이름은 원래 파일 이름, 줄바꿈·BOM은 그대로; `RemoteEditorController.openLocalFileAsNew`). 이 앱에서 끌어낸 것은 무시한다 (`FlutterDragOut.inProgress`).
-  실제 OS 끌기는 자동 테스트로 확인하지 못했다 (앱 안의 끌기와 `openDroppedPaths`는 테스트한다). 인코딩은 여전히 UTF-8만이라 CP949 같은 로컬 파일은 열리지 않는다.
-- 규칙: UTF-8 텍스트만, 2MB 초과·NUL 바이트(바이너리)·폴더·장치는 거부 (`SenderFile.decode(rejectBinary: true)`, LineSender와 같은 규칙).
+  실제 OS 끌기는 자동 테스트로 확인하지 못했다 (앱 안의 끌기와 `openDroppedPaths`는 테스트한다).
+- 규칙: **UTF-8 또는 CP949** 텍스트만, 2MB 초과·NUL 바이트(바이너리)·폴더·장치는 거부 (`SenderFile.decode(rejectBinary: true, allowLegacy: true)`; LineSender는 `allowLegacy` 없이 UTF-8만).
   줄바꿈(CRLF)과 BOM은 저장할 때 원래대로 되돌린다. 심볼릭 링크는 실제 경로를 편집한다.
+- **CP949** (`services/text_encoding.dart`, 표는 `cp949_table.dart`): 한국어 Windows의 옛 파일(.bat, .ini, CSV)과 옛 서버의 글이 많아서 읽고 쓴다. 외부 패키지 없이 표로 변환한다 (macOS·Linux도 같은 결과).
+  표는 Python의 cp949 코덱에서 만든 자동 생성 파일이다 (126 x 190, 유효 17,048자; 다시 만들 일이 없으면 고치지 않는다).
+  **UTF-8로 읽다 실패했을 때만 CP949를 시도하고, 읽은 글을 다시 CP949로 바꾼 것이 원본 바이트와 똑같을 때만 받아들인다** (아니면 거부) — 건드리지 않은 부분이 저장해도 바뀌지 않도록. UTF-8 BOM이 있으면 UTF-8이다.
+  저장할 때 같은 인코딩으로 되돌린다. CP949에 없는 글자(이모지 등)를 넣고 저장하면 조용히 깨뜨리지 않고 오류로 알리며(`unencodable`), 상태 줄의 인코딩 메뉴에서 UTF-8로 바꾸면 저장된다 (인코딩을 바꾸는 것도 "변경됨"이고, 저장하면 파일이 그 인코딩으로 바뀐다).
+  새 파일은 UTF-8이고, 이 PC의 CP949 파일을 서버 탭에 끌어놓으면 CP949 그대로 새 파일로 열린다. 이 PC의 파일 중 CP949가 아닌 다른 인코딩(UTF-16, 일본어 등)은 열지 않는다.
 - 저장(`services/remote_text_file.dart`): 저장 직전에 서버 파일의 크기·수정 시각을 다시 확인해 열 때와 다르면 쓰지 않고 충돌로 알린다
   (덮어쓰기 / 서버 버전 불러오기 / 취소). 임시 이름에 쓴 뒤 `rename`하고 권한을 이어받는다 (소유자는 가능할 때만). 폴더에 쓸 수 없으면 파일에 바로 쓴다.
   테스트는 메모리 가짜 `RemoteFs`(`test/helpers/fake_remote_fs.dart`)로 한다.

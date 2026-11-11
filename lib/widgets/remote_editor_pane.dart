@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/remote_text_file.dart';
 import '../services/sender_file.dart';
+import '../services/text_encoding.dart';
 import '../settings/terminal_prefs.dart';
 import '../state/remote_editor_controller.dart';
 import '../state/terminal_session.dart';
@@ -23,8 +24,9 @@ String _errorText(AppLocalizations l10n, Object e) {
       RemoteEditError.notRegular => l10n.editorErrNotFile,
       RemoteEditError.notFound => l10n.editorErrNotFound,
       RemoteEditError.tooLarge => l10n.editorErrTooLarge(SenderFile.maxBytes ~/ (1024 * 1024)),
-      RemoteEditError.notUtf8 => l10n.senderFileNotUtf8,
+      RemoteEditError.notUtf8 => l10n.editorErrNotText,
       RemoteEditError.binary => l10n.editorErrBinary,
+      RemoteEditError.unencodable => l10n.editorErrUnencodable(e.detail),
       RemoteEditError.alreadyOpen => l10n.editorErrAlreadyOpen,
       RemoteEditError.io => l10n.editorErrIo(e.detail),
     };
@@ -768,6 +770,26 @@ class _StatusRow extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                   child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
                 ),
+              // 글자 인코딩: 연 파일의 인코딩이 보이고(UTF-8 / CP949), 바꾸고 저장하면 파일이 그 인코딩으로 바뀐다.
+              PopupMenuButton<TextEncoding>(
+                tooltip: l10n.editorEncoding,
+                initialValue: doc.encoding,
+                onSelected: doc.setEncoding,
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: TextEncoding.utf8, child: Text('UTF-8')),
+                  PopupMenuItem(value: TextEncoding.cp949, child: Text(l10n.editorEncodingCp949)),
+                ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(doc.encoding.label, style: AppFonts.mono.copyWith(fontSize: 12, color: scheme.onSurface)),
+                      PhosphorIcon(PhosphorIconsDuotone.caretDown, size: 16, color: scheme.onSurfaceVariant),
+                    ],
+                  ),
+                ),
+              ),
               IconButton(
                 tooltip: l10n.editorSaveAs,
                 iconSize: 20,
