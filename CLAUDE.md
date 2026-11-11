@@ -236,6 +236,8 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - SSH 탭에서 파일을 우클릭 → "편집" 또는 F4로 연다. 서버에 아무것도 설치하지 않고 SFTP로만 읽고 쓴다. 탭 오른쪽에 도킹되는 칸이고
   (`remote_editor_pane.dart`, `home_screen.dart`의 세 번째 칸), 안에 파일 탭이 있다. 접으면 오른쪽에 좁은 손잡이만 남고 열린 파일은 유지된다.
   더블클릭은 아직 다운로드 그대로다 (편집으로 바꾸는 설정은 다음 단계).
+  F4는 탐색기(`SftpPane`)가 자기 `FocusNode`를 가지고 있어야 받는다 — 터미널이 포커스를 쥐고 있어서, 행을 고를 때(`_select`) 탐색기가 포커스를 가져온다 (`test/sftp_pane_keys_test.dart`).
+  왼쪽에 줄 번호가 있고, 본문은 줄을 넘기지 않고 가로로 스크롤한다 (줄 번호와 줄이 1:1이 되도록; 둘 다 같은 고정 줄 높이 strut).
 - 규칙: UTF-8 텍스트만, 2MB 초과·NUL 바이트(바이너리)·폴더·장치는 거부 (`SenderFile.decode(rejectBinary: true)`, LineSender와 같은 규칙).
   줄바꿈(CRLF)과 BOM은 저장할 때 원래대로 되돌린다. 심볼릭 링크는 실제 경로를 편집한다.
 - 저장(`services/remote_text_file.dart`): 저장 직전에 서버 파일의 크기·수정 시각을 다시 확인해 열 때와 다르면 쓰지 않고 충돌로 알린다

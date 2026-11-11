@@ -149,4 +149,48 @@ void main() {
     expect(controller.current!.path, '/etc/app.conf');
     expect(find.text('port=22\n'), findsOneWidget);
   });
+
+  Text gutter(WidgetTester tester) => tester.widget<Text>(find.byKey(const ValueKey('editor-line-numbers')));
+
+  testWidgets('line numbers follow the number of lines, including an empty last line', (tester) async {
+    fs.put('/etc/lines.txt', utf8.encode('a\nb\nc\n'));
+    await pumpPane(tester);
+    await tester.runAsync(() => controller.open('/etc/lines.txt'));
+    await tester.pump();
+    expect(gutter(tester).data, '1\n2\n3\n4');
+
+    await tester.enterText(find.byType(TextField), 'only one line');
+    await tester.pump();
+    expect(gutter(tester).data, '1');
+  });
+
+  testWidgets('a long line is not wrapped: the field gets wider than the pane and scrolls sideways', (tester) async {
+    fs.put('/etc/long.txt', utf8.encode('${'x' * 600}\nshort\n'));
+    await pumpPane(tester);
+    await tester.runAsync(() => controller.open('/etc/long.txt'));
+    await tester.pump();
+
+    // 500px 칸보다 넓은 본문 → 가로 스크롤. 줄이 넘어가지 않으니 줄 번호와 줄이 1:1이다.
+    expect(tester.getSize(find.byType(TextField)).width, greaterThan(500));
+    expect(gutter(tester).data, '1\n2\n3');
+  });
+
+  testWidgets('line numbers scroll together with the text', (tester) async {
+    fs.put('/etc/many.txt', utf8.encode([for (var i = 0; i < 200; i++) 'line $i'].join('\n')));
+    await pumpPane(tester);
+    await tester.runAsync(() => controller.open('/etc/many.txt'));
+    await tester.pump();
+
+    final numbersScroll = tester
+        .widgetList<SingleChildScrollView>(find.byType(SingleChildScrollView))
+        .firstWhere((w) => w.physics is NeverScrollableScrollPhysics)
+        .controller!;
+    expect(numbersScroll.offset, 0);
+
+    await tester.drag(find.byType(TextField), const Offset(0, -400));
+    await tester.pump();
+    final textScroll = tester.widget<TextField>(find.byType(TextField)).scrollController!;
+    expect(textScroll.offset, greaterThan(0));
+    expect(numbersScroll.offset, textScroll.offset);
+  });
 }

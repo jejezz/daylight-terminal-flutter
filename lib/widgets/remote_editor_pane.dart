@@ -298,10 +298,19 @@ class _EditorField extends StatefulWidget {
 
 class _EditorFieldState extends State<_EditorField> {
   final _focus = FocusNode();
+  final _vScroll = ScrollController();
+  final _hScroll = ScrollController();
+  final _gutterScroll = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    // 본문이 세로로 스크롤되면 줄 번호도 같이 움직인다.
+    _vScroll.addListener(() {
+      if (!_gutterScroll.hasClients) return;
+      final max = _gutterScroll.position.maxScrollExtent;
+      _gutterScroll.jumpTo(_vScroll.offset.clamp(0.0, max));
+    });
     // 방금 열었거나 탭을 눌러 이 파일로 왔으면 바로 쓸 수 있게 포커스를 준다.
     if (widget.active) WidgetsBinding.instance.addPostFrameCallback((_) => mounted ? _focus.requestFocus() : null);
   }
@@ -317,6 +326,9 @@ class _EditorFieldState extends State<_EditorField> {
   @override
   void dispose() {
     _focus.dispose();
+    _vScroll.dispose();
+    _hScroll.dispose();
+    _gutterScroll.dispose();
     super.dispose();
   }
 
@@ -331,6 +343,51 @@ class _EditorFieldState extends State<_EditorField> {
     return KeyEventResult.ignored;
   }
 
+  /// 글자 하나(고정폭)의 너비. 글꼴·크기가 바뀔 때만 다시 잰다.
+  double _charWidth = 8;
+  String? _measuredFor;
+
+  void _measure(TextStyle style) {
+    final key = '${style.fontFamily}/${style.fontSize}';
+    if (_measuredFor == key) return;
+    _measuredFor = key;
+    final painter = TextPainter(
+      text: TextSpan(text: '0' * 20, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    _charWidth = painter.width / 20;
+    painter.dispose();
+  }
+
+  /// 줄 수(마지막 줄 포함)와, 가장 긴 줄의 칸 수 (한글 같은 넓은 글자는 2칸으로 센다 — 줄을 넘기지 않으므로 가로 스크롤 폭을 정한다).
+  static (int, int) _lineStats(String text) {
+    var lines = 1;
+    var longest = 0;
+    var cells = 0;
+    for (var i = 0; i < text.length; i++) {
+      final c = text.codeUnitAt(i);
+      if (c == 0x0A) {
+        lines++;
+        if (cells > longest) longest = cells;
+        cells = 0;
+      } else {
+        cells += c >= 0x1100 ? 2 : 1;
+      }
+    }
+    return (lines, cells > longest ? cells : longest);
+  }
+
+  String _gutterText = '1';
+  int _gutterLines = 1;
+
+  String _numbers(int lines) {
+    if (lines != _gutterLines) {
+      _gutterLines = lines;
+      _gutterText = [for (var i = 1; i <= lines; i++) i].join('\n');
+    }
+    return _gutterText;
+  }
+
   @override
   Widget build(BuildContext context) {
     final prefs = context.watch<TerminalPrefs>();
@@ -342,24 +399,96 @@ class _EditorFieldState extends State<_EditorField> {
       height: 1.3,
       color: scheme.onSurface,
     );
+    // 줄 번호와 본문의 줄 높이가 어긋나지 않도록 둘 다 같은 고정 줄 높이(strut)를 쓴다.
+    final strut = StrutStyle(
+      fontFamily: prefs.family,
+      fontFamilyFallback: prefs.style.fontFamilyFallback,
+      fontSize: prefs.size,
+      height: 1.3,
+      forceStrutHeight: true,
+    );
+    _measure(style);
     // 편집기 글자는 터미널과 같은 글꼴·크기를 쓴다 ("화면 글자 크기" 배율은 받지 않는다).
+    // 줄은 넘기지 않고 가로로 스크롤한다 — 한 줄이 화면 한 줄이라 줄 번호가 정확하다.
     return MediaQuery.withNoTextScaling(
-      child: Focus(
-        onKeyEvent: _onKey,
-        child: TextField(
-          controller: widget.doc.text,
-          focusNode: _focus,
-          maxLines: null,
-          expands: true,
-          textAlignVertical: TextAlignVertical.top,
-          style: style,
-          decoration: const InputDecoration(
-            isDense: true,
-            contentPadding: EdgeInsets.all(AppSpacing.md),
-            filled: false,
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: Focus(
+          onKeyEvent: _onKey,
+          child: ListenableBuilder(
+            listenable: widget.doc.text,
+            builder: (context, _) {
+              final (lines, longest) = _lineStats(widget.doc.text.text);
+              final digits = lines.toString().length < 2 ? 2 : lines.toString().length;
+              final gutterWidth = digits * _charWidth + AppSpacing.sm + AppSpacing.md;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: gutterWidth,
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerLow,
+                      border: Border(right: BorderSide(color: scheme.outlineVariant)),
+                    ),
+                    child: SingleChildScrollView(
+                      controller: _gutterScroll,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: AppSpacing.sm),
+                        child: Text(
+                          _numbers(lines),
+                          key: const ValueKey('editor-line-numbers'),
+                          textAlign: TextAlign.right,
+                          softWrap: false,
+                          style: style.copyWith(color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                          strutStyle: strut,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, box) {
+                        final width = (longest + 4) * _charWidth + AppSpacing.md * 2;
+                        return Scrollbar(
+                          controller: _vScroll,
+                          notificationPredicate: (n) => n.depth == 1,
+                          child: Scrollbar(
+                            controller: _hScroll,
+                            child: SingleChildScrollView(
+                              controller: _hScroll,
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: width < box.maxWidth ? box.maxWidth : width,
+                                child: TextField(
+                                  controller: widget.doc.text,
+                                  focusNode: _focus,
+                                  scrollController: _vScroll,
+                                  maxLines: null,
+                                  expands: true,
+                                  textAlignVertical: TextAlignVertical.top,
+                                  style: style,
+                                  strutStyle: strut,
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.all(AppSpacing.md),
+                                    filled: false,
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
