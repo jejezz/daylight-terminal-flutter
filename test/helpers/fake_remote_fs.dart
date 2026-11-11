@@ -1,9 +1,16 @@
 import 'dart:typed_data';
 
 import 'package:daylight_terminal/services/remote_text_file.dart';
+import 'package:path/path.dart' as p;
 
 /// 메모리 안의 가짜 서버 파일 시스템. 시각은 [clock]이 올라가며 쓸 때마다 바뀐다.
 class FakeRemoteFs implements RemoteFs {
+  @override
+  p.Context pathContext = p.posix;
+
+  @override
+  bool writeInPlace = false;
+
   final Map<String, Uint8List> files = {};
   final Map<String, RemoteStat> stats = {};
   final Set<String> dirs = {'/'};

@@ -12,6 +12,7 @@ import '../services/drag_staging.dart';
 import '../services/log_file_service.dart';
 import '../services/shell_commands.dart';
 import '../services/shell_integration.dart';
+import 'remote_editor_controller.dart';
 
 enum SessionStatus { idle, connecting, connected, error }
 
@@ -37,6 +38,9 @@ abstract class TerminalSession extends ChangeNotifier {
   }
 
   final Terminal terminal;
+
+  /// 오른쪽에 도킹되는 편집기 (SSH 탭은 서버 파일을 SFTP로, 로컬 셸·시리얼 탭은 이 PC의 파일을 편집한다). 편집기가 없는 탭은 null.
+  RemoteEditorController? get editor => null;
 
   /// 사용자가 직접 지은 탭 이름. 있으면 탭 첫 줄의 폴더 이름 대신 이것을 보인다. 없으면(null) 자동 이름.
   /// 저장된 탭 목록에 같이 저장되어 다시 켜도 남는다.

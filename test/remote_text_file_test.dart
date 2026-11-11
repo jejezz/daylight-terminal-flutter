@@ -5,6 +5,7 @@ import 'package:daylight_terminal/services/remote_text_file.dart';
 import 'package:daylight_terminal/services/sender_file.dart';
 import 'package:daylight_terminal/state/remote_editor_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 import 'helpers/fake_remote_fs.dart';
 
@@ -233,6 +234,10 @@ class _FailingWrites implements RemoteFs {
 
   final FakeRemoteFs inner;
 
+  @override
+  p.Context get pathContext => inner.pathContext;
+  @override
+  bool get writeInPlace => inner.writeInPlace;
   @override
   Future<String> resolve(String path) => inner.resolve(path);
   @override

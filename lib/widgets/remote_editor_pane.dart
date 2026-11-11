@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart' as p;
+import 'package:desktop_drop/desktop_drop.dart';
+import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -9,10 +10,11 @@ import '../services/remote_text_file.dart';
 import '../services/sender_file.dart';
 import '../settings/terminal_prefs.dart';
 import '../state/remote_editor_controller.dart';
-import '../state/ssh_session_provider.dart';
+import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import '../theme/phosphor_icons.dart';
 import '../utils/ui_scale.dart';
+import 'file_pane_parts.dart' show PaneDragData;
 import 'highlight_controller.dart';
 
 String _errorText(AppLocalizations l10n, Object e) {
@@ -32,14 +34,16 @@ String _errorText(AppLocalizations l10n, Object e) {
 
 /// 탭·대화상자에 보이는 파일 이름 (서버 경로의 파일 이름, 새 파일은 "제목 없음 N").
 String editorDocumentName(AppLocalizations l10n, EditorDocument doc) =>
-    doc.path == null ? l10n.editorUntitled(doc.number) : p.posix.basename(doc.path!);
+    doc.path == null ? l10n.editorUntitled(doc.number) : doc.pathContext.basename(doc.path!);
 
-/// 서버 파일 [path]를 편집기 칸에 연다. 열 수 없으면 이유를 알린다.
-Future<void> openRemoteFile(BuildContext context, SshSessionProvider session, String path) async {
+/// 파일 [path]를 편집기 칸에 연다 (SSH 탭은 서버 파일, 로컬 셸·시리얼 탭은 이 PC의 파일). 열 수 없으면 이유를 알린다.
+Future<void> openRemoteFile(BuildContext context, TerminalSession session, String path) async {
   final l10n = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
+  final editor = session.editor;
+  if (editor == null) return;
   try {
-    await session.editor.open(path);
+    await editor.open(path);
   } catch (e) {
     messenger
       ..hideCurrentSnackBar()
@@ -64,7 +68,7 @@ Future<bool> saveEditorDocument(BuildContext context, RemoteEditorController con
         context: context,
         builder: (context) => AlertDialog(
           title: Text(l10n.editorConflictTitle),
-          content: Text(l10n.editorConflictBody(p.posix.basename(doc.path!))),
+          content: Text(l10n.editorConflictBody(doc.pathContext.basename(doc.path!))),
           actions: [
             TextButton(
               autofocus: true,
@@ -87,7 +91,7 @@ Future<bool> saveEditorDocument(BuildContext context, RemoteEditorController con
       if (choice != 'overwrite') return false;
       result = await controller.save(doc, overwrite: true);
     }
-    say(l10n.editorSaved(p.posix.basename(doc.path!)));
+    say(l10n.editorSaved(doc.pathContext.basename(doc.path!)));
     return true;
   } catch (e) {
     say(_errorText(l10n, e));
@@ -99,7 +103,8 @@ Future<bool> saveEditorDocument(BuildContext context, RemoteEditorController con
 Future<String?> _askServerPath(BuildContext context, String initial) {
   final l10n = AppLocalizations.of(context);
   final input = TextEditingController(text: initial);
-  input.selection = TextSelection(baseOffset: initial.lastIndexOf('/') + 1, extentOffset: initial.length);
+  final nameStart = initial.lastIndexOf(RegExp(r'[/\\]')) + 1;
+  input.selection = TextSelection(baseOffset: nameStart, extentOffset: initial.length);
   return showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
@@ -129,10 +134,11 @@ Future<bool> saveEditorDocumentAs(BuildContext context, RemoteEditorController c
   void say(String message) => messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 4)));
+  final ctx = controller.pathContext;
   final dir = controller.suggestedDirectory;
-  final entered = await _askServerPath(context, doc.path ?? p.posix.join(dir, 'untitled.txt'));
+  final entered = await _askServerPath(context, doc.path ?? ctx.join(dir, doc.suggestedName ?? 'untitled.txt'));
   if (entered == null || entered.isEmpty) return false;
-  final path = p.posix.normalize(entered.startsWith('/') ? entered : p.posix.join(dir, entered));
+  final path = ctx.normalize(ctx.isAbsolute(entered) ? entered : ctx.join(dir, entered));
   if (!context.mounted) return false;
   // 같은 이름으로 저장하면 보통 저장과 같다 (그사이 서버에서 바뀌었는지도 확인한다).
   if (path == doc.path) return saveEditorDocument(context, controller, doc);
@@ -158,7 +164,7 @@ Future<bool> saveEditorDocumentAs(BuildContext context, RemoteEditorController c
       if (overwrite != true) return false;
       result = await controller.saveAs(doc, path, overwrite: true);
     }
-    say(l10n.editorSaved(p.posix.basename(path)));
+    say(l10n.editorSaved(ctx.basename(path)));
     return true;
   } catch (e) {
     say(_errorText(l10n, e));
@@ -202,19 +208,112 @@ Future<bool> confirmEditorClose(
 
 /// 탭을 닫기 전에 이 탭의 편집기에 저장하지 않은 파일이 있으면 묻는다. 닫아도 되면 true.
 Future<bool> confirmCloseSessionEditor(BuildContext context, Object session) {
-  if (session is! SshSessionProvider || !session.editor.hasUnsaved) return Future.value(true);
-  return confirmEditorClose(context, session.editor, session.editor.documents);
+  final editor = session is TerminalSession ? session.editor : null;
+  if (editor == null || !editor.hasUnsaved) return Future.value(true);
+  return confirmEditorClose(context, editor, editor.documents);
+}
+
+/// 편집기 칸에 끌어놓은 파일들의 경로를 연다. 서버 편집기에서는 서버 파일(이 앱의 탐색기에서 끌어온 것)이면 그대로 열고,
+/// 이 PC의 파일([localFiles], OS 탐색기에서 끌어온 것)이면 내용을 새 파일로 열어 서버 경로를 묻고 저장하게 한다. 로컬 편집기는
+/// 둘 다 이 PC의 파일을 바로 연다. 여러 개를 끌었을 때 섞여 있는 폴더는 건너뛰고, 한 개만 끌었는데 열 수 없으면 이유를 알린다.
+Future<void> openDroppedPaths(
+  BuildContext context,
+  RemoteEditorController controller,
+  List<String> paths, {
+  required bool localFiles,
+}) async {
+  if (paths.isEmpty) return;
+  final l10n = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  Object? firstError;
+  for (final path in paths) {
+    try {
+      if (localFiles && !controller.local) {
+        await controller.openLocalFileAsNew(path);
+      } else {
+        await controller.open(path);
+      }
+    } catch (e) {
+      if (paths.length > 1 && e is RemoteEditException && e.kind == RemoteEditError.notRegular) continue;
+      firstError ??= e;
+    }
+  }
+  if (firstError != null) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(_errorText(l10n, firstError)), duration: const Duration(seconds: 4)));
+  }
 }
 
 /// 서버 탭 오른쪽에 붙는 편집기: 위에 열린 파일 탭, 가운데 본문, 아래에 경로와 저장 버튼. 열린 파일이 없으면 안내와
 /// "새 파일" 버튼이 보인다.
-class RemoteEditorPane extends StatelessWidget {
-  const RemoteEditorPane({super.key, required this.controller});
+class RemoteEditorPane extends StatefulWidget {
+  const RemoteEditorPane({super.key, required this.controller, this.dropEnabled = true});
 
   final RemoteEditorController controller;
 
+  /// 파일을 끌어놓아 열 수 있는가 (보이지 않는 탭에서는 끈다).
+  final bool dropEnabled;
+
+  @override
+  State<RemoteEditorPane> createState() => _RemoteEditorPaneState();
+}
+
+class _RemoteEditorPaneState extends State<RemoteEditorPane> {
+  bool _dropping = false;
+
+  RemoteEditorController get controller => widget.controller;
+
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    // 이 앱의 탐색기 행을 끌어온 것(서버 경로 또는 이 PC 경로)과 OS 탐색기에서 끌어온 이 PC의 파일을 둘 다 받는다.
+    return DropTarget(
+      enable: widget.dropEnabled,
+      onDragEntered: (_) {
+        if (!FlutterDragOut.inProgress) setState(() => _dropping = true);
+      },
+      onDragExited: (_) => setState(() => _dropping = false),
+      onDragDone: (details) {
+        setState(() => _dropping = false);
+        // 이 앱에서 끌어낸 것이 다시 들어온 경우는 무시한다.
+        if (FlutterDragOut.inProgress) return;
+        openDroppedPaths(context, controller, [for (final f in details.files) f.path], localFiles: true);
+      },
+      child: DragTarget<PaneDragData>(
+        onWillAcceptWithDetails: (d) => widget.dropEnabled && d.data.terminalPaths != null,
+        onAcceptWithDetails: (d) {
+          final paths = d.data.terminalPaths?.call() ?? const <String>[];
+          // 같은 편집기의 파일 시스템 안의 경로다 (SSH 탭의 탐색기는 서버 경로, 로컬 탭의 폴더 뷰는 이 PC의 경로).
+          openDroppedPaths(context, controller, paths, localFiles: false);
+        },
+        builder: (context, candidates, _) => Stack(
+          children: [
+            Positioned.fill(child: _content(context)),
+            if (_dropping || candidates.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.10),
+                      border: Border.all(color: scheme.primary, width: 2),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      l10n.editorDropActive,
+                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _content(BuildContext context) {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {

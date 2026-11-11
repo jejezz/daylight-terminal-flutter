@@ -62,8 +62,7 @@ import 'app_localizations_ko.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,18 +82,17 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('ko'),
+    Locale('ko')
   ];
 
   /// No description provided for @aboutTooltip.
@@ -2138,15 +2135,20 @@ abstract class AppLocalizations {
   /// **'그 파일은 이미 편집기에 열려 있습니다'**
   String get editorErrAlreadyOpen;
 
+  /// No description provided for @editorDropActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'여기에 놓으면 편집기로 엽니다'**
+  String get editorDropActive;
+
   /// No description provided for @helpEditor.
   ///
   /// In ko, this message translates to:
-  /// **'원격 편집기\n서버의 텍스트 파일을 SFTP로 열어 고치고 저장합니다. 서버에 아무것도 설치하지 않습니다. 저장할 때 서버에서 그사이 바뀌었는지 먼저 확인합니다. 탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 열거나, + 버튼으로 새 파일을 만들어 서버에 저장할 수 있습니다. 셸 스크립트와 설정 파일은 색으로 구분해 보여 줍니다.'**
+  /// **'편집기\n텍스트 파일을 열어 고치고 저장합니다. SSH 탭에서는 서버의 파일을 SFTP로 고치므로 서버에 아무것도 설치하지 않고, 로컬 셸·시리얼 탭에서는 이 PC의 파일을 고칩니다. 저장할 때 그사이 파일이 바뀌었는지 먼저 확인합니다. 탐색기에서 파일을 오른쪽 클릭 → 편집(또는 F4)으로 열거나, 파일을 이 칸으로 끌어다 놓거나, + 버튼으로 새 파일을 만들 수 있습니다. 서버 탭에서 이 PC의 파일을 끌어놓으면 내용을 새 파일로 열어, 서버 경로를 정해 저장할 수 있습니다. 셸 스크립트와 설정 파일은 색으로 구분해 보여 줍니다.'**
   String get helpEditor;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -2155,26 +2157,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'ko'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'ko'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'ko':
-      return AppLocalizationsKo();
+    case 'en': return AppLocalizationsEn();
+    case 'ko': return AppLocalizationsKo();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

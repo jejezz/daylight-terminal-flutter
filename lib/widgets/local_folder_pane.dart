@@ -17,6 +17,7 @@ import '../state/local_folder_session.dart';
 import '../theme/app_theme.dart';
 import 'file_pane_parts.dart';
 import 'list_selection.dart';
+import 'remote_editor_pane.dart';
 
 /// 로컬 셸 탭의 왼쪽 폴더 뷰 — 이 PC의 폴더를 보여 준다.
 ///
@@ -33,6 +34,16 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
   final _selection = ListSelection();
   List<String>? _dragPaths;
   bool _dropping = false;
+
+  /// 탐색기가 키보드 포커스를 가지는 자리. 터미널이 포커스를 쥐고 있으면 F4가 여기까지 오지 않으므로, 행을 고르면 이 노드가
+  /// 포커스를 가져온다.
+  final _focus = FocusNode(debugLabel: 'local folder pane');
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
 
   void _toast(String message) {
     if (!mounted) return;
@@ -169,6 +180,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
       items: [
+        if (targets.any((t) => !t.isDirectory)) PopupMenuItem(value: 'edit', child: Text(l10n.editorEdit)),
         if (single) PopupMenuItem(value: 'open', child: Text(l10n.localOpen)),
         if (single) PopupMenuItem(value: 'reveal', child: Text(l10n.localReveal)),
         if (single && e.isDirectory && session.canMoveTerminal)
@@ -178,6 +190,8 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
       ],
     );
     switch (choice) {
+      case 'edit':
+        await _edit(session, targets);
       case 'open':
         await _guard(() => FileRevealService.open(session.pathOf(e)));
       case 'reveal':
@@ -189,6 +203,30 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
       case 'delete':
         await _delete(session, targets);
     }
+  }
+
+  /// 고른 파일(폴더는 뺀다)을 오른쪽 편집기 칸에 연다.
+  Future<void> _edit(LocalFolderSession session, List<FileItem> items) async {
+    for (final e in items) {
+      if (e.isDirectory) continue;
+      await openRemoteFile(context, session, session.pathOf(e));
+      if (!mounted) return;
+    }
+  }
+
+  /// F4: 선택한 파일을 편집한다 (SFTP 탐색기와 같은 키).
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.f4) {
+      final session = context.read<LocalFolderSession>();
+      final selected = [
+        for (final e in session.entries)
+          if (_selection.contains(e.name) && !e.isDirectory) e,
+      ];
+      if (selected.isEmpty) return KeyEventResult.ignored;
+      _edit(session, selected);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 
   BuildContext? _placesButtonContext;
@@ -221,7 +259,9 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Focus(focusNode: _focus, onKeyEvent: _onKey, child: _buildBody(context));
+
+  Widget _buildBody(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final session = context.watch<LocalFolderSession>();
     final scheme = Theme.of(context).colorScheme;
@@ -284,8 +324,10 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                           return FileRow(
                             entry: e,
                             selected: _selection.contains(e.name),
-                            onTap: () =>
-                                setState(() => _selection.click(i, session.entries, HardwareKeyboard.instance)),
+                            onTap: () {
+                              _focus.requestFocus();
+                              setState(() => _selection.click(i, session.entries, HardwareKeyboard.instance));
+                            },
                             onOpen: () => _guard(
                               () => e.isDirectory ? session.openEntry(e) : FileRevealService.open(session.pathOf(e)),
                             ),

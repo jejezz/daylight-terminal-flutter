@@ -6,6 +6,9 @@ import 'package:path/path.dart' as p;
 
 import '../services/diag_log.dart';
 import '../models/file_item.dart';
+import '../services/local_fs.dart';
+import '../services/remote_text_file.dart';
+import 'remote_editor_controller.dart';
 import 'terminal_session.dart';
 
 /// 왼쪽에 이 PC의 폴더 뷰가 붙는 탭(로컬 셸, 시리얼)의 공통 부분. 폴더 목록, 이동, 복사, 이름 변경, 삭제,
@@ -22,6 +25,27 @@ abstract class LocalFolderSession extends TerminalSession {
   bool _folderErrorDenied = false;
   String? _folderErrorMovedTo;
   bool _hasListing = false;
+
+  /// 이 PC의 파일을 고치는 편집기 (탐색기가 보는 폴더를 새 파일의 저장 위치로 제안한다). 처음 쓸 때 만든다.
+  RemoteEditorController? _editor;
+
+  @override
+  RemoteEditorController get editor => _editor ??= RemoteEditorController(
+    () => editorFs ?? const LocalFs(),
+    directory: () => _folderPath,
+    local: true,
+    context: p.context,
+  );
+
+  /// 테스트에서 디스크 대신 끼워 넣는 가짜 파일 계층.
+  @visibleForTesting
+  RemoteFs? editorFs;
+
+  @override
+  void dispose() {
+    _editor?.dispose();
+    super.dispose();
+  }
 
   String get folderPath => _folderPath;
   List<FileItem> get entries => _entries;

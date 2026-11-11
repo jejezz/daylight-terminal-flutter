@@ -1,10 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:dartssh2/dartssh2.dart';
+import 'package:path/path.dart' as p;
 
 import 'sender_file.dart';
 
-/// 원격 파일의 종류와 크기·시각·권한. 편집기는 이 값으로 "그사이 서버에서 바뀌었는가"를 판단한다.
+/// 파일의 종류와 크기·시각·권한. 편집기는 이 값으로 "그사이 서버(또는 디스크)에서 바뀌었는가"를 판단한다.
 enum RemoteFileType { regular, directory, other }
 
 class RemoteStat {
@@ -13,7 +14,7 @@ class RemoteStat {
   final RemoteFileType type;
   final int size;
 
-  /// 수정 시각(초). SFTP v3는 초 단위만 알려 준다.
+  /// 수정 시각. 단위는 [RemoteFs]마다 다르다 (SFTP v3는 초, 로컬 디스크는 밀리초) — 같은 파일 시스템 안에서 비교만 한다.
   final int? mtime;
 
   /// 권한 비트(0o7777). 모르면 null.
@@ -25,8 +26,15 @@ class RemoteStat {
   bool sameAs(RemoteStat other) => size == other.size && mtime == other.mtime;
 }
 
-/// 원격 편집에 필요한 서버 파일 동작만 모은 얇은 계층. 실제로는 SFTP이고, 테스트는 메모리 가짜를 쓴다.
+/// 편집에 필요한 파일 동작만 모은 얇은 계층. 서버는 SFTP([SftpRemoteFs]), 이 PC는 `dart:io`(`LocalFs`)이고, 테스트는
+/// 메모리 가짜를 쓴다.
 abstract interface class RemoteFs {
+  /// 이 파일 시스템의 경로 규칙 (서버는 posix, Windows의 이 PC는 `C:\` 경로).
+  p.Context get pathContext;
+
+  /// true면 저장할 때 임시 파일을 만들어 바꿔 끼우지 않고 파일에 바로 쓴다 (이 PC의 파일: 소유자·권한·ACL·하드 링크를 그대로 둔다).
+  bool get writeInPlace;
+
   /// 심볼릭 링크를 따라간 실제 경로.
   Future<String> resolve(String path);
 
@@ -57,6 +65,12 @@ class SftpRemoteFs implements RemoteFs {
   SftpRemoteFs(this._sftp);
 
   final SftpClient _sftp;
+
+  @override
+  p.Context get pathContext => p.posix;
+
+  @override
+  bool get writeInPlace => false;
 
   @override
   Future<String> resolve(String path) => _sftp.absolute(path);
@@ -175,23 +189,25 @@ abstract final class RemoteText {
       }
       if (stat.type != RemoteFileType.regular) throw RemoteEditException(RemoteEditError.notRegular, real);
       if (stat.size > SenderFile.maxBytes) throw const RemoteEditException(RemoteEditError.tooLarge);
-      final bytes = await fs.read(real);
-      final SenderDocument doc;
-      try {
-        doc = SenderFile.decode(bytes, rejectBinary: true);
-      } on SenderFileException catch (e) {
-        throw RemoteEditException(switch (e.kind) {
-          SenderFileError.tooLarge => RemoteEditError.tooLarge,
-          SenderFileError.notUtf8 => RemoteEditError.notUtf8,
-          SenderFileError.binary => RemoteEditError.binary,
-          SenderFileError.io => RemoteEditError.io,
-        });
-      }
-      return RemoteTextFile(real, doc, stat);
+      return RemoteTextFile(real, decodeText(await fs.read(real)), stat);
     } on RemoteEditException {
       rethrow;
     } catch (e) {
       throw RemoteEditException(RemoteEditError.io, '$e');
+    }
+  }
+
+  /// 편집기에서 열 수 있는 텍스트인지 확인하고 문서로 바꾼다 (UTF-8, 2MB 이하, 바이너리 아님). 아니면 [RemoteEditException].
+  static SenderDocument decodeText(Uint8List bytes) {
+    try {
+      return SenderFile.decode(bytes, rejectBinary: true);
+    } on SenderFileException catch (e) {
+      throw RemoteEditException(switch (e.kind) {
+        SenderFileError.tooLarge => RemoteEditError.tooLarge,
+        SenderFileError.notUtf8 => RemoteEditError.notUtf8,
+        SenderFileError.binary => RemoteEditError.binary,
+        SenderFileError.io => RemoteEditError.io,
+      });
     }
   }
 
@@ -260,6 +276,10 @@ abstract final class RemoteText {
   }
 
   static Future<RemoteStat> _writeFresh(RemoteFs fs, String path, Uint8List data, RemoteStat? old) async {
+    if (fs.writeInPlace) {
+      await fs.write(path, data);
+      return fs.stat(path);
+    }
     final tmp = '$path.dlt-${DateTime.now().microsecondsSinceEpoch}.tmp';
     var wroteTmp = false;
     try {

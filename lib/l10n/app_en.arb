@@ -688,5 +688,6 @@
   "editorExistsBody": "{path} already exists on the server. Overwrite it?",
   "@editorExistsBody": {"placeholders": {"path": {"type": "String"}}},
   "editorErrAlreadyOpen": "That file is already open in the editor",
-  "helpEditor": "Remote editor\nOpens a text file from the server over SFTP so you can edit and save it. Nothing is installed on the server. Before saving, it checks whether the file changed on the server in the meantime. Open a file with right-click → Edit (or F4) in the explorer, or use the + button to write a new file and save it to the server. Shell scripts and config files are colored."
+  "editorDropActive": "Drop here to open in the editor",
+  "helpEditor": "Editor\nOpens a text file so you can edit and save it. On an SSH tab it edits the server's file over SFTP, so nothing is installed on the server; on local shell and serial tabs it edits files on this PC. Before saving, it checks whether the file changed in the meantime. Open a file with right-click → Edit (or F4) in the explorer, drag a file onto this panel, or use the + button to write a new file. On a server tab, dropping a file from this PC opens its content as a new file you can save to a server path. Shell scripts and config files are colored."
 }
