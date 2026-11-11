@@ -222,11 +222,9 @@ class _SessionViewState extends State<_SessionView> {
   static const _minEditor = 260.0;
   static const _editorHandleWidth = 36.0;
 
-  /// SSH 탭의 오른쪽 편집기 칸 (다른 탭 종류에는 없다). 열린 파일이 없으면 자리를 차지하지 않고, 접혀 있으면 가는 손잡이만 남는다.
-  RemoteEditorController? get _editor {
-    final s = widget.session;
-    return s is SshSessionProvider ? s.editor : null;
-  }
+  /// 오른쪽 편집기 칸: SSH 탭은 서버 파일, 로컬 셸·시리얼 탭은 이 PC의 파일을 고친다. 열린 파일이 없어도 펼쳐져 있고,
+  /// 접혀 있으면 가는 손잡이만 남는다.
+  RemoteEditorController? get _editor => widget.session.editor;
 
   void _onEditorChanged() {
     if (mounted) setState(() {});
@@ -372,7 +370,10 @@ class _SessionViewState extends State<_SessionView> {
                       // 오른쪽 칸이라 왼쪽으로 끌면 넓어진다.
                       onDrag: (d) => setState(() => _editorWidth = (_dragBase - d).clamp(_minEditor, maxEditor)),
                     ),
-                    SizedBox(width: editorWidth, child: RemoteEditorPane(controller: editor).help(HelpId.editor)),
+                    SizedBox(
+                      width: editorWidth,
+                      child: RemoteEditorPane(controller: editor, dropEnabled: session.isActive).help(HelpId.editor),
+                    ),
                   ],
                   if (editor != null && editorHandle) RemoteEditorHandle(controller: editor),
                 ],

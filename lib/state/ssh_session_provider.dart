@@ -57,6 +57,7 @@ class SshSessionProvider extends TerminalSession {
 
   /// 오른쪽에 도킹되는 원격 편집기 (SFTP로 파일을 읽고 쓴다 — 서버에 아무것도 설치하지 않는다). 연결이 끊겨도 열린 파일은
   /// 남겨 두어서, 저장하지 못한 글을 잃지 않는다. 다른 서버에 접속할 때만 비운다 ([_connect]).
+  @override
   late final RemoteEditorController editor = RemoteEditorController(() {
     if (debugRemoteFs != null) return debugRemoteFs;
     final sftp = _sftp;

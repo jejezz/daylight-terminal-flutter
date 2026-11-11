@@ -231,7 +231,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - Windows(`windows/runner/main.cpp`)는 `DartProject::set_impeller_switch`, Linux(`linux/runner/main.cc`)의 `main` 맨 앞에서 엔진 생성 전에 `FLUTTER_ENGINE_SWITCHES`/`FLUTTER_ENGINE_SWITCH_1=enable-impeller=true|false`를 설정한다.
   macOS는 Info.plist `FLTEnableImpeller=false`가 기본이고 `MainFlutterWindow.swift`가 같은 환경 변수 방식으로 덮어쓴다(켜는 쪽은 실제 Mac에서 확인하지 못했다).
 
-## 원격 편집기 (SFTP, 오른쪽 도킹)
+## 편집기 (SFTP 서버 파일 / 이 PC의 파일, 오른쪽 도킹)
 
 - SSH 탭에서 파일을 우클릭 → "편집" 또는 F4로 연다. 서버에 아무것도 설치하지 않고 SFTP로만 읽고 쓴다. 탭 오른쪽에 도킹되는 칸이고
   (`remote_editor_pane.dart`, `home_screen.dart`의 세 번째 칸), 안에 파일 탭이 있다. 접으면 오른쪽에 좁은 손잡이만 남고 열린 파일은 유지된다.
@@ -243,12 +243,24 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   이미 있는 경로면 덮어쓸지 묻고, 다른 탭에 열려 있는 경로는 거부한다. "다른 이름으로 저장"(Ctrl+Shift+S)은 열린 파일의 복사본을 서버에 만들고 그 탭이 복사본을 편집한다 (`RemoteText.saveNew`, `RemoteEditorController.saveAs`).
 - 구문 강조(`services/syntax_highlight.dart`, `widgets/highlight_controller.dart`): 셸(.sh/.bash/.zshrc 등, 또는 첫 줄 `#!`)과 설정 파일(.conf/.ini/.yaml/.env/.service 등)만 vim처럼 색을 입힌다. 이름이 바뀌면(새 파일을 foo.sh로 저장) 바로 켜진다.
   글은 그대로이고 색만 입히며(`buildTextSpan`), 한글 조합 중 밑줄도 유지한다. 40만 자를 넘으면 강조하지 않는다 (키마다 글 전체를 다시 훑기 때문). 팔레트는 밝은/어두운 테마별로 따로 있다.
-- 규칙: UTF-8 텍스트만, 2MB 초과·NUL 바이트(바이너리)·폴더·장치는 거부 (`SenderFile.decode(rejectBinary: true)`, LineSender와 같은 규칙).
+- **로컬 셸·시리얼 탭에도 같은 편집기**가 있다 (`LocalFolderSession.editor`, 이 PC의 파일). `RemoteFs`(읽기·쓰기·확인·이름 바꾸기)와 경로 규칙(`pathContext`)만 바꿔 끼운 같은 컨트롤러·화면이다:
+  서버는 `SftpRemoteFs`(posix, 임시 파일 후 `rename`), 이 PC는 `LocalFs`(`services/local_fs.dart`, Windows 경로, **파일에 바로 쓴다** — 임시 파일을 바꿔 끼우면 ACL·소유자·권한·하드 링크가 바뀌므로; 수정 시각은 밀리초로 비교).  탭 종류마다 `TerminalSession.editor`가 다르다(없으면 null).
+  로컬 탐색기(`LocalFolderPane`)도 우클릭 → 편집 / F4 (자기 `FocusNode`가 행을 고를 때 포커스를 가져온다). 더블클릭은 OS 기본 프로그램으로 여는 그대로다. Windows에서 `C:\a`와 `c:/A`는 같은 파일로 본다 (`pathContext.canonicalize`).
+  테스트: 화면 테스트는 디스크 대신 메모리 파일 시스템(`session.editorFs` 훅)을 쓴다 — 위젯 테스트의 가짜 시계 안에서는 실제 파일 입출력이 끝나지 않는다. 디스크 동작은 `LocalFs` 단위 테스트가 본다 (`test/local_editor_test.dart`).
+- **끌어놓기로 열기** (`RemoteEditorPane`의 `DropTarget` + `DragTarget<PaneDragData>`, `openDroppedPaths`): 이 앱의 탐색기 행을 끌어놓으면 그 파일을 연다 (서버 탭은 서버 경로를 SFTP로 바로 읽고, 로컬 탭은 이 PC 경로). 폴더는 여러 개 중에 섞여 있으면 건너뛰고, 한 개만 끌었는데 못 열면 이유를 알린다.
+  OS 탐색기/Finder에서 끌어온 **이 PC의 파일**은 로컬 탭에서는 바로 열고, **서버 탭에서는 내용을 새 파일("제목 없음")로 열어** 저장할 때 서버 경로를 묻는다 (제안 이름은 원래 파일 이름, 줄바꿈·BOM은 그대로; `RemoteEditorController.openLocalFileAsNew`). 이 앱에서 끌어낸 것은 무시한다 (`FlutterDragOut.inProgress`).
+  실제 OS 끌기는 자동 테스트로 확인하지 못했다 (앱 안의 끌기와 `openDroppedPaths`는 테스트한다).
+- 규칙: **UTF-8 또는 CP949** 텍스트만, 2MB 초과·NUL 바이트(바이너리)·폴더·장치는 거부 (`SenderFile.decode(rejectBinary: true, allowLegacy: true)`; LineSender는 `allowLegacy` 없이 UTF-8만).
   줄바꿈(CRLF)과 BOM은 저장할 때 원래대로 되돌린다. 심볼릭 링크는 실제 경로를 편집한다.
+- **CP949** (`services/text_encoding.dart`, 표는 `cp949_table.dart`): 한국어 Windows의 옛 파일(.bat, .ini, CSV)과 옛 서버의 글이 많아서 읽고 쓴다. 외부 패키지 없이 표로 변환한다 (macOS·Linux도 같은 결과).
+  표는 Python의 cp949 코덱에서 만든 자동 생성 파일이다 (126 x 190, 유효 17,048자; 다시 만들 일이 없으면 고치지 않는다).
+  **UTF-8로 읽다 실패했을 때만 CP949를 시도하고, 읽은 글을 다시 CP949로 바꾼 것이 원본 바이트와 똑같을 때만 받아들인다** (아니면 거부) — 건드리지 않은 부분이 저장해도 바뀌지 않도록. UTF-8 BOM이 있으면 UTF-8이다.
+  저장할 때 같은 인코딩으로 되돌린다. CP949에 없는 글자(이모지 등)를 넣고 저장하면 조용히 깨뜨리지 않고 오류로 알리며(`unencodable`), 상태 줄의 인코딩 메뉴에서 UTF-8로 바꾸면 저장된다 (인코딩을 바꾸는 것도 "변경됨"이고, 저장하면 파일이 그 인코딩으로 바뀐다).
+  새 파일은 UTF-8이고, 이 PC의 CP949 파일을 서버 탭에 끌어놓으면 CP949 그대로 새 파일로 열린다. 이 PC의 파일 중 CP949가 아닌 다른 인코딩(UTF-16, 일본어 등)은 열지 않는다.
 - 저장(`services/remote_text_file.dart`): 저장 직전에 서버 파일의 크기·수정 시각을 다시 확인해 열 때와 다르면 쓰지 않고 충돌로 알린다
   (덮어쓰기 / 서버 버전 불러오기 / 취소). 임시 이름에 쓴 뒤 `rename`하고 권한을 이어받는다 (소유자는 가능할 때만). 폴더에 쓸 수 없으면 파일에 바로 쓴다.
   테스트는 메모리 가짜 `RemoteFs`(`test/helpers/fake_remote_fs.dart`)로 한다.
-- 상태는 탭마다 `SshSessionProvider.editor`(`RemoteEditorController`). 연결이 끊겨도 열린 파일은 남기고, 다른 서버에 접속할 때만 비운다.
+- 상태는 탭마다 `TerminalSession.editor`(`RemoteEditorController`; SSH는 `SshSessionProvider`, 로컬은 `LocalFolderSession`). 연결이 끊겨도 열린 파일은 남기고, 다른 서버에 접속할 때만 비운다.
   저장하지 않은 변경이 있으면 파일 탭·서버 탭을 닫을 때 묻는다.
 - 아직: 설정 창 "편집기" 섹션(더블클릭 동작, `.bak` 백업), 좁은 화면에서 아래로 옮기기, 읽기 전용 파일의 sudo 안내, 그 밖의 언어 강조. 실제 SFTP 서버로 확인하지 못했다
   (`SftpRemoteFs`는 e2e 테스트 없음).

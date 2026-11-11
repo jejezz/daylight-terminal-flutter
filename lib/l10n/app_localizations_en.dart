@@ -1218,6 +1218,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editorErrAlreadyOpen => 'That file is already open in the editor';
 
   @override
+  String get editorDropActive => 'Drop here to open in the editor';
+
+  @override
+  String get editorEncoding =>
+      'Text encoding (changing it and saving converts the file to that encoding)';
+
+  @override
+  String get editorEncodingCp949 => 'CP949 (Korean Windows)';
+
+  @override
+  String get editorErrNotText => 'Only UTF-8 or CP949 text files can be opened';
+
+  @override
+  String editorErrUnencodable(String char) {
+    return 'The character \'$char\' cannot be saved in this file\'s encoding. Switch the encoding to UTF-8 on the line below to save it.';
+  }
+
+  @override
   String get helpEditor =>
-      'Remote editor\nOpens a text file from the server over SFTP so you can edit and save it. Nothing is installed on the server. Before saving, it checks whether the file changed on the server in the meantime. Open a file with right-click → Edit (or F4) in the explorer, or use the + button to write a new file and save it to the server. Shell scripts and config files are colored.';
+      'Editor\nOpens a text file so you can edit and save it. On an SSH tab it edits the server\'s file over SFTP, so nothing is installed on the server; on local shell and serial tabs it edits files on this PC. Before saving, it checks whether the file changed in the meantime. Open a file with right-click → Edit (or F4) in the explorer, drag a file onto this panel, or use the + button to write a new file. On a server tab, dropping a file from this PC opens its content as a new file you can save to a server path. Besides UTF-8 it also opens CP949 (old Korean Windows) files and saves them back in the same encoding; you can change it on the line below. Shell scripts and config files are colored.';
 }
