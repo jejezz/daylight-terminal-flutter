@@ -245,7 +245,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   글은 그대로이고 색만 입히며(`buildTextSpan`), 한글 조합 중 밑줄도 유지한다. 40만 자를 넘으면 강조하지 않는다 (키마다 글 전체를 다시 훑기 때문). 팔레트는 밝은/어두운 테마별로 따로 있다.
 - **로컬 셸·시리얼 탭에도 같은 편집기**가 있다 (`LocalFolderSession.editor`, 이 PC의 파일). `RemoteFs`(읽기·쓰기·확인·이름 바꾸기)와 경로 규칙(`pathContext`)만 바꿔 끼운 같은 컨트롤러·화면이다:
   서버는 `SftpRemoteFs`(posix, 임시 파일 후 `rename`), 이 PC는 `LocalFs`(`services/local_fs.dart`, Windows 경로, **파일에 바로 쓴다** — 임시 파일을 바꿔 끼우면 ACL·소유자·권한·하드 링크가 바뀌므로; 수정 시각은 밀리초로 비교).  탭 종류마다 `TerminalSession.editor`가 다르다(없으면 null).
-  로컬 탐색기(`LocalFolderPane`)도 우클릭 → 편집 / F4 (자기 `FocusNode`가 행을 고를 때 포커스를 가져온다). 더블클릭은 OS 기본 프로그램으로 여는 그대로다. Windows에서 `C:`와 `c:/A`는 같은 파일로 본다 (`pathContext.canonicalize`).
+  로컬 탐색기(`LocalFolderPane`)도 우클릭 → 편집 / F4 (자기 `FocusNode`가 행을 고를 때 포커스를 가져온다). 더블클릭은 OS 기본 프로그램으로 여는 그대로다. Windows에서 `C:\a`와 `c:/A`는 같은 파일로 본다 (`pathContext.canonicalize`).
   테스트: 화면 테스트는 디스크 대신 메모리 파일 시스템(`session.editorFs` 훅)을 쓴다 — 위젯 테스트의 가짜 시계 안에서는 실제 파일 입출력이 끝나지 않는다. 디스크 동작은 `LocalFs` 단위 테스트가 본다 (`test/local_editor_test.dart`).
 - **끌어놓기로 열기** (`RemoteEditorPane`의 `DropTarget` + `DragTarget<PaneDragData>`, `openDroppedPaths`): 이 앱의 탐색기 행을 끌어놓으면 그 파일을 연다 (서버 탭은 서버 경로를 SFTP로 바로 읽고, 로컬 탭은 이 PC 경로). 폴더는 여러 개 중에 섞여 있으면 건너뛰고, 한 개만 끌었는데 못 열면 이유를 알린다.
   OS 탐색기/Finder에서 끌어온 **이 PC의 파일**은 로컬 탭에서는 바로 열고, **서버 탭에서는 내용을 새 파일("제목 없음")로 열어** 저장할 때 서버 경로를 묻는다 (제안 이름은 원래 파일 이름, 줄바꿈·BOM은 그대로; `RemoteEditorController.openLocalFileAsNew`). 이 앱에서 끌어낸 것은 무시한다 (`FlutterDragOut.inProgress`).
