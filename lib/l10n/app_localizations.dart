@@ -827,8 +827,14 @@ abstract class AppLocalizations {
   /// No description provided for @senderHint.
   ///
   /// In ko, this message translates to:
-  /// **'여러 줄을 미리 써 두고 Ctrl+Enter로 한 줄씩 전송합니다 (Enter: 줄바꿈)'**
+  /// **'여러 줄을 미리 써 두고 Enter로 한 줄씩 전송합니다 (Shift+Enter: 줄바꿈)'**
   String get senderHint;
+
+  /// No description provided for @senderHintCtrlEnter.
+  ///
+  /// In ko, this message translates to:
+  /// **'여러 줄을 미리 써 두고 Ctrl+Enter로 한 줄씩 전송합니다 (Enter: 줄바꿈)'**
+  String get senderHintCtrlEnter;
 
   /// No description provided for @senderLineEndingNone.
   ///
@@ -1220,6 +1226,24 @@ abstract class AppLocalizations {
   /// **'색상 구성표'**
   String get terminalColorScheme;
 
+  /// No description provided for @settingsSectionLineSender.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 전송기 (LineSender)'**
+  String get settingsSectionLineSender;
+
+  /// No description provided for @senderEnterSends.
+  ///
+  /// In ko, this message translates to:
+  /// **'Enter로 현재 줄 전송'**
+  String get senderEnterSends;
+
+  /// No description provided for @senderEnterSendsHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜면 Enter가 전송, Shift+Enter가 줄바꿈입니다. 끄면 Enter가 줄바꿈, Ctrl+Enter가 전송입니다.'**
+  String get senderEnterSendsHelp;
+
   /// No description provided for @settingsSectionStartup.
   ///
   /// In ko, this message translates to:
@@ -1237,6 +1261,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'로컬 셸은 같은 폴더에서 바로 열고, SSH와 시리얼은 접속 정보만 채워 둡니다. 비밀번호는 저장하지 않으며 자동으로 연결하지 않습니다.'**
   String get restoreTabsHelp;
+
+  /// No description provided for @settingsTabTerminal.
+  ///
+  /// In ko, this message translates to:
+  /// **'터미널'**
+  String get settingsTabTerminal;
+
+  /// No description provided for @settingsTabFiles.
+  ///
+  /// In ko, this message translates to:
+  /// **'탐색기·전송'**
+  String get settingsTabFiles;
+
+  /// No description provided for @settingsTabStartup.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작·권한'**
+  String get settingsTabStartup;
 
   /// No description provided for @settingsSectionAdmin.
   ///

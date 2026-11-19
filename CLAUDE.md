@@ -91,7 +91,8 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 
 ## 설정 창과 탐색기 자동 새로 고침
 
-- 툴바의 설정(톱니) 버튼 = `settings_dialog.dart`. 섹션: "새로 고침 옵션", "터미널 글꼴".
+- 툴바의 설정(톱니) 버튼 = `settings_dialog.dart`. 항목이 많아서 **탭 4개**로 나눈다(`DefaultTabController`, 고정 높이 안에서 탭마다 따로 스크롤; 안 보이는 탭의 위젯은 만들어지지 않으니 테스트는 탭을 눌러 옮긴다):
+  "외형"(모드·팔레트·언어·화면 글자 크기) / "터미널"(글꼴·크기·스크롤백·색상) / "탐색기·전송"(새로 고침 옵션, 줄 전송기) / "시작·권한"(탭 복원, 관리자 권한). "기본값으로"는 모든 탭을 되돌린다.
 - 보이는 탭의 목록만 5초마다 조용히(로딩 표시·오류 없이, 바뀐 것이 있을 때만 갱신) 다시 읽는다. 탭이 활성화되면 바로 한 번 읽고,
   비활성화되면 멈추고, 사용자가 새로 고치면 5초가 다시 시작된다 (`TerminalSession.setActive` / `restartAutoRefreshTimer`).
 - 설정(`refresh_prefs.dart`): `auto_refresh_local`(기본 켜짐), `auto_refresh_ssh`(기본 꺼짐 — 네트워크 오류가 잦아서).
@@ -155,8 +156,8 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   저장하지 않은 변경이 있으면 이름이 `● 이름 (변경됨)`으로 바뀐다. 파일과 연결되기 전(새 스크립트)에는 `제목 없음`이 보인다. 열기·새로 만들기 전에 변경이 있으면 취소/버리기/저장을 묻는다.
 - 규칙(`sender_file.dart`): UTF-8 텍스트만(BOM은 떼고, UTF-8이 아니면 깨져 보이게 열지 않고 거부), 2MB 초과 거부. 칸 안에서는
   줄바꿈을 LF로 통일하고(한 줄씩 보내는 로직이 LF 기준), 저장할 때 파일이 원래 쓰던 줄바꿈(CRLF 등)으로 돌려놓는다.
-- 그냥 Enter는 보통의 편집기와 같은 줄바꿈이고, Ctrl+Enter가 커서가 있는 줄을 터미널로 보낸다(연결 전에는 아무 일도 하지 않는다).
-  불러온 뒤 커서는 맨 앞이라 Ctrl+Enter를 누르면 첫 줄부터 보내진다. 마지막 줄을 보내면 새 줄이 붙지만 그것만으로
+- **기본은 Enter가 커서가 있는 줄을 터미널로 보내고 Shift+Enter가 줄바꿈이다**(Ctrl+Enter도 전송; 연결 전에는 아무 일도 하지 않는다; 한글 등 IME 조합 중의 Enter는 IME에 맡긴다). 설정 창 "탐색기·전송" 탭의 "Enter로 현재 줄 전송"(`sender_prefs.dart`, 키 `sender_enter_sends`, 기본 켜짐)을 끄면 예전처럼 Enter = 줄바꿈, Ctrl+Enter = 전송이다. 입력 칸의 안내 글(hint)도 설정에 따라 바뀐다. `SenderPrefs`가 위젯 트리에 없으면(테스트) 기본값으로 본다(`SenderPrefs.maybeOf`).
+  불러온 뒤 커서는 맨 앞이라 전송 키를 누르면 첫 줄부터 보내진다. 마지막 줄을 보내면 새 줄이 붙지만 그것만으로
   "변경됨"이 되지는 않는다(끝의 빈 줄은 비교에서 뺀다). 스크립트와 파일 연결은 탭마다 따로다.
 - 스크롤바 위 마우스 커서: TextField가 칸 전체를 I자 커서로 덮어서 안쪽 스크롤바 위에서도 커서가 안 바뀐다. 스크롤바가 있을
   때만 오른쪽 가장자리(안쪽 여백 10px + 스크롤바 18px)에 `PassThroughCursorRegion`(화살표 커서, 마우스 이벤트는 통과)을

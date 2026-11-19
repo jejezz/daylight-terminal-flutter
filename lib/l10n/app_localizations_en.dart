@@ -435,6 +435,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get senderHint =>
+      'Write several lines ahead and send them one by one with Enter (Shift+Enter: new line)';
+
+  @override
+  String get senderHintCtrlEnter =>
       'Write several lines ahead and send them one by one with Ctrl+Enter (Enter: new line)';
 
   @override
@@ -668,6 +672,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalColorScheme => 'Color scheme';
 
   @override
+  String get settingsSectionLineSender => 'Line sender';
+
+  @override
+  String get senderEnterSends => 'Send the current line with Enter';
+
+  @override
+  String get senderEnterSendsHelp =>
+      'On: Enter sends, Shift+Enter starts a new line. Off: Enter starts a new line, Ctrl+Enter sends.';
+
+  @override
   String get settingsSectionStartup => 'Startup';
 
   @override
@@ -676,6 +690,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restoreTabsHelp =>
       'Local shells open in the same folder. SSH and serial tabs only get their connection details filled in — passwords are never saved and nothing connects by itself.';
+
+  @override
+  String get settingsTabTerminal => 'Terminal';
+
+  @override
+  String get settingsTabFiles => 'Files & sender';
+
+  @override
+  String get settingsTabStartup => 'Startup & admin';
 
   @override
   String get settingsSectionAdmin => 'Administrator';
