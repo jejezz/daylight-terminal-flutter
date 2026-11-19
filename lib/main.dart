@@ -27,6 +27,7 @@ import 'services/elevation.dart';
 import 'services/profile_store.dart';
 import 'settings/refresh_prefs.dart';
 import 'settings/restore_prefs.dart';
+import 'settings/sender_prefs.dart';
 import 'services/tab_store.dart';
 import 'settings/terminal_prefs.dart';
 import 'settings/ui_prefs.dart';
@@ -87,6 +88,8 @@ Future<void> main() async {
   _mark('RefreshPrefs');
   final restorePrefs = await RestorePrefs.load();
   _mark('RestorePrefs');
+  final senderPrefs = await SenderPrefs.load();
+  _mark('SenderPrefs');
   final profiles = await ProfileStore.load();
   _mark('ProfileStore');
   final tabStore = await TabStore.load();
@@ -117,6 +120,7 @@ Future<void> main() async {
         uiPrefs: uiPrefs,
         refreshPrefs: refreshPrefs,
         restorePrefs: restorePrefs,
+        senderPrefs: senderPrefs,
         placement: placement,
         updates: updates,
       ),
@@ -180,6 +184,7 @@ class App extends StatefulWidget {
     required this.uiPrefs,
     required this.refreshPrefs,
     required this.restorePrefs,
+    required this.senderPrefs,
     this.placement,
     this.updates,
   });
@@ -190,6 +195,7 @@ class App extends StatefulWidget {
   final UiPrefs uiPrefs;
   final RefreshPrefs refreshPrefs;
   final RestorePrefs restorePrefs;
+  final SenderPrefs senderPrefs;
   final WindowPlacement? placement;
   final UpdateService? updates;
 
@@ -276,6 +282,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         ChangeNotifierProvider<UiPrefs>.value(value: widget.uiPrefs),
         ChangeNotifierProvider<RefreshPrefs>.value(value: widget.refreshPrefs),
         ChangeNotifierProvider<RestorePrefs>.value(value: widget.restorePrefs),
+        ChangeNotifierProvider<SenderPrefs>.value(value: widget.senderPrefs),
       ],
       child: AppSettingsScope(
         settings: widget.settings,

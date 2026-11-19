@@ -423,7 +423,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get transferClear => '완료된 항목 지우기';
 
   @override
-  String get senderHint => '여러 줄을 미리 써 두고 Ctrl+Enter로 한 줄씩 전송합니다 (Enter: 줄바꿈)';
+  String get senderHint => '여러 줄을 미리 써 두고 Enter로 한 줄씩 전송합니다 (Shift+Enter: 줄바꿈)';
+
+  @override
+  String get senderHintCtrlEnter =>
+      '여러 줄을 미리 써 두고 Ctrl+Enter로 한 줄씩 전송합니다 (Enter: 줄바꿈)';
 
   @override
   String get senderLineEndingNone => '없음';
@@ -652,6 +656,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get terminalColorScheme => '색상 구성표';
 
   @override
+  String get settingsSectionLineSender => '줄 전송기 (LineSender)';
+
+  @override
+  String get senderEnterSends => 'Enter로 현재 줄 전송';
+
+  @override
+  String get senderEnterSendsHelp =>
+      '켜면 Enter가 전송, Shift+Enter가 줄바꿈입니다. 끄면 Enter가 줄바꿈, Ctrl+Enter가 전송입니다.';
+
+  @override
   String get settingsSectionStartup => '시작';
 
   @override
@@ -660,6 +674,15 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get restoreTabsHelp =>
       '로컬 셸은 같은 폴더에서 바로 열고, SSH와 시리얼은 접속 정보만 채워 둡니다. 비밀번호는 저장하지 않으며 자동으로 연결하지 않습니다.';
+
+  @override
+  String get settingsTabTerminal => '터미널';
+
+  @override
+  String get settingsTabFiles => '탐색기·전송';
+
+  @override
+  String get settingsTabStartup => '시작·권한';
 
   @override
   String get settingsSectionAdmin => '관리자 권한';

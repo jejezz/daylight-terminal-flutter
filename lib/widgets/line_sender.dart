@@ -14,14 +14,16 @@ import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
 import '../models/line_ending.dart';
 import '../services/sender_file.dart';
+import '../settings/sender_prefs.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import 'file_pane_parts.dart' show PaneDragData;
 import 'pass_through_cursor.dart';
 
 /// 여러 줄을 미리 써두고 한 줄씩 순서대로 전송하는 스크립트 러너.
-/// 그냥 Enter는 보통의 편집기와 같은 줄바꿈이고, Ctrl+Enter가 커서가 있는 줄을 전송한다.
-/// 전송 후 커서는 다음 줄의 끝으로 이동해서, Ctrl+Enter를 반복해서 누르면
+/// 기본은 Enter가 커서가 있는 줄을 전송하고 Shift+Enter가 줄바꿈이다. 설정(`SenderPrefs`)으로 바꾸면
+/// 예전처럼 Enter가 줄바꿈, Ctrl+Enter가 전송이다.
+/// 전송 후 커서는 다음 줄의 끝으로 이동해서, 전송 키를 반복해서 누르면
 /// 위에서부터 한 줄씩 순서대로 흘러 내려가며 전송된다.
 ///
 /// 편집기처럼 스크립트를 파일에서 불러오고(Ctrl+O) 저장할 수 있다(Ctrl+S, 다른 이름으로: Ctrl+Shift+S).
@@ -183,7 +185,7 @@ class LineSenderState extends State<LineSender> {
     return true;
   }
 
-  /// 칸의 내용을 문서로 바꾼다. 커서는 맨 앞에 두어서 Ctrl+Enter를 누르면 첫 줄부터 보내진다.
+  /// 칸의 내용을 문서로 바꾼다. 커서는 맨 앞에 두어서 전송 키를 누르면 첫 줄부터 보내진다.
   void _setDocument(String? path, String text, String eol, {bool remoteCopy = false}) {
     _path = path;
     _remoteCopy = remoteCopy;
@@ -275,12 +277,35 @@ class LineSenderState extends State<LineSender> {
     final isEnter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
     if (!isEnter) return KeyEventResult.ignored;
 
-    // 그냥 Enter는 보통의 편집기처럼 TextField의 기본 동작(줄바꿈)에 맡긴다.
-    if (!HardwareKeyboard.instance.isControlPressed) return KeyEventResult.ignored;
+    // 한글 등 IME 조합 중의 Enter는 조합을 끝내는 키라 IME에 맡긴다.
+    if (_controller.value.composing.isValid) return KeyEventResult.ignored;
 
-    // 연결 전에는 보낼 곳이 없다 — Ctrl+Enter는 아무 일도 하지 않는다.
+    // 설정(`SenderPrefs.enterSends`, 기본 켜짐)에 따라:
+    //  켜짐: Enter·Ctrl+Enter = 전송, Shift+Enter = 줄바꿈.
+    //  꺼짐: Enter = 줄바꿈(TextField 기본 동작), Ctrl+Enter = 전송.
+    final enterSends = _enterSends(context);
+    if (enterSends && kb.isShiftPressed) {
+      // 엔진의 기본 줄바꿈에 맡기지 않고 직접 넣고 처리했다고 알린다.
+      _insertNewline();
+      return KeyEventResult.handled;
+    }
+    if (!enterSends && !kb.isControlPressed) return KeyEventResult.ignored;
+
+    // 연결 전에는 보낼 곳이 없다 — 아무 일도 하지 않는다 (줄바꿈도 넣지 않는다).
     if (context.read<TerminalSession>().connected) _sendCurrentLine();
     return KeyEventResult.handled;
+  }
+
+  /// 설정이 없으면(테스트 등) 기본값(Enter = 전송).
+  static bool _enterSends(BuildContext context) => SenderPrefs.maybeOf(context)?.enterSends ?? true;
+
+  void _insertNewline() {
+    final value = _controller.value;
+    final sel = value.selection;
+    final start = sel.isValid ? sel.start : value.text.length;
+    final end = sel.isValid ? sel.end : value.text.length;
+    final newText = value.text.replaceRange(start, end, '\n');
+    _controller.value = TextEditingValue(text: newText, selection: TextSelection.collapsed(offset: start + 1));
   }
 
   void _sendCurrentLine() {
@@ -590,7 +615,7 @@ class LineSenderState extends State<LineSender> {
                               // 바깥 상자(Container)가 배경과 모서리를 맡으므로, 테마의 기본 채움과 테두리는 끈다.
                               decoration: InputDecoration(
                                 isDense: true,
-                                hintText: l10n.senderHint,
+                                hintText: (SenderPrefs.maybeOf(context, listen: true)?.enterSends ?? true) ? l10n.senderHint : l10n.senderHintCtrlEnter,
                                 contentPadding: const EdgeInsets.fromLTRB(
                                   _contentPadding,
                                   AppSpacing.xs,

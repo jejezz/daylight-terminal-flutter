@@ -3,6 +3,7 @@ import 'package:daylight_terminal/services/profile_store.dart';
 import 'package:daylight_terminal/settings/app_settings.dart';
 import 'package:daylight_terminal/settings/refresh_prefs.dart';
 import 'package:daylight_terminal/settings/restore_prefs.dart';
+import 'package:daylight_terminal/settings/sender_prefs.dart';
 import 'package:daylight_terminal/settings/terminal_prefs.dart';
 import 'package:daylight_terminal/settings/ui_prefs.dart';
 import 'package:daylight_terminal/state/sessions_controller.dart';
@@ -87,6 +88,7 @@ void main() {
     final refresh = await RefreshPrefs.load();
     final restore = await RestorePrefs.load();
     final ui = await UiPrefs.load();
+    final sender = await SenderPrefs.load();
     final settings = await AppSettings.load();
     await tester.pumpWidget(
       AppSettingsScope(
@@ -97,6 +99,7 @@ void main() {
             ChangeNotifierProvider<RefreshPrefs>.value(value: refresh),
             ChangeNotifierProvider<RestorePrefs>.value(value: restore),
             ChangeNotifierProvider<UiPrefs>.value(value: ui),
+            ChangeNotifierProvider<SenderPrefs>.value(value: sender),
           ],
           child: MaterialApp(
             theme: AppTheme.dark(),
@@ -114,11 +117,23 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('Agave Nerd Font Mono (내장)'), findsOneWidget);
-    expect(find.text('새로 고침 옵션'), findsOneWidget);
-    expect(find.text('터미널 글꼴'), findsOneWidget);
+    // 탭 4개: 외형 / 터미널 / 탐색기·전송 / 시작·권한. 첫 탭은 외형.
+    for (final label in ['외형', '터미널', '탐색기·전송', '시작·권한']) {
+      expect(find.widgetWithText(Tab, label), findsOneWidget);
+    }
+    expect(find.text('Agave Nerd Font Mono (내장)'), findsNothing); // 터미널 탭이 아니라서 아직 안 만들어졌다
 
-    // 새로 고침 옵션: 로컬은 기본 켜짐, SFTP는 기본 꺼짐
+    // 화면 글자 크기 (외형 탭의 슬라이더)
+    expect(ui.scale, 1.0);
+    await tester.drag(find.byType(Slider).first, const Offset(60, 0));
+    await tester.pump();
+    expect(ui.scale, greaterThan(1.0));
+    expect(prefs.size, 13);
+
+    // 탐색기·전송 탭: 새로 고침 옵션 (로컬은 기본 켜짐, SFTP는 기본 꺼짐), LineSender Enter (기본 켜짐)
+    await tester.tap(find.widgetWithText(Tab, '탐색기·전송'));
+    await tester.pumpAndSettle();
+    expect(find.text('새로 고침 옵션'), findsOneWidget);
     expect((refresh.local, refresh.ssh), (true, false));
     await tester.tap(find.text('SFTP 폴더 자동 새로 고침'));
     await tester.pump();
@@ -126,6 +141,16 @@ void main() {
     await tester.tap(find.text('로컬 폴더 자동 새로 고침'));
     await tester.pump();
     expect(refresh.local, isFalse);
+    expect(sender.enterSends, isTrue);
+    await tester.tap(find.text('Enter로 현재 줄 전송'));
+    await tester.pump();
+    expect(sender.enterSends, isFalse);
+
+    // 터미널 탭
+    await tester.tap(find.widgetWithText(Tab, '터미널'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agave Nerd Font Mono (내장)'), findsOneWidget);
+    expect(find.text('터미널 글꼴'), findsOneWidget);
 
     // 목록에서 고르기
     await tester.ensureVisible(find.byType(DropdownButtonFormField<String>).first);
@@ -146,19 +171,10 @@ void main() {
     expect(prefs.family, 'JetBrains Mono');
     expect(prefs.isPreset, isFalse);
 
-    // 화면 글자 크기 (첫 슬라이더): 터미널 글자 크기와 따로 움직인다
-    expect(ui.scale, 1.0);
+    // 크기 (이 탭의 첫 슬라이더)
     await tester.ensureVisible(find.byType(Slider).first);
     await tester.pump();
-    await tester.drag(find.byType(Slider).first, const Offset(60, 0));
-    await tester.pump();
-    expect(ui.scale, greaterThan(1.0));
-    expect(prefs.size, 13);
-
-    // 크기
-    await tester.ensureVisible(find.byType(Slider).last);
-    await tester.pump();
-    await tester.drag(find.byType(Slider).last, const Offset(120, 0));
+    await tester.drag(find.byType(Slider).first, const Offset(120, 0));
     await tester.pump();
     expect(prefs.size, greaterThan(13));
 
@@ -186,6 +202,7 @@ void main() {
     expect(prefs.scheme.id, 'vscode-dark');
     expect(ui.scale, 1.0);
     expect((refresh.local, refresh.ssh), (true, false));
+    expect(sender.enterSends, isTrue);
     expect(tester.takeException(), isNull);
   });
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:daylight_terminal/l10n/app_localizations.dart';
 import 'package:daylight_terminal/models/local_shell.dart';
+import 'package:daylight_terminal/settings/sender_prefs.dart';
 import 'package:daylight_terminal/state/local_shell_session.dart';
 import 'package:daylight_terminal/state/terminal_session.dart';
 import 'package:daylight_terminal/theme/app_theme.dart';
@@ -15,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helpers/fake_pty.dart';
 
@@ -72,14 +74,17 @@ void main() {
     if (tmp.existsSync()) await tmp.delete(recursive: true);
   });
 
-  Future<void> pumpSender(WidgetTester tester, {bool connected = true, double? width}) async {
+  Future<void> pumpSender(WidgetTester tester, {bool connected = true, double? width, SenderPrefs? sender}) async {
     tester.view.physicalSize = const Size(1000, 600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     if (connected) await tester.runAsync(session.start);
     await tester.pumpWidget(
-      ChangeNotifierProvider<TerminalSession>.value(
-        value: session,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<TerminalSession>.value(value: session),
+          if (sender != null) ChangeNotifierProvider<SenderPrefs>.value(value: sender),
+        ],
         child: MaterialApp(
           theme: AppTheme.dark(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -162,8 +167,8 @@ void main() {
     },
   );
 
-  testWidgets('a plain Enter does not send (raw key event alone, as a real Enter would reach us)', (tester) async {
-    File(file('plain.sh')).writeAsStringSync('cd /srv\nls -l\n');
+  testWidgets('by default a plain Enter sends the cursor line and advances; Ctrl+Enter sends too', (tester) async {
+    File(file('plain.sh')).writeAsStringSync('cd /srv\nls -l\nexit\n');
     dialogs.openAnswers.add(file('plain.sh'));
     await pumpSender(tester);
     await tapOpen(tester);
@@ -172,14 +177,53 @@ void main() {
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
+    expect(ptys.last.writtenText, 'cd /srv\r');
+    expect(text(tester), 'cd /srv\nls -l\nexit\n'); // 줄바꿈이 끼어들지 않는다
 
-    // 실제 기기에서는 줄바꿈 자체가 raw 키 이벤트가 아니라 엔진의 텍스트 입력 채널로 들어오고
-    // (performAction(newline) 때 "이미 들어가 있다"는 flutter 자체 문서/구현), sendKeyEvent는 그
-    // 채널을 흉내 내지 않는다 — 여기서는 우리 코드가 보통의 편집 동작에 끼어들어 뭔가를
-    // 보내지는 않는지만 확인한다.
+    await pressCtrlEnter(tester);
+    await tester.pump();
+    expect(ptys.last.writtenText, 'cd /srv\rls -l\r');
+  });
+
+  testWidgets('Shift+Enter inserts a new line instead of sending', (tester) async {
+    await pumpSender(tester);
+    await typeText(tester, 'abcd');
+    final controller = tester.widget<TextField>(field()).controller!;
+    tester.widget<TextField>(field()).focusNode!.requestFocus();
+    controller.selection = const TextSelection.collapsed(offset: 2);
+    await tester.pump();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.pump();
+
+    expect(text(tester), 'ab\ncd');
+    expect(controller.selection.baseOffset, 3);
     expect(ptys.last.writtenText, isEmpty);
   });
 
+  testWidgets('with "Enter sends" off, a plain Enter does not send but Ctrl+Enter does', (tester) async {
+    SharedPreferences.setMockInitialValues({'sender_enter_sends': false});
+    final sender = await SenderPrefs.load();
+    expect(sender.enterSends, isFalse);
+    File(file('plain.sh')).writeAsStringSync('cd /srv\nls -l\n');
+    dialogs.openAnswers.add(file('plain.sh'));
+    await pumpSender(tester, sender: sender);
+    await tapOpen(tester);
+
+    tester.widget<TextField>(field()).focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    // 실제 기기에서는 줄바꿈 자체가 엔진의 텍스트 입력 채널로 들어오고 sendKeyEvent는 그 채널을 흉내 내지 않는다 —
+    // 여기서는 우리 코드가 끼어들어 뭔가를 보내지는 않는지만 확인한다.
+    expect(ptys.last.writtenText, isEmpty);
+
+    await pressCtrlEnter(tester);
+    await tester.pump();
+    expect(ptys.last.writtenText, 'cd /srv\r');
+  });
 
   testWidgets('editing marks the file modified; Save writes it and clears the mark; the button needs no file yet', (
     tester,
