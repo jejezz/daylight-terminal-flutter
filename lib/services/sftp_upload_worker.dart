@@ -21,6 +21,7 @@ class UploadRequest {
     required this.hostKey,
     required this.items,
     required this.events,
+    this.download = false,
   });
 
   final String host;
@@ -34,8 +35,12 @@ class UploadRequest {
   final String hostKey;
 
   /// 올릴 (로컬 경로, 원격 경로) 쌍. 파일이나 폴더.
+  /// [download]가 true면 반대로 내려받을 (원격 경로, 로컬 경로) 쌍이다.
   final List<(String, String)> items;
   final SendPort events;
+
+  /// true면 [items]를 서버에서 내려받는다 (같은 워커·같은 메시지를 쓴다).
+  final bool download;
 }
 
 /// 워커가 보내는 메시지의 종류. 메시지는 `[종류, 항목 번호, 값]` 꼴의 리스트다.
@@ -106,14 +111,15 @@ Future<void> sftpUploadMain(UploadRequest req) async {
 
   try {
     for (var i = 0; i < req.items.length; i++) {
-      final (local, remote) = req.items[i];
+      final (from, to) = req.items[i];
       var done = 0;
       final throttle = ProgressThrottle(() => send(UploadEvent.done, i, done));
       try {
-        await uploadPath(
+        final run = req.download ? downloadPath : uploadPath;
+        await run(
           sftp,
-          local,
-          remote,
+          from,
+          to,
           cancel: cancels[i],
           onTotal: (n) => send(UploadEvent.total, i, n),
           onProgress: (n) {
@@ -230,4 +236,73 @@ Future<void> uploadPath(
   }
 
   await walk(local, remote);
+}
+
+/// 서버의 [remote](파일 또는 폴더)를 로컬 [local]로 내려받는다. 폴더는 안을 따라 내려가며 받는다.
+/// 콜백과 취소는 [uploadPath]와 같다. 취소하면 받던 로컬 파일은 지운다.
+Future<void> downloadPath(
+  SftpClient sftp,
+  String remote,
+  String local, {
+  required UploadCancel cancel,
+  required void Function(int addTotal) onTotal,
+  required void Function(int done) onProgress,
+}) async {
+  var done = 0;
+  Future<void> walk(String r, String l, SftpFileAttrs attr) async {
+    if (cancel.requested) throw const UploadCancelled();
+    if (attr.isDirectory) {
+      await Directory(l).create(recursive: true);
+      for (final n in await sftp.listdir(r)) {
+        if (n.filename == '.' || n.filename == '..') continue;
+        await walk(p.posix.join(r, n.filename), p.join(l, n.filename), n.attr);
+      }
+      return;
+    }
+    onTotal(attr.size ?? 0);
+    final base = done;
+    final remoteFile = await sftp.open(r, mode: SftpFileOpenMode.read);
+    final out = File(l).openSync(mode: FileMode.write);
+    final finished = Completer<void>();
+    StreamSubscription<Uint8List>? sub;
+    var cancelled = false;
+    try {
+      var received = 0;
+      sub = remoteFile
+          .read(onProgress: (n) => onProgress(base + n))
+          .listen(
+            (chunk) {
+              out.writeFromSync(chunk);
+              received += chunk.length;
+            },
+            onDone: () => finished.complete(),
+            onError: (Object e, StackTrace s) => finished.completeError(e, s),
+            cancelOnError: true,
+          );
+      cancel._abort = () async {
+        cancelled = true;
+        await sub?.cancel();
+        if (!finished.isCompleted) finished.complete();
+      };
+      if (cancel.requested) unawaited(cancel._abort!());
+      await finished.future;
+      cancelled = cancelled || cancel.requested;
+      done = base + received;
+    } finally {
+      cancel._abort = null;
+      out.closeSync();
+      try {
+        await remoteFile.close();
+      } catch (_) {}
+    }
+    if (cancelled) {
+      // 반쯤 받은 파일은 남기지 않는다.
+      try {
+        File(l).deleteSync();
+      } catch (_) {}
+      throw const UploadCancelled();
+    }
+  }
+
+  await walk(remote, local, await sftp.stat(remote));
 }
