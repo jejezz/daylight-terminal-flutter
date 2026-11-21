@@ -75,6 +75,7 @@ class SshSessionProvider extends TerminalSession {
     _entries = entries;
     notify();
   }
+
   String? _editorServer;
 
   /// 연결하지 않고 접속 정보만 채워 둔다 (지난번 탭을 다시 열 때). 접속 화면이 이 값으로 채워진다.
@@ -389,13 +390,19 @@ class SshSessionProvider extends TerminalSession {
     // 암호화가 메인 isolate를 붙잡아 앱이 느려지지 않게 별도 isolate의 별도 연결로 올린다.
     // 그 연결을 못 열면(일회용 인증 등) 지금 연결로 직접 올린다.
     final done =
-        await _uploadInWorker(localPaths, transfers, target) ?? await _uploadHere(sftp, localPaths, transfers, target);
+        await _runInWorker([for (final path in localPaths) (path, _join(target, p.basename(path)))], transfers) ??
+        await _uploadHere(sftp, localPaths, transfers, target);
     if (_remotePath == target) await refresh();
     return done;
   }
 
-  /// 별도 isolate에서 올린다. 워커가 서버에 붙지 못했으면 아무것도 올리지 않은 채 null.
-  Future<List<String>?> _uploadInWorker(List<String> localPaths, List<Transfer> transfers, String target) async {
+  /// 별도 isolate에서 올리거나(기본, [items]는 (로컬, 원격)) 내려받는다([download]면 (원격, 로컬)).
+  /// 워커가 서버에 붙지 못했으면 아무것도 하지 않은 채 null. 성공한 항목의 이름을 돌려준다.
+  Future<List<String>?> _runInWorker(
+    List<(String, String)> items,
+    List<Transfer> transfers, {
+    bool download = false,
+  }) async {
     final profile = _profile;
     if (profile == null || (profile.keyPath == null && _password == null)) return null;
     final hostKey = store.knownHostKey(profile.host, profile.port);
@@ -409,7 +416,7 @@ class SshSessionProvider extends TerminalSession {
     void finishWith(List<String>? value) {
       if (result.isCompleted) return;
       for (final t in transfers) {
-        if (value != null && t.status == TransferStatus.running) t.finish('upload stopped');
+        if (value != null && t.status == TransferStatus.running) t.finish('transfer stopped');
       }
       result.complete(value);
     }
@@ -458,8 +465,9 @@ class SshSessionProvider extends TerminalSession {
           password: _password,
           keyPassphrase: _keyPassphrase,
           hostKey: hostKey,
-          items: [for (final path in localPaths) (path, _join(target, p.basename(path)))],
+          items: items,
           events: events.sendPort,
+          download: download,
         ),
         onExit: events.sendPort,
       );
@@ -560,48 +568,59 @@ class SshSessionProvider extends TerminalSession {
 
   /// [items]를 [localDir] 아래로 내려받는다. 같은 이름은 덮어쓴다. [from]은 원격 폴더(기본: 지금 폴더).
   Future<void> download(List<FileItem> items, String localDir, {String? from}) async {
-    final sftp = _sftp;
-    if (sftp == null) return;
-    for (final e in items) {
-      await _downloadItem(sftp, _join(from ?? _remotePath, e.name), p.join(localDir, e.name), e);
-    }
+    final dir = from ?? _remotePath;
+    await _download([for (final e in items) (e, _join(dir, e.name), p.join(localDir, e.name))]);
   }
 
   /// [e] 하나를 [localPath](전체 경로)로 내려받는다 — 저장 대화상자와 드래그 앤 드롭(macOS 파일 프로미스)용.
   /// 성공하면 true, 실패하면 전송 목록에 오류를 남기고 false.
   Future<bool> downloadEntryTo(FileItem e, String localPath, {String? from}) async {
-    final sftp = _sftp;
-    if (sftp == null) return false;
-    return _downloadItem(sftp, _join(from ?? _remotePath, e.name), localPath, e);
+    final ok = await _download([(e, _join(from ?? _remotePath, e.name), localPath)]);
+    return ok.isNotEmpty;
   }
 
   /// 끌어내기(드래그 아웃)용: macOS 밖에서는 파일 프로미스가 없으므로, 먼저 임시 폴더에 로컬 사본을
   /// 받아 그 경로를 돌려준다. 하나라도 실패하면 예외를 던진다.
   Future<List<String>> stageForDrag(List<FileItem> items, {String? from}) async {
     final dir = await DragStaging.newDir();
-    final paths = <String>[];
-    for (final e in items) {
-      final local = p.join(dir.path, e.name);
-      if (!await downloadEntryTo(e, local, from: from)) {
-        throw FileSystemException('download failed', e.name);
-      }
-      paths.add(local);
+    final dirPath = from ?? _remotePath;
+    final paths = [for (final e in items) p.join(dir.path, e.name)];
+    final ok = await _download([
+      for (var i = 0; i < items.length; i++) (items[i], _join(dirPath, items[i].name), paths[i]),
+    ]);
+    if (ok.length != items.length) {
+      throw FileSystemException('download failed', items.firstWhere((e) => !ok.contains(e.name)).name);
     }
     return paths;
   }
 
-  Future<bool> _downloadItem(SftpClient sftp, String remote, String local, FileItem e) async {
-    final t = Transfer(e.name, TransferDirection.download);
-    _transfers.insert(0, t);
-    notify();
-    try {
-      await _downloadPath(sftp, remote, local, e.isDirectory, t, size: e.size);
-      t.finish();
-      return true;
-    } catch (err) {
-      t.finish(err);
-      return false;
+  /// (항목, 원격 경로, 로컬 경로)들을 내려받고 성공한 항목의 이름을 돌려준다.
+  /// 업로드처럼 별도 isolate의 별도 연결에서 받아 앱이 느려지지 않게 하고, 전송 줄의 X로 취소할 수 있다.
+  /// 그 연결을 못 열면(일회용 인증 등) 지금 연결로 메인 isolate에서 받는다 (취소할 수 없다).
+  Future<List<String>> _download(List<(FileItem, String, String)> jobs) async {
+    final sftp = _sftp;
+    if (sftp == null || jobs.isEmpty) return const [];
+    final transfers = [for (final (e, _, _) in jobs) Transfer(e.name, TransferDirection.download)];
+    for (final t in transfers.reversed) {
+      t.onCancel = () {}; // 멈추는 방법은 워커 쪽이 바꿔 단다
+      _transfers.insert(0, t);
     }
+    notify();
+    final viaWorker = await _runInWorker([for (final (_, r, l) in jobs) (r, l)], transfers, download: true);
+    if (viaWorker != null) return viaWorker;
+    final done = <String>[];
+    for (var i = 0; i < jobs.length; i++) {
+      final (e, remote, local) = jobs[i];
+      transfers[i].onCancel = null;
+      try {
+        await _downloadPath(sftp, remote, local, e.isDirectory, transfers[i], size: e.size);
+        transfers[i].finish();
+        done.add(e.name);
+      } catch (err) {
+        transfers[i].finish(err);
+      }
+    }
+    return done;
   }
 
   Future<void> _downloadPath(SftpClient sftp, String remote, String local, bool isDir, Transfer t, {int? size}) async {

@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+
 import '../theme/phosphor_icons.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:provider/provider.dart';
@@ -532,9 +534,8 @@ class _TransferTile extends StatelessWidget {
         final label = switch (transfer.status) {
           TransferStatus.running when transfer.cancelRequested => l10n.transferCancelling(transfer.name),
           TransferStatus.running =>
-            transfer.direction == TransferDirection.upload
-                ? l10n.transferUploading(transfer.name)
-                : l10n.transferDownloading(transfer.name),
+            '${transfer.direction == TransferDirection.upload ? l10n.transferUploading(transfer.name) : l10n.transferDownloading(transfer.name)}'
+                '${transfer.speedLabel == null ? '' : ' · ${transfer.speedLabel}'}',
           TransferStatus.done => '${transfer.name} · ${l10n.transferDone}',
           TransferStatus.failed => '${transfer.name} · ${l10n.transferFailed(transfer.error ?? '')}',
           TransferStatus.cancelled => '${transfer.name} · ${l10n.transferCancelled}',
@@ -547,7 +548,9 @@ class _TransferTile extends StatelessWidget {
               Row(
                 children: [
                   PhosphorIcon(
-                    transfer.direction == TransferDirection.upload ? PhosphorIconsDuotone.uploadSimple : PhosphorIconsDuotone.downloadSimple,
+                    transfer.direction == TransferDirection.upload
+                        ? PhosphorIconsDuotone.uploadSimple
+                        : PhosphorIconsDuotone.downloadSimple,
                     size: 14,
                     color: transfer.status == TransferStatus.failed ? scheme.error : scheme.onSurfaceVariant,
                   ),
