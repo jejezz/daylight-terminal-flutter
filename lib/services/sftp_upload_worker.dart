@@ -6,6 +6,8 @@ import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:path/path.dart' as p;
 
+import 'ssh_algorithms.dart';
+
 /// 업로드 워커에게 보내는 요청. 메인 연결과 같은 서버에 **따로** 접속해서 올린다.
 ///
 /// dartssh2는 암호화·무결성 검사를 순수 Dart로 해서, 메인 isolate에서 올리면 그동안 화면 그리기와
@@ -86,6 +88,7 @@ Future<void> sftpUploadMain(UploadRequest req) async {
     final password = req.password;
     final c = client = SSHClient(
       socket,
+      algorithms: fastSshAlgorithms,
       username: req.username,
       identities: identities,
       onPasswordRequest: password == null ? null : () => password,

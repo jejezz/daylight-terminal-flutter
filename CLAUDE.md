@@ -57,7 +57,9 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 - 두 번째 연결에 쓰려고 비밀번호·키 암호를 **연결이 살아 있는 동안 메모리에만** 들고 있다(`_password`, `_keyPassphrase`; 끊기면 지운다, 저장하지 않는다).
 - 워커가 접속하지 못하면(일회용 인증 등) 아무것도 올리기 전에 알려 오고, 그때는 지금 연결로 메인 isolate에서 올린다(`_uploadHere`, 진행 알림만 줄임).
 - 올리는 도중 전송 줄의 X 버튼으로 취소할 수 있다(`Transfer.cancel`, 워커에는 항목 번호를 보낸다). 쓰던 파일은 `writer.abort()`로 끊고 서버의 반쯤 올라간 파일은 지운다. 다운로드는 취소할 수 없다.
-- 다운로드는 아직 메인 isolate에서 한다.
+- 다운로드도 같은 워커가 한다(`UploadRequest.download`, `downloadPath`). 전송 줄의 X로 취소하면 받던 로컬 파일을 지운다. 연결을 못 열면 메인 isolate에서 받는다(취소 불가). 전송 줄에는 속도(`Transfer.speedLabel`)가 보인다.
+- **암호 우선순위**(`ssh_algorithms.dart`, `fastSshAlgorithms`): dartssh2 기본은 AES-GCM이 맨 앞인데 순수 Dart 구현이 loopback에서 1.6MB/s밖에 안 나왔다
+  (chacha20-poly1305 36MB/s, aes-ctr 13~15MB/s). 그래서 chacha20 → aes-ctr → aes-gcm 순으로 협상한다. 메인 연결과 워커 모두 쓴다.
 
 ## 주소록과 터미널 글꼴
 

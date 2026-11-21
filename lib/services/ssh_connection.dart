@@ -5,6 +5,7 @@ import 'package:dartssh2/dartssh2.dart';
 
 import '../models/ssh_profile.dart';
 import 'profile_store.dart';
+import 'ssh_algorithms.dart';
 
 /// 저장된 호스트 키와 다른 키가 왔다 — 중간자 공격일 수 있어 접속을 거부한다.
 class HostKeyMismatchException implements Exception {
@@ -43,6 +44,7 @@ class SshConnection {
       }
       final c = client = SSHClient(
         socket,
+        algorithms: fastSshAlgorithms,
         username: profile.username,
         identities: identities,
         onPasswordRequest: password == null ? null : () => password,
