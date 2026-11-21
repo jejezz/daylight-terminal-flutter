@@ -269,7 +269,7 @@ Future<void> downloadPath(
     try {
       var received = 0;
       sub = remoteFile
-          .read(onProgress: (n) => onProgress(base + n))
+          .read(chunkSize: 64 * 1024, maxPendingRequests: 128, onProgress: (n) => onProgress(base + n))
           .listen(
             (chunk) {
               out.writeFromSync(chunk);
