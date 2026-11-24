@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../theme/phosphor_icons.dart';
+
 import 'package:provider/provider.dart';
 
 import '../app_identity.dart';
 import '../help/help_mode.dart';
 import '../l10n/app_localizations.dart';
+import '../settings/sender_prefs.dart';
 import '../state/sessions_controller.dart';
 import '../state/local_folder_session.dart';
 import '../state/local_shell_session.dart';
@@ -214,6 +217,10 @@ class _SessionViewState extends State<_SessionView> {
   double _senderHeight = 160;
   double _editorWidth = 460;
 
+  /// LineSender와 편집기 자리를 바꿨을 때(`SenderPrefs.swapped`)의 크기: 오른쪽 LineSender 폭, 터미널 아래 편집기 높이.
+  double _senderWidth = 380;
+  double _editorHeight = 300;
+
   /// 구분선을 누른 순간의 칸 크기 (끄는 동안 이 값에 움직인 거리를 더해 크기를 정한다).
   double _dragBase = 0;
 
@@ -221,6 +228,8 @@ class _SessionViewState extends State<_SessionView> {
   static const _minTerminal = 360.0;
   static const _minEditor = 260.0;
   static const _editorHandleWidth = 36.0;
+  static const _minSenderWidth = 300.0;
+  static const _minEditorHeight = 200.0;
 
   /// 오른쪽 편집기 칸: SSH 탭은 서버 파일, 로컬 셸·시리얼 탭은 이 PC의 파일을 고친다. 열린 파일이 없어도 펼쳐져 있고,
   /// 접혀 있으면 가는 손잡이만 남는다.
@@ -241,10 +250,14 @@ class _SessionViewState extends State<_SessionView> {
     _editor?.removeListener(_onEditorChanged);
     super.dispose();
   }
+
   // 입력 칸(이름 줄 36 + 글 영역이 최소한 보일 높이) + 하단 줄(44) + 여백. LineSender의 버튼 줄이 가려지지 않게 그 아래로는 못 줄인다.
   static const _minSender = 144.0;
 
   final _senderKey = GlobalKey<LineSenderState>();
+
+  /// 자리를 바꿔도 편집기 칸의 상태(스크롤, 끌어놓기 표시)가 남도록 위젯을 옮긴다.
+  final _editorKey = GlobalKey();
 
   /// 서버가 연결을 닫은 뒤 사용자가 "다시 연결"이나 "탭 닫기"를 골랐다 (접속 화면으로 넘어가도 된다).
   bool _lostHandled = false;
@@ -315,15 +328,95 @@ class _SessionViewState extends State<_SessionView> {
           child: LayoutBuilder(
             builder: (context, box) {
               final editor = _editor;
+              final prefs = SenderPrefs.maybeOf(context, listen: true);
+              // 편집기가 없는 탭에서는 바꿀 것이 없다.
+              final swapped = editor != null && (prefs?.swapped ?? false);
+              final onSwap = prefs?.toggleSwapped;
               final editorOpen = editor != null && editor.visible;
               final editorHandle = editor != null && !editor.visible;
-              final maxEditor = (box.maxWidth - _minExplorer - _minTerminal - 6).clamp(_minEditor, 1200.0);
-              final editorWidth = _editorWidth.clamp(_minEditor, maxEditor);
-              final editorSpace = editorOpen ? editorWidth + 6 : (editorHandle ? _editorHandleWidth : 0.0);
-              final maxExplorer = (box.maxWidth - _minTerminal - editorSpace).clamp(_minExplorer, 800.0);
+              final senderPane = LineSender(key: _senderKey).help(HelpId.sender);
+              Widget editorPane(RemoteEditorController editor) => RemoteEditorPane(
+                key: _editorKey,
+                controller: editor,
+                dropEnabled: session.isActive,
+                dockedBottom: swapped,
+                onSwap: onSwap,
+              ).help(HelpId.editor);
+
+              // 오른쪽 칸: 보통은 편집기(접히면 손잡이), 바꾸면 LineSender.
+              final maxRight = (box.maxWidth - _minExplorer - _minTerminal - 6).clamp(
+                swapped ? _minSenderWidth : _minEditor,
+                1200.0,
+              );
+              final double rightWidth;
+              final double rightSpace;
+              if (swapped) {
+                rightWidth = _senderWidth.clamp(_minSenderWidth, maxRight);
+                rightSpace = rightWidth + 6;
+              } else {
+                rightWidth = _editorWidth.clamp(_minEditor, maxRight);
+                rightSpace = editorOpen ? rightWidth + 6 : (editorHandle ? _editorHandleWidth : 0.0);
+              }
+              final maxExplorer = (box.maxWidth - _minTerminal - rightSpace).clamp(_minExplorer, 800.0);
               final explorer = _explorerWidth.clamp(_minExplorer, maxExplorer);
+              // 터미널 아래 칸: 보통은 LineSender, 바꾸면 편집기(접히면 가로 손잡이).
               final maxSender = (box.maxHeight - 120).clamp(_minSender, 600.0);
               final sender = _senderHeight.clamp(_minSender, maxSender);
+              final maxEditorHeight = (box.maxHeight - 120).clamp(_minEditorHeight, 900.0);
+              final editorHeight = _editorHeight.clamp(_minEditorHeight, maxEditorHeight);
+
+              final List<Widget> below;
+              if (!swapped) {
+                below = [
+                  PaneDivider(
+                    axis: Axis.horizontal,
+                    color: scheme.outlineVariant,
+                    onDragStart: () => _dragBase = sender,
+                    onDrag: (d) => setState(() => _senderHeight = (_dragBase - d).clamp(_minSender, maxSender)),
+                  ),
+                  SizedBox(height: sender, child: senderPane),
+                ];
+              } else if (editorOpen) {
+                below = [
+                  PaneDivider(
+                    axis: Axis.horizontal,
+                    color: scheme.outlineVariant,
+                    onDragStart: () => _dragBase = editorHeight,
+                    onDrag: (d) =>
+                        setState(() => _editorHeight = (_dragBase - d).clamp(_minEditorHeight, maxEditorHeight)),
+                  ),
+                  SizedBox(height: editorHeight, child: editorPane(editor)),
+                ];
+              } else {
+                below = [RemoteEditorHandle(controller: editor, horizontal: true, onSwap: onSwap)];
+              }
+
+              final List<Widget> right;
+              if (swapped) {
+                right = [
+                  PaneDivider(
+                    axis: Axis.vertical,
+                    color: scheme.outlineVariant,
+                    onDragStart: () => _dragBase = rightWidth,
+                    onDrag: (d) => setState(() => _senderWidth = (_dragBase - d).clamp(_minSenderWidth, maxRight)),
+                  ),
+                  SizedBox(width: rightWidth, child: senderPane),
+                ];
+              } else if (editorOpen) {
+                right = [
+                  PaneDivider(
+                    axis: Axis.vertical,
+                    color: scheme.outlineVariant,
+                    onDragStart: () => _dragBase = rightWidth,
+                    // 오른쪽 칸이라 왼쪽으로 끌면 넓어진다.
+                    onDrag: (d) => setState(() => _editorWidth = (_dragBase - d).clamp(_minEditor, maxRight)),
+                  ),
+                  SizedBox(width: rightWidth, child: editorPane(editor)),
+                ];
+              } else {
+                right = [if (editorHandle) RemoteEditorHandle(controller: editor, onSwap: onSwap)];
+              }
+
               return Row(
                 children: [
                   // 왼쪽: SSH 탭은 서버의 폴더(SFTP), 로컬 셸 탭은 이 PC의 폴더.
@@ -349,33 +442,11 @@ class _SessionViewState extends State<_SessionView> {
                               ? _SerialBody(session: widget.session as SerialSession)
                               : const TerminalPane().help(HelpId.terminal),
                         ),
-                        PaneDivider(
-                          axis: Axis.horizontal,
-                          color: scheme.outlineVariant,
-                          onDragStart: () => _dragBase = sender,
-                          onDrag: (d) => setState(() => _senderHeight = (_dragBase - d).clamp(_minSender, maxSender)),
-                        ),
-                        SizedBox(
-                          height: sender,
-                          child: LineSender(key: _senderKey).help(HelpId.sender),
-                        ),
+                        ...below,
                       ],
                     ),
                   ),
-                  if (editor != null && editorOpen) ...[
-                    PaneDivider(
-                      axis: Axis.vertical,
-                      color: scheme.outlineVariant,
-                      onDragStart: () => _dragBase = editorWidth,
-                      // 오른쪽 칸이라 왼쪽으로 끌면 넓어진다.
-                      onDrag: (d) => setState(() => _editorWidth = (_dragBase - d).clamp(_minEditor, maxEditor)),
-                    ),
-                    SizedBox(
-                      width: editorWidth,
-                      child: RemoteEditorPane(controller: editor, dropEnabled: session.isActive).help(HelpId.editor),
-                    ),
-                  ],
-                  if (editor != null && editorHandle) RemoteEditorHandle(controller: editor),
+                  ...right,
                 ],
               );
             },

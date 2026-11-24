@@ -1229,7 +1229,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSectionLineSender.
   ///
   /// In ko, this message translates to:
-  /// **'줄 전송기 (LineSender)'**
+  /// **'라인 전송기 (LineSender)'**
   String get settingsSectionLineSender;
 
   /// No description provided for @senderEnterSends.
@@ -1243,6 +1243,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'켜면 Enter가 전송, Shift+Enter가 줄바꿈입니다. 끄면 Enter가 줄바꿈, Ctrl+Enter가 전송입니다.'**
   String get senderEnterSendsHelp;
+
+  /// No description provided for @senderSwapEditor.
+  ///
+  /// In ko, this message translates to:
+  /// **'편집기를 터미널 아래에'**
+  String get senderSwapEditor;
+
+  /// No description provided for @senderSwapEditorHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜면 편집기가 터미널 아래에, 라인 전송기가 오른쪽에 있습니다. 편집기 위쪽의 ⇆ 버튼으로도 바꿀 수 있습니다.'**
+  String get senderSwapEditorHelp;
 
   /// No description provided for @settingsSectionStartup.
   ///
@@ -2059,6 +2071,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'편집기 접기'**
   String get editorHide;
+
+  /// No description provided for @paneEditorTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'편집기'**
+  String get paneEditorTitle;
+
+  /// No description provided for @paneSenderTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'라인 전송기'**
+  String get paneSenderTitle;
+
+  /// No description provided for @editorSwapWithSender.
+  ///
+  /// In ko, this message translates to:
+  /// **'편집기와 라인 전송기 자리 바꾸기'**
+  String get editorSwapWithSender;
 
   /// No description provided for @editorModified.
   ///

@@ -18,6 +18,7 @@ import '../settings/sender_prefs.dart';
 import '../state/terminal_session.dart';
 import '../theme/app_theme.dart';
 import 'file_pane_parts.dart' show PaneDragData;
+import 'pane_title.dart';
 import 'pass_through_cursor.dart';
 
 /// 여러 줄을 미리 써두고 한 줄씩 순서대로 전송하는 스크립트 러너.
@@ -439,6 +440,14 @@ class LineSenderState extends State<LineSender> {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           child: Row(
             children: [
+              // 편집기와 자리를 바꿀 수 있어서 어느 칸인지 제목과 색으로 알려 준다.
+              PaneTitle(
+                key: const ValueKey('line-sender-title'),
+                icon: PhosphorIconsDuotone.listBullets,
+                label: l10n.paneSenderTitle,
+                color: PaneColors.sender(scheme),
+              ),
+              const SizedBox(width: AppSpacing.sm),
               Flexible(child: _path == null ? chip : Tooltip(message: _path!, child: chip)),
               if (_remoteCopy) ...[
                 const SizedBox(width: AppSpacing.sm),
@@ -595,6 +604,7 @@ class LineSenderState extends State<LineSender> {
                   decoration: BoxDecoration(
                     color: scheme.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(AppRadius.button),
+                    border: Border.all(color: PaneColors.sender(scheme).withValues(alpha: 0.45)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
