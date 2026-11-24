@@ -278,6 +278,10 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   두 칸 모두 `GlobalKey`로 옮겨서 자리를 바꿔도 LineSender 글·편집 중인 파일이 그대로다. 크기는 배치마다 따로 기억한다(탭이 살아 있는 동안만). 편집기가 없는 탭은 바꾸지 않는다.
   `SenderPrefs`가 트리에 없으면(테스트) ⇆ 버튼이 없고 보통 배치다 (`test/sender_editor_swap_test.dart`).
 
+- **탐색기 접기/펼치기**: 탐색기 헤더 맨 오른쪽의 ◂ 버튼(`PaneHeader.onHide`, SFTP·로컬 폴더 뷰 공통)으로 접으면 왼쪽에 폭 36의 손잡이(`ExplorerHandle`, `home_screen.dart`)만 남고
+  그 자리는 터미널(과 아래·오른쪽 칸)이 쓴다. 손잡이의 폴더 버튼으로 다시 펼친다. 상태는 탭마다(`TerminalSession.explorerVisible`)이고 저장하지 않는다.
+  접으면 탐색기 위젯이 트리에서 빠지므로 행 선택은 사라지지만 폴더 위치는 세션에 남는다 (`test/explorer_collapse_test.dart`).
+
 - **구분선 끌기**(`widgets/pane_divider.dart`, `PaneDivider`; 탐색기·편집기·LineSender 칸 공통)는 이벤트마다 움직인 양을 더하지 않고 **누른 자리에서의 누적 거리**로 크기를 정한다 (`onDragStart`에서 크기를 기억).
   화면이 다시 그려지기 전에 이벤트가 여러 번 오거나 최소·최대 크기에 걸렸다 풀릴 때 구분선이 마우스를 못 따라가던 문제를 없앤다 (`test/pane_divider_test.dart`).
 

@@ -2072,6 +2072,18 @@ abstract class AppLocalizations {
   /// **'편집기 접기'**
   String get editorHide;
 
+  /// No description provided for @explorerHide.
+  ///
+  /// In ko, this message translates to:
+  /// **'탐색기 접기'**
+  String get explorerHide;
+
+  /// No description provided for @explorerShow.
+  ///
+  /// In ko, this message translates to:
+  /// **'탐색기 펼치기'**
+  String get explorerShow;
+
   /// No description provided for @paneEditorTitle.
   ///
   /// In ko, this message translates to:

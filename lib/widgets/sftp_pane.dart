@@ -392,6 +392,7 @@ class _SftpPaneState extends State<SftpPane> {
                 onNewFolder: _newFolder,
                 onTerminalToHere: () => session.moveTerminalTo(session.remotePath),
                 onExplorerToTerminal: _syncExplorer,
+                onHide: () => session.setExplorerVisible(false),
               ),
               Expanded(
                 child: session.sftpError != null

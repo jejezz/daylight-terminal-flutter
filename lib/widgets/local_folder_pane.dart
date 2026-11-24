@@ -296,6 +296,7 @@ class _LocalFolderPaneState extends State<LocalFolderPane> {
                 onTerminalToHere: session.canMoveTerminal ? () => session.moveTerminalTo(session.folderPath) : null,
                 // 현재 경로를 알려 줄 수 없는 셸(cmd)은 이 항목을 숨긴다.
                 onExplorerToTerminal: session.canSyncExplorer ? () => _syncExplorer(session) : null,
+                onHide: () => session.setExplorerVisible(false),
                 extraActions: [
                   Builder(
                     builder: (buttonContext) {

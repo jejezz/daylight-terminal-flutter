@@ -1182,6 +1182,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editorHide => 'Hide editor';
 
   @override
+  String get explorerHide => 'Hide explorer';
+
+  @override
+  String get explorerShow => 'Show explorer';
+
+  @override
   String get paneEditorTitle => 'Editor';
 
   @override

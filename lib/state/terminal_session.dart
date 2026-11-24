@@ -367,6 +367,16 @@ abstract class TerminalSession extends ChangeNotifier {
   /// 보이는 탭만 받아야 한다 (안 그러면 뒤쪽 탭도 같이 받는다).
   bool get isActive => _active;
 
+  /// 왼쪽 탐색기 칸이 펼쳐져 있는가 (접으면 가는 손잡이만 남는다). 탭마다 따로이고 저장하지 않는다.
+  bool get explorerVisible => _explorerVisible;
+  bool _explorerVisible = true;
+
+  void setExplorerVisible(bool value) {
+    if (value == _explorerVisible) return;
+    _explorerVisible = value;
+    notifyListeners();
+  }
+
   /// 이 탭이 지금 보이는 탭인지 알린다. 활성화되면 바로 한 번 새로 고치고 [autoRefreshInterval]마다 되풀이하며,
   /// 비활성화되면 멈춘다.
   void setActive(bool value) {

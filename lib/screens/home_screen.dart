@@ -228,6 +228,7 @@ class _SessionViewState extends State<_SessionView> {
   static const _minTerminal = 360.0;
   static const _minEditor = 260.0;
   static const _editorHandleWidth = 36.0;
+  static const _explorerHandleWidth = 36.0;
   static const _minSenderWidth = 300.0;
   static const _minEditorHeight = 200.0;
 
@@ -344,7 +345,10 @@ class _SessionViewState extends State<_SessionView> {
               ).help(HelpId.editor);
 
               // 오른쪽 칸: 보통은 편집기(접히면 손잡이), 바꾸면 LineSender.
-              final maxRight = (box.maxWidth - _minExplorer - _minTerminal - 6).clamp(
+              final explorerOpen = session.explorerVisible;
+              // 탐색기를 접으면 그 자리를 오른쪽 칸이 더 쓸 수 있다.
+              final leftReserve = explorerOpen ? _minExplorer + 6 : _explorerHandleWidth;
+              final maxRight = (box.maxWidth - leftReserve - _minTerminal).clamp(
                 swapped ? _minSenderWidth : _minEditor,
                 1200.0,
               );
@@ -417,21 +421,25 @@ class _SessionViewState extends State<_SessionView> {
                 right = [if (editorHandle) RemoteEditorHandle(controller: editor, onSwap: onSwap)];
               }
 
+              final explorerHelp = widget.session is LocalFolderSession ? HelpId.explorerLocal : HelpId.explorerSftp;
               return Row(
                 children: [
-                  // 왼쪽: SSH 탭은 서버의 폴더(SFTP), 로컬 셸 탭은 이 PC의 폴더.
-                  SizedBox(
-                    width: explorer,
-                    child: widget.session is LocalFolderSession
-                        ? const LocalFolderPane().help(HelpId.explorerLocal)
-                        : const SftpPane().help(HelpId.explorerSftp),
-                  ),
-                  PaneDivider(
-                    axis: Axis.vertical,
-                    color: scheme.outlineVariant,
-                    onDragStart: () => _dragBase = explorer,
-                    onDrag: (d) => setState(() => _explorerWidth = (_dragBase + d).clamp(_minExplorer, maxExplorer)),
-                  ),
+                  // 왼쪽: SSH 탭은 서버의 폴더(SFTP), 로컬 셸 탭은 이 PC의 폴더. 접으면 가는 손잡이만 남는다.
+                  if (explorerOpen) ...[
+                    SizedBox(
+                      width: explorer,
+                      child: widget.session is LocalFolderSession
+                          ? const LocalFolderPane().help(HelpId.explorerLocal)
+                          : const SftpPane().help(HelpId.explorerSftp),
+                    ),
+                    PaneDivider(
+                      axis: Axis.vertical,
+                      color: scheme.outlineVariant,
+                      onDragStart: () => _dragBase = explorer,
+                      onDrag: (d) => setState(() => _explorerWidth = (_dragBase + d).clamp(_minExplorer, maxExplorer)),
+                    ),
+                  ] else
+                    ExplorerHandle(session: widget.session).help(explorerHelp),
                   Expanded(
                     child: Column(
                       children: [
@@ -454,6 +462,34 @@ class _SessionViewState extends State<_SessionView> {
         ),
         const StatusBar().help(HelpId.statusBar),
       ],
+    );
+  }
+}
+
+/// 탐색기를 접었을 때 왼쪽에 남는 가는 손잡이. 누르면 다시 펼친다.
+class ExplorerHandle extends StatelessWidget {
+  const ExplorerHandle({super.key, required this.session});
+
+  final TerminalSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      width: 36,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        border: Border(right: BorderSide(color: scheme.outlineVariant)),
+      ),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: IconButton(
+          tooltip: l10n.explorerShow,
+          icon: const PhosphorIcon(PhosphorIconsDuotone.folderOpen),
+          onPressed: () => session.setExplorerVisible(true),
+        ),
+      ),
     );
   }
 }
