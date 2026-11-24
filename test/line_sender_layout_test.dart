@@ -109,9 +109,13 @@ void main() {
 
     // 입력 칸이 맨 위(안쪽 여백 8)부터 시작한다 — 그 위에 별도의 제목 줄이 없다.
     expect(inputBox.top, closeTo(sender.top + 8, 1));
-    // 이름은 그 상자 안 왼쪽 위에 있고, 글을 쓰는 영역 위에 있다.
-    expect(name.left, greaterThanOrEqualTo(inputBox.left));
-    expect(name.left, lessThan(inputBox.left + 48)); // 칩 안쪽 여백과 아이콘 뒤
+    // 칸 제목(라인 전송기)이 상자 안 왼쪽 위에 있고, 파일 이름은 그 바로 뒤에, 글을 쓰는 영역 위에 있다.
+    final title = rectOf(tester, find.byKey(const ValueKey('line-sender-title')));
+    expect(title.left, greaterThanOrEqualTo(inputBox.left));
+    expect(title.left, lessThan(inputBox.left + 16));
+    expect(title.bottom, lessThanOrEqualTo(field.top + 1));
+    expect(name.left, greaterThanOrEqualTo(title.right));
+    expect(name.left, lessThan(title.right + 48)); // 칩 안쪽 여백과 아이콘 뒤
     expect(name.top, greaterThanOrEqualTo(inputBox.top));
     expect(name.bottom, lessThanOrEqualTo(field.top + 1));
     expect(field.top, greaterThanOrEqualTo(inputBox.top));
@@ -288,11 +292,12 @@ void main() {
       expect(d.border, isNotNull);
       expect(d.borderRadius, isNotNull);
       expect(d.color, isNull, reason: '칩은 윤곽선만 — 본문 상자 배경 위에 얹힌다');
-      // 이름은 칩 안에 들어 있고, 칩은 상자 안 왼쪽 위에 있다.
+      // 이름은 칩 안에 들어 있고, 칩은 상자 안 위쪽, 칸 제목(라인 전송기) 바로 뒤에 있다.
+      final title = rectOf(tester, find.byKey(const ValueKey('line-sender-title')));
       expect(name.left, greaterThanOrEqualTo(chip.left));
       expect(name.right, lessThanOrEqualTo(chip.right));
-      expect(chip.left, greaterThanOrEqualTo(inputBox.left));
-      expect(chip.left, lessThan(inputBox.left + 16));
+      expect(chip.left, greaterThanOrEqualTo(title.right));
+      expect(chip.left, lessThan(title.right + 16));
       expect(chip.top, greaterThanOrEqualTo(inputBox.top));
       expect(chip.bottom, lessThanOrEqualTo(rectOf(tester, find.byType(TextField)).top + 1));
     },

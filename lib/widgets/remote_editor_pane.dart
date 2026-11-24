@@ -17,6 +17,7 @@ import '../theme/phosphor_icons.dart';
 import '../utils/ui_scale.dart';
 import 'file_pane_parts.dart' show PaneDragData;
 import 'highlight_controller.dart';
+import 'pane_title.dart';
 
 String _errorText(AppLocalizations l10n, Object e) {
   if (e is RemoteEditException) {
@@ -250,9 +251,21 @@ Future<void> openDroppedPaths(
 /// 서버 탭 오른쪽에 붙는 편집기: 위에 열린 파일 탭, 가운데 본문, 아래에 경로와 저장 버튼. 열린 파일이 없으면 안내와
 /// "새 파일" 버튼이 보인다.
 class RemoteEditorPane extends StatefulWidget {
-  const RemoteEditorPane({super.key, required this.controller, this.dropEnabled = true});
+  const RemoteEditorPane({
+    super.key,
+    required this.controller,
+    this.dropEnabled = true,
+    this.dockedBottom = false,
+    this.onSwap,
+  });
 
   final RemoteEditorController controller;
+
+  /// 터미널 아래에 붙어 있는가 (LineSender와 자리를 바꾼 상태). 접기 버튼의 화살표 방향만 바뀐다.
+  final bool dockedBottom;
+
+  /// LineSender와 자리를 바꾸는 버튼을 누르면 부른다. null이면 버튼이 없다.
+  final VoidCallback? onSwap;
 
   /// 파일을 끌어놓아 열 수 있는가 (보이지 않는 탭에서는 끈다).
   final bool dropEnabled;
@@ -326,7 +339,7 @@ class _RemoteEditorPaneState extends State<RemoteEditorPane> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _TabStrip(controller: controller),
+              _TabStrip(controller: controller, dockedBottom: widget.dockedBottom, onSwap: widget.onSwap),
               Expanded(
                 child: controller.documents.isEmpty
                     ? _EmptyEditor(controller: controller)
@@ -361,8 +374,9 @@ class _EmptyEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    // 터미널 아래에 낮게 붙어 있을 때도 넘치지 않게 스크롤된다.
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -390,9 +404,11 @@ class _EmptyEditor extends StatelessWidget {
 }
 
 class _TabStrip extends StatelessWidget {
-  const _TabStrip({required this.controller});
+  const _TabStrip({required this.controller, this.dockedBottom = false, this.onSwap});
 
   final RemoteEditorController controller;
+  final bool dockedBottom;
+  final VoidCallback? onSwap;
 
   @override
   Widget build(BuildContext context) {
@@ -404,10 +420,24 @@ class _TabStrip extends StatelessWidget {
       height: context.scaled(36),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
-        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+        border: Border(
+          // 라인 전송기와 자리를 바꿀 수 있어서 어느 칸인지 제목과 색(위쪽 띠)으로 알려 준다.
+          top: BorderSide(color: PaneColors.editor(scheme), width: 2),
+          bottom: BorderSide(color: scheme.outlineVariant),
+        ),
       ),
       child: Row(
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            child: PaneTitle(
+              key: const ValueKey('editor-title'),
+              icon: PhosphorIconsDuotone.notePencil,
+              label: l10n.paneEditorTitle,
+              color: PaneColors.editor(scheme),
+            ),
+          ),
+          VerticalDivider(width: 1, indent: 8, endIndent: 8, color: scheme.outlineVariant),
           Expanded(
             child: ListView(
               scrollDirection: Axis.horizontal,
@@ -475,11 +505,19 @@ class _TabStrip extends StatelessWidget {
               ],
             ),
           ),
+          if (onSwap != null)
+            IconButton(
+              tooltip: l10n.editorSwapWithSender,
+              iconSize: 18,
+              visualDensity: VisualDensity.compact,
+              icon: const PhosphorIcon(PhosphorIconsDuotone.arrowsLeftRight),
+              onPressed: onSwap,
+            ),
           IconButton(
             tooltip: l10n.editorHide,
             iconSize: 18,
             visualDensity: VisualDensity.compact,
-            icon: const PhosphorIcon(PhosphorIconsDuotone.caretRight),
+            icon: PhosphorIcon(dockedBottom ? PhosphorIconsDuotone.caretDown : PhosphorIconsDuotone.caretRight),
             onPressed: () => controller.setVisible(false),
           ),
         ],
@@ -490,9 +528,15 @@ class _TabStrip extends StatelessWidget {
 
 /// 접혀 있을 때 오른쪽 끝에 남는 가는 손잡이. 눌러서 편집기를 다시 편다.
 class RemoteEditorHandle extends StatelessWidget {
-  const RemoteEditorHandle({super.key, required this.controller});
+  const RemoteEditorHandle({super.key, required this.controller, this.horizontal = false, this.onSwap});
 
   final RemoteEditorController controller;
+
+  /// LineSender와 자리를 바꾸는 버튼 (접혀 있어도 바꿀 수 있게). null이면 버튼이 없다.
+  final VoidCallback? onSwap;
+
+  /// 터미널 아래에 접혀 있을 때(LineSender와 자리를 바꾼 상태): 오른쪽 세로 손잡이 대신 아래 가로 손잡이.
+  final bool horizontal;
 
   @override
   Widget build(BuildContext context) {
@@ -500,17 +544,39 @@ class RemoteEditorHandle extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final warn = scheme.brightness == Brightness.dark ? AppColors.warning : AppColors.warningTextLight;
     return Container(
-      width: 36,
+      width: horizontal ? null : 36,
+      height: horizontal ? 36 : null,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
-        border: Border(left: BorderSide(color: scheme.outlineVariant)),
+        border: Border(
+          // 접혀 있어도 편집기 색의 띠로 알아볼 수 있게.
+          left: horizontal ? BorderSide.none : BorderSide(color: PaneColors.editor(scheme), width: 2),
+          top: horizontal ? BorderSide(color: PaneColors.editor(scheme), width: 2) : BorderSide.none,
+        ),
       ),
       child: Align(
-        alignment: Alignment.topCenter,
-        child: IconButton(
-          tooltip: l10n.editorEdit,
-          icon: PhosphorIcon(PhosphorIconsDuotone.notePencil, color: controller.hasUnsaved ? warn : null),
-          onPressed: () => controller.setVisible(true),
+        alignment: horizontal ? Alignment.centerRight : Alignment.topCenter,
+        child: Flex(
+          direction: horizontal ? Axis.horizontal : Axis.vertical,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onSwap != null)
+              IconButton(
+                tooltip: l10n.editorSwapWithSender,
+                iconSize: 18,
+                visualDensity: VisualDensity.compact,
+                icon: const PhosphorIcon(PhosphorIconsDuotone.arrowsLeftRight),
+                onPressed: onSwap,
+              ),
+            IconButton(
+              tooltip: l10n.editorEdit,
+              icon: PhosphorIcon(
+                PhosphorIconsDuotone.notePencil,
+                color: controller.hasUnsaved ? warn : PaneColors.editor(scheme),
+              ),
+              onPressed: () => controller.setVisible(true),
+            ),
+          ],
         ),
       ),
     );
@@ -587,8 +653,10 @@ class _EditorFieldState extends State<_EditorField> {
     final key = '${style.fontFamily}/${style.fontSize}';
     if (_measuredFor == key) return;
     _measuredFor = key;
-    final painter = TextPainter(text: TextSpan(text: '0' * 20, style: style), textDirection: TextDirection.ltr)
-      ..layout();
+    final painter = TextPainter(
+      text: TextSpan(text: '0' * 20, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
     _charWidth = painter.width / 20;
     painter.dispose();
   }
@@ -751,7 +819,9 @@ class _StatusRow extends StatelessWidget {
         return Container(
           height: context.scaled(36),
           padding: const EdgeInsets.only(left: AppSpacing.sm),
-          decoration: BoxDecoration(border: Border(top: BorderSide(color: scheme.outlineVariant))),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: scheme.outlineVariant)),
+          ),
           child: Row(
             children: [
               Expanded(

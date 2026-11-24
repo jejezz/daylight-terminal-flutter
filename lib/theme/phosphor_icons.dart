@@ -40,6 +40,7 @@ abstract final class PhosphorIconsDuotone {
   static const info = IconData(0xe2cf, fontFamily: _family, matchTextDirection: true);
   static const keyReturn = IconData(0xe783, fontFamily: _family, matchTextDirection: true);
   static const linkBreak = IconData(0xe2e5, fontFamily: _family, matchTextDirection: true);
+  static const listBullets = IconData(0xe2f3, fontFamily: _family, matchTextDirection: true);
   static const magnifyingGlass = IconData(0xe30d, fontFamily: _family, matchTextDirection: true);
   static const moon = IconData(0xe331, fontFamily: _family, matchTextDirection: true);
   static const notePencil = IconData(0xe34d, fontFamily: _family, matchTextDirection: true);
@@ -93,6 +94,7 @@ const _secondary = <int, IconData>{
   0xe2cf: IconData(0xe2ce, fontFamily: _family, matchTextDirection: true), // info
   0xe783: IconData(0xe782, fontFamily: _family, matchTextDirection: true), // keyReturn
   0xe2e5: IconData(0xe2e4, fontFamily: _family, matchTextDirection: true), // linkBreak
+  0xe2f3: IconData(0xe2f2, fontFamily: _family, matchTextDirection: true), // listBullets
   0xe30d: IconData(0xe30c, fontFamily: _family, matchTextDirection: true), // magnifyingGlass
   0xe331: IconData(0xe330, fontFamily: _family, matchTextDirection: true), // moon
   0xe34d: IconData(0xe34c, fontFamily: _family, matchTextDirection: true), // notePencil

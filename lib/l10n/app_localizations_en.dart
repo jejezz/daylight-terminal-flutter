@@ -682,6 +682,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'On: Enter sends, Shift+Enter starts a new line. Off: Enter starts a new line, Ctrl+Enter sends.';
 
   @override
+  String get senderSwapEditor => 'Editor below the terminal';
+
+  @override
+  String get senderSwapEditorHelp =>
+      'On: the editor sits below the terminal and the line sender on the right. You can also swap them with the ⇆ button above the editor.';
+
+  @override
   String get settingsSectionStartup => 'Startup';
 
   @override
@@ -1173,6 +1180,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editorHide => 'Hide editor';
+
+  @override
+  String get paneEditorTitle => 'Editor';
+
+  @override
+  String get paneSenderTitle => 'Line sender';
+
+  @override
+  String get editorSwapWithSender => 'Swap editor and line sender';
 
   @override
   String get editorModified => 'modified';

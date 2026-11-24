@@ -94,7 +94,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 ## 설정 창과 탐색기 자동 새로 고침
 
 - 툴바의 설정(톱니) 버튼 = `settings_dialog.dart`. 항목이 많아서 **탭 4개**로 나눈다(`DefaultTabController`, 고정 높이 안에서 탭마다 따로 스크롤; 안 보이는 탭의 위젯은 만들어지지 않으니 테스트는 탭을 눌러 옮긴다):
-  "외형"(모드·팔레트·언어·화면 글자 크기) / "터미널"(글꼴·크기·스크롤백·색상) / "탐색기·전송"(새로 고침 옵션, 줄 전송기) / "시작·권한"(탭 복원, 관리자 권한). "기본값으로"는 모든 탭을 되돌린다.
+  "외형"(모드·팔레트·언어·화면 글자 크기) / "터미널"(글꼴·크기·스크롤백·색상) / "탐색기·전송"(새로 고침 옵션, 라인 전송기) / "시작·권한"(탭 복원, 관리자 권한). "기본값으로"는 모든 탭을 되돌린다.
 - 보이는 탭의 목록만 5초마다 조용히(로딩 표시·오류 없이, 바뀐 것이 있을 때만 갱신) 다시 읽는다. 탭이 활성화되면 바로 한 번 읽고,
   비활성화되면 멈추고, 사용자가 새로 고치면 5초가 다시 시작된다 (`TerminalSession.setActive` / `restartAutoRefreshTimer`).
 - 설정(`refresh_prefs.dart`): `auto_refresh_local`(기본 켜짐), `auto_refresh_ssh`(기본 꺼짐 — 네트워크 오류가 잦아서).
@@ -146,7 +146,7 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
 
 ## LineSender를 편집기처럼 (불러오기/저장)
 
-- **제목 줄은 없다.** 편집 중인 파일 이름과 변경 여부는 입력 칸 안 맨 위(높이 36의 이름 줄)에 **둥근 윤곽선 칩**(새 연결 화면의 셸
+- **별도의 제목 줄은 없다** (칸 제목 `라인 전송기`는 아래 이름 줄 맨 앞, 파일 칩 앞에 있다). 편집 중인 파일 이름과 변경 여부는 입력 칸 안 맨 위(높이 36의 이름 줄)에 **둥근 윤곽선 칩**(새 연결 화면의 셸
   버튼과 같은 모양, 높이 28)으로 고정되어 있다. 본문과 구별되도록 본문(`onSurface`)과 다른 강조색(`primary`)을 쓰고, 저장하지 않은 변경이
   있으면 칩의 글자·아이콘·윤곽선이 모두 경고색으로 바뀐다. 글이 스크롤돼도 그대로 있고, 눌러도 입력 칸에 포커스가 간다(파일이 없으면
   `제목 없음`). 배경과 모서리는 바깥 `Container`가 맡고 안쪽 TextField는 채움·테두리를 끈다(테마 기본이 `filled`라서). 버튼은 모두
@@ -267,6 +267,16 @@ https://github.com/jejezz/application-release-templates/tree/main/conventions
   저장하지 않은 변경이 있으면 파일 탭·서버 탭을 닫을 때 묻는다.
 - 아직: 설정 창 "편집기" 섹션(더블클릭 동작, `.bak` 백업), 좁은 화면에서 아래로 옮기기, 읽기 전용 파일의 sudo 안내, 그 밖의 언어 강조. 실제 SFTP 서버로 확인하지 못했다
   (`SftpRemoteFs`는 e2e 테스트 없음).
+
+- **LineSender와 편집기 자리 바꾸기**: 편집기 칸 위쪽의 ⇆ 버튼(`RemoteEditorPane.onSwap`) 또는 설정 창 "탐색기·전송" 탭의 "편집기를 터미널 아래에"
+  (`SenderPrefs.swapped`, 키 `sender_editor_swapped`, 기본 꺼짐, 모든 탭에 같이 적용). 켜면 편집기가 터미널 아래(높이 `_editorHeight`, 최소 200),
+  LineSender가 오른쪽(폭 `_senderWidth`, 최소 300)에 있다. 접으면 터미널 아래에 가로 손잡이(`RemoteEditorHandle(horizontal: true)`)가 남는다.
+  접힌 손잡이(세로·가로 모두)에도 ⇆ 버튼이 있어서 접힌 채로 자리를 바꿀 수 있다(접힌 상태는 그대로).
+  자리를 바꿀 수 있어서 두 칸은 **제목과 고정 색**으로 구별한다 (`widgets/pane_title.dart`의 `PaneTitle`/`PaneColors`, 팔레트와 상관없이 고정):
+  라인 전송기 = 청록(이름 줄 맨 앞의 `라인 전송기` 제목, 아이콘 listBullets — 전송 버튼과 같은 paperPlaneTilt는 테스트가 아이콘으로 버튼을 찾아서 쓰지 않는다; 입력 상자 윤곽선),
+  편집기 = 보라(파일 탭 줄 맨 앞의 `편집기` 제목, 탭 줄 위쪽 2px 띠, 접힌 손잡이의 띠와 아이콘).
+  두 칸 모두 `GlobalKey`로 옮겨서 자리를 바꿔도 LineSender 글·편집 중인 파일이 그대로다. 크기는 배치마다 따로 기억한다(탭이 살아 있는 동안만). 편집기가 없는 탭은 바꾸지 않는다.
+  `SenderPrefs`가 트리에 없으면(테스트) ⇆ 버튼이 없고 보통 배치다 (`test/sender_editor_swap_test.dart`).
 
 - **구분선 끌기**(`widgets/pane_divider.dart`, `PaneDivider`; 탐색기·편집기·LineSender 칸 공통)는 이벤트마다 움직인 양을 더하지 않고 **누른 자리에서의 누적 거리**로 크기를 정한다 (`onDragStart`에서 크기를 기억).
   화면이 다시 그려지기 전에 이벤트가 여러 번 오거나 최소·최대 크기에 걸렸다 풀릴 때 구분선이 마우스를 못 따라가던 문제를 없앤다 (`test/pane_divider_test.dart`).

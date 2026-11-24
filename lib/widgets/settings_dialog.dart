@@ -321,6 +321,13 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                           value: sender.enterSends,
                           onChanged: sender.setEnterSends,
                         ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.senderSwapEditor),
+                          subtitle: Text(l10n.senderSwapEditorHelp),
+                          value: sender.swapped,
+                          onChanged: sender.setSwapped,
+                        ),
                       ],
                     ]),
                     _tab(context, [

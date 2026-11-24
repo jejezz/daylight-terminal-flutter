@@ -656,7 +656,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get terminalColorScheme => '색상 구성표';
 
   @override
-  String get settingsSectionLineSender => '줄 전송기 (LineSender)';
+  String get settingsSectionLineSender => '라인 전송기 (LineSender)';
 
   @override
   String get senderEnterSends => 'Enter로 현재 줄 전송';
@@ -664,6 +664,13 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get senderEnterSendsHelp =>
       '켜면 Enter가 전송, Shift+Enter가 줄바꿈입니다. 끄면 Enter가 줄바꿈, Ctrl+Enter가 전송입니다.';
+
+  @override
+  String get senderSwapEditor => '편집기를 터미널 아래에';
+
+  @override
+  String get senderSwapEditorHelp =>
+      '켜면 편집기가 터미널 아래에, 라인 전송기가 오른쪽에 있습니다. 편집기 위쪽의 ⇆ 버튼으로도 바꿀 수 있습니다.';
 
   @override
   String get settingsSectionStartup => '시작';
@@ -1133,6 +1140,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get editorHide => '편집기 접기';
+
+  @override
+  String get paneEditorTitle => '편집기';
+
+  @override
+  String get paneSenderTitle => '라인 전송기';
+
+  @override
+  String get editorSwapWithSender => '편집기와 라인 전송기 자리 바꾸기';
 
   @override
   String get editorModified => '변경됨';
