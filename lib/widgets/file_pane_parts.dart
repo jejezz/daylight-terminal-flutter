@@ -24,6 +24,7 @@ class PaneHeader extends StatelessWidget {
     this.onTerminalToHere,
     this.onExplorerToTerminal,
     this.extraActions = const [],
+    this.onHide,
   });
 
   final String path;
@@ -34,6 +35,9 @@ class PaneHeader extends StatelessWidget {
   final VoidCallback? onTerminalToHere;
   final VoidCallback? onExplorerToTerminal;
   final List<Widget> extraActions;
+
+  /// 탐색기 칸을 접는다 (맨 오른쪽 버튼). null이면 버튼이 없다.
+  final VoidCallback? onHide;
 
   static void _tap(String name, VoidCallback action) {
     DiagLog.log('ui.pane $name');
@@ -124,6 +128,14 @@ class PaneHeader extends StatelessWidget {
                     PopupMenuItem(value: 'explorer', child: Text(l10n.pathMenuExplorerToTerminal)),
                 ],
               ),
+            ),
+          if (onHide != null)
+            IconButton(
+              iconSize: 18,
+              visualDensity: VisualDensity.compact,
+              tooltip: l10n.explorerHide,
+              icon: const PhosphorIcon(PhosphorIconsDuotone.caretLeft),
+              onPressed: () => _tap('hide', onHide!),
             ),
         ],
       ),

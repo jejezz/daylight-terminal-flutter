@@ -696,6 +696,8 @@
   "@editorSave": {"placeholders": {"shortcut": {"type": "String"}}},
   "editorClose": "파일 닫기",
   "editorHide": "편집기 접기",
+  "explorerHide": "탐색기 접기",
+  "explorerShow": "탐색기 펼치기",
   "paneEditorTitle": "편집기",
   "paneSenderTitle": "라인 전송기",
   "editorSwapWithSender": "편집기와 라인 전송기 자리 바꾸기",

@@ -679,6 +679,8 @@
   "@editorSave": {"placeholders": {"shortcut": {"type": "String"}}},
   "editorClose": "Close file",
   "editorHide": "Hide editor",
+  "explorerHide": "Hide explorer",
+  "explorerShow": "Show explorer",
   "paneEditorTitle": "Editor",
   "paneSenderTitle": "Line sender",
   "editorSwapWithSender": "Swap editor and line sender",

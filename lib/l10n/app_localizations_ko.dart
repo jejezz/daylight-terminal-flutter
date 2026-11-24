@@ -1142,6 +1142,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get editorHide => '편집기 접기';
 
   @override
+  String get explorerHide => '탐색기 접기';
+
+  @override
+  String get explorerShow => '탐색기 펼치기';
+
+  @override
   String get paneEditorTitle => '편집기';
 
   @override
