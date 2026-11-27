@@ -1,5 +1,5 @@
+import 'dart:io' show exit;
 import 'dart:math' as math;
-import 'dart:ui' show AppExitType;
 
 import 'package:flutter/material.dart';
 
@@ -59,7 +59,11 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     final failed = AppLocalizations.of(context).adminRestartFailed;
     await context.read<SessionsController>().saveTabsNow();
     if (Elevation.relaunchAsAdmin()) {
-      await ServicesBinding.instance.exitApplication(AppExitType.required);
+      // 새 관리자 프로세스는 이미 떴으니 이 앱은 반드시 끝난다. exitApplication(required) 는
+      // didRequestAppExit(창 위치 저장·기록 파일 닫기)를 건너뛰고, Windows 에서는 엔진이 스스로
+      // 내려가는 동안 옛 창이 멈춘 채 9–13초 남았다 (daylight-broom 측정). 정리를 직접 거친 뒤 바로 끝낸다.
+      await ServicesBinding.instance.handleRequestAppExit();
+      exit(0);
     } else {
       messenger.showSnackBar(SnackBar(content: Text(failed)));
     }
